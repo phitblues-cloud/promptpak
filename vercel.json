@@ -1,5 +1,8 @@
 {
   "outputDirectory": "public",
-  "cleanUrls": true,
-  "functions": { "api/*.js": { "maxDuration": 60 } }
+  "rewrites": [{ "source": "/", "destination": "/api/app" }],
+  "functions": {
+    "api/*.js": { "maxDuration": 60 },
+    "api/app.py": { "maxDuration": 30, "includeFiles": "renderer/**" }
+  }
 }

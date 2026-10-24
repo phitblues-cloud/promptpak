@@ -6,9 +6,7 @@
 1. supabase.com → Continue with GitHub → New project → Name `promptpak`, Region **Southeast Asia (Singapore)**, Plan Free → จดรหัสฐานข้อมูลเก็บเอง
 2. เมนูซ้าย **SQL Editor** → New query → เปิดไฟล์ `supabase/01_schema.sql` บน GitHub → กด Raw → เลือกทั้งหมด คัดลอก → วาง → **Run** (ต้องขึ้น Success)
 3. ทำซ้ำกับไฟล์ `supabase/02_seed.sql` (ห้องจริง 31 ห้อง + การจอง/แชทตัวอย่าง)
-4. **Authentication → Users → Add user → Create new user** ใส่อีเมล + รหัสผ่านของเจ้าของ ติ๊ก Auto Confirm
-5. **Authentication → Sign In / Providers** → ปิด **Allow new users to sign up** (กันคนนอกสมัครเข้าระบบเอง)
-6. **Project Settings → API Keys** เตรียมค่า 3 ตัว (ยังไม่ต้องคัดลอกไปไหน): Project URL, publishable/anon key, secret/service_role key
+4. **Project Settings → Data API** → Project URL และ **Project Settings → API Keys** → secret / service_role key (เตรียมไว้ ยังไม่ต้องคัดลอกไปไหน)
 
 ## ขั้น 2 · LINE Messaging API
 1. LINE Official Account Manager → **ตั้งค่า → Messaging API → เปิดใช้งาน** → สร้าง/เลือก Provider
@@ -23,24 +21,27 @@
 
 ## ขั้น 4 · Vercel (เปิดเว็บจริง)
 1. vercel.com → Continue with GitHub → **Add New → Project** → Import `promptpak`
-2. ก่อนกด Deploy เปิด **Environment Variables** ใส่ 6 ค่า:
+2. ก่อนกด Deploy เปิด **Environment Variables** ใส่ 8 ค่า:
    | Name | ค่า |
    |---|---|
    | SUPABASE_URL | Project URL จาก Supabase |
-   | SUPABASE_ANON_KEY | publishable / anon key |
    | SUPABASE_SERVICE_ROLE_KEY | secret / service_role key |
+   | APP_SECRET | ตัวอักษรสุ่มยาวๆ 32 ตัวขึ้นไป (ใช้ลงลายเซ็นการเข้าสู่ระบบ) |
+   | OWNER_PIN | PIN บัตรเจ้าของ (ตัวเลข 6 หลัก) |
+   | STAFF_PIN | PIN บัตรพนักงาน (ตัวเลข 6 หลัก ไม่ซ้ำกับเจ้าของ) |
    | LINE_CHANNEL_SECRET | Channel secret |
    | LINE_CHANNEL_ACCESS_TOKEN | Channel access token |
    | ANTHROPIC_API_KEY | คีย์ Claude |
 3. Deploy → ได้ลิงก์ เช่น `https://promptpak-xxx.vercel.app`
 4. เปิด `ลิงก์/api/health` → ทุกค่าต้องเป็น `true` และ database = `ok`
+5. เปิด `ลิงก์` → หน้าล็อกอินเดิม → แตะบัตรเจ้าของ → ใส่ PIN → เข้าแอป v196 พร้อมข้อมูลจริง
 
 ## ขั้น 5 · ต่อ LINE เข้ากับเว็บ
 1. developers.line.biz → แท็บ Messaging API → **Webhook URL** = `ลิงก์/api/line-webhook` → Update → **Verify** (ต้องขึ้น Success) → เปิด **Use webhook**
-2. ทดสอบ: ใช้ LINE ส่วนตัวทักแชท OA "ขอห้องตึก 2 ห้อง วันที่ ... ถึง ..." → เปิดเว็บหน้าแรกดูการจองเด้งขึ้น
+2. ทดสอบ: ใช้ LINE ส่วนตัวทักแชท OA "ขอห้องตึก 2 ห้อง วันที่ ... ถึง ..." → ภายใน ~10 วินาที การจองขึ้นใน **จัดการการจอง** (ปฏิทิน + การจองทั้งหมด) และแชทขึ้นใน **แชทลูกค้า LINE** · ถึงวันเข้าพักจะขึ้นการ์ดเช็คอินที่หน้าแรก
 
 ## เกณฑ์ผ่าน (ล็อกไว้ก่อน)
-- ทัก LINE → การจองขึ้นหน้าแรก ≤ 30 วินาที
+- ทัก LINE → การจองขึ้นในโมดูลการจอง ≤ 30 วินาที
 - บทสนทนาทดสอบ 10 แบบ ราคา/ห้องว่างถูก 10/10
 - จองซ้ำห้องคืนเดียวกัน = 0 ครั้ง (ฐานข้อมูลกันไว้)
 - ตัวเลขใน AI สรุปตรงฐานข้อมูล 100%

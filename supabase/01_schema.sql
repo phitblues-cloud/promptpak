@@ -278,9 +278,6 @@ exception when unique_violation then
   return true;
 end $$;
 
-create or replace function pp_handoff(p_line_user_id text, p_reason text) returns void language sql as $$
-  update chat_threads set needs_staff = true, handoff_reason = p_reason where line_user_id = p_line_user_id
-$$;
 
 create or replace function pp_chat_threads() returns jsonb language sql stable as $$
   select coalesce(jsonb_agg(x order by x->>'last_message_at' desc), '[]') from (
@@ -336,6 +333,100 @@ do $$ declare f record; begin
     if exists (select 1 from pg_roles where rolname = 'anon') then
       execute format('revoke all on function %s from anon, authenticated', f.sig);
     end if;
+    if exists (select 1 from pg_roles where rolname = 'service_role') then
+      execute format('grant execute on function %s to service_role', f.sig);
+    end if;
+  end loop;
+end $$;
+
+-- ---------- สำหรับหน้าจอ v196 ----------
+alter table chat_threads add column if not exists handoff_at timestamptz;
+
+create table if not exists pin_fails (
+  id bigserial primary key,
+  ip text not null,
+  at timestamptz not null default now()
+);
+alter table pin_fails enable row level security;
+
+-- ค่าที่เปลี่ยนเมื่อข้อมูลเปลี่ยน (หน้าจอใช้ตรวจว่าต้องโหลดข้อมูลใหม่ไหม)
+create or replace function pp_stamp() returns text language sql stable as $$
+  select concat_ws('|', pp_today(),
+    (select count(*) from bookings), (select max(created_at) from bookings),
+    (select count(*) from bookings where status = 'ยกเลิก'),
+    (select count(*) from chat_messages), (select count(*) from chat_threads where needs_staff))
+$$;
+
+-- ข้อมูลทั้งหมดที่หน้าจอใช้
+create or replace function pp_export() returns jsonb language sql stable as $$
+  select jsonb_build_object(
+    'stamp', pp_stamp(),
+    'bookings', coalesce((select jsonb_agg(to_jsonb(b) - 'id' order by b.booking_no) from bookings b), '[]'),
+    'guests', coalesce((select jsonb_agg(to_jsonb(g)) from guests g), '[]'),
+    'threads', coalesce((select jsonb_agg(jsonb_build_object('id', t.id, 'line_user_id', t.line_user_id,
+        'display_name', t.display_name, 'needs_staff', t.needs_staff, 'is_seed', t.is_seed,
+        'messages', (select coalesce(jsonb_agg(jsonb_build_object('sender', sender, 'body', body, 'at', created_at)
+                       order by created_at, id), '[]') from chat_messages m where m.thread_id = t.id))
+        order by t.id)
+      from chat_threads t where not t.is_seed), '[]'))
+$$;
+
+-- AI เงียบเมื่อส่งต่อพนักงาน: เปิดให้ AI ตอบอีกครั้งอัตโนมัติหลัง 6 ชั่วโมง
+create or replace function pp_staff_active(p_line_user_id text) returns boolean language plpgsql as $$
+declare t chat_threads;
+begin
+  select * into t from chat_threads where line_user_id = p_line_user_id;
+  if t.id is null or not t.needs_staff then return false; end if;
+  if t.handoff_at is not null and t.handoff_at < now() - interval '6 hours' then
+    update chat_threads set needs_staff = false, handoff_reason = null where id = t.id;
+    return false;
+  end if;
+  return true;
+end $$;
+
+create or replace function pp_handoff(p_line_user_id text, p_reason text) returns void language sql as $$
+  update chat_threads set needs_staff = true, handoff_reason = p_reason, handoff_at = now() where line_user_id = p_line_user_id
+$$;
+
+-- กันเดา PIN: ผิดเกิน 8 ครั้งใน 15 นาที ล็อก
+create or replace function pp_pin_locked(p_ip text) returns boolean language sql stable as $$
+  select count(*) >= 8 from pin_fails where ip = p_ip and at > now() - interval '15 minutes'
+$$;
+create or replace function pp_pin_fail(p_ip text) returns void language sql as $$
+  insert into pin_fails (ip) values (p_ip)
+$$;
+
+do $$ declare f record; begin
+  for f in select p.oid::regprocedure sig from pg_proc p join pg_namespace n on n.oid = p.pronamespace
+           where n.nspname = 'public' and p.proname like 'pp\_%' loop
+    execute format('revoke all on function %s from public', f.sig);
+    if exists (select 1 from pg_roles where rolname = 'anon') then
+      execute format('revoke all on function %s from anon, authenticated', f.sig);
+    end if;
+    if exists (select 1 from pg_roles where rolname = 'service_role') then
+      execute format('grant execute on function %s to service_role', f.sig);
+    end if;
+  end loop;
+end $$;
+
+-- เก็บผล AI สรุปไว้ใช้ซ้ำ (ข้อมูลไม่เปลี่ยน = ไม่เรียก AI ซ้ำ ประหยัดค่าใช้จ่าย)
+create table if not exists ai_cache (
+  key        text primary key,
+  value      jsonb not null,
+  created_at timestamptz not null default now()
+);
+alter table ai_cache enable row level security;
+create or replace function pp_cache_get(p_key text) returns jsonb language sql stable as $$
+  select value from ai_cache where key = p_key and created_at > now() - interval '1 hour'
+$$;
+create or replace function pp_cache_put(p_key text, p_value jsonb) returns void language sql as $$
+  insert into ai_cache (key, value) values (p_key, p_value)
+  on conflict (key) do update set value = excluded.value, created_at = now()
+$$;
+do $$ declare f record; begin
+  for f in select p.oid::regprocedure sig from pg_proc p join pg_namespace n on n.oid = p.pronamespace
+           where n.nspname = 'public' and p.proname in ('pp_cache_get', 'pp_cache_put') loop
+    execute format('revoke all on function %s from public', f.sig);
     if exists (select 1 from pg_roles where rolname = 'service_role') then
       execute format('grant execute on function %s to service_role', f.sig);
     end if;

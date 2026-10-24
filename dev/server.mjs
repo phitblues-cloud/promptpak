@@ -4,6 +4,7 @@ import http from 'node:http';
 import { readFile } from 'node:fs/promises';
 import path from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
+import { spawnSync } from 'node:child_process';
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const TYPES = { '.html': 'text/html; charset=utf-8', '.css': 'text/css', '.js': 'text/javascript', '.svg': 'image/svg+xml', '.png': 'image/png', '.json': 'application/json' };
@@ -13,6 +14,16 @@ export function createServer() {
   return http.createServer(async (req, res) => {
     try {
       const url = new URL(req.url, `http://localhost:${port}`);
+      if (url.pathname === '/' || url.pathname === '/api/app') {   // ฟังก์ชัน Python (หน้าจอ v196)
+        const chunks = []; for await (const c of req) chunks.push(c);
+        const r = spawnSync('python3', [path.join(root, 'dev', 'pyrun.py')], { input: JSON.stringify({ method: req.method,
+          query: url.search.slice(1), cookie: req.headers.cookie || '', body: Buffer.concat(chunks).toString() }),
+          encoding: 'utf8', maxBuffer: 64 << 20, env: process.env });
+        if (r.status !== 0) { res.writeHead(500).end(r.stderr); return; }
+        const o = JSON.parse(r.stdout);
+        res.writeHead(o.status, o.headers).end(o.body);
+        return;
+      }
       if (url.pathname.startsWith('/api/')) {
         const name = url.pathname.slice(5).replace(/[^a-z0-9-]/gi, '');
         const mod = await import(pathToFileURL(path.join(root, 'api', name + '.js')).href);

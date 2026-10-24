@@ -1,0 +1,83 @@
+# -*- coding: utf-8 -*-
+import collections
+from patch_all import R, J
+from nb import *
+
+MON = ['ม.ค.', 'ก.พ.', 'มี.ค.', 'เม.ย.', 'พ.ค.', 'มิ.ย.', 'ก.ค.', 'ส.ค.', 'ก.ย.', 'ต.ค.', 'พ.ย.', 'ธ.ค.']
+def short_date(s):
+    y, mo, d = map(int, s[:10].split('-')); return f'{d} {MON[mo-1]}'
+def day_short(dn):
+    d = EPOCH + datetime.timedelta(days=dn); return f'{d.day} {MON[d.month-1]}'
+
+def tlabel(iso):
+    d = dno(iso); k = D0 - d; hhmm = iso[11:16]
+    if k <= 0: return hhmm
+    if k == 1: return 'เมื่อวาน ' + hhmm
+    if k <= 6: return f'{k} วันก่อน ' + hhmm
+    return short_date(iso) + ' ' + hhmm
+
+def bd_of(b):
+    t = b['nights']
+    if b.get('cancelled'): return {'k': 'cancel', 't': t}
+    if b.get('noshow'): return {'k': 'cancel', 't': t}
+    st = b['stage']
+    if st == 'outdone': return {'k': 'done', 't': t}
+    if st == 'out': return {'k': 'co', 't': t}
+    if st == 'stay': return {'k': 'stay', 'n': D0 - b['start'] + 1, 't': t}
+    if b['start'] <= D0: return {'k': 'wait', 't': t, 'date': short_date(REF), 'unpaid': 0 if b['paid'] or b['kind'] == 'credit' else 1}
+    return {'k': 'soon', 't': t, 'date': day_short(b['start'])}
+
+def stay_txt(b):
+    if b.get('cancelled'): return 'ยกเลิกการจอง'
+    if b.get('noshow'): return 'ไม่มาตามนัด'
+    st = b['stage']
+    if st == 'outdone': return 'เช็คเอาท์แล้ว'
+    if st == 'out': return 'เช็คเอาท์วันนี้'
+    if st == 'stay': return f"เข้าพักอยู่ · เหลือ {b['end'] - D0} คืน"
+    if b['start'] <= D0: return 'จองไว้ · เข้าพักวันนี้'
+    return 'จองไว้ · เข้าพัก ' + day_short(b['start'])
+
+def seg_of(n):
+    return 'none' if n == 0 else ('often' if n >= 3 else ('rep' if n == 2 else 'new'))
+
+def build():
+    CV, BKN, BD, PF, LCX = [], {}, {}, {}, {}
+    for i, t in enumerate(sorted(m['line_chats'], key=lambda x: x['thread_id']), 1):
+        g = G[t['guest_id']]
+        b = BKBY.get(t['linked_booking_id'])
+        last = t['last_message_at']
+        ago = max(0, (REFMS - msl(last)) // 60000)
+        msgs = []
+        for x in t['messages']:
+            who = {'ลูกค้า': 'c', 'ระบบอัตโนมัติ': 'b', 'พนักงาน': 's'}[x['from']]
+            tx = x['text']
+            if x['type'] == 'image': tx = '🖼 ' + tx
+            elif x['type'] == 'file': tx = '📎 ' + tx
+            elif x['type'] == 'flex': tx = '🧾 ' + tx
+            msgs.append([who, tx, tlabel(x['at'])])
+        n_st = len([s for s in BK if s['gid'] == g['guest_id'] and s['start'] <= D0])
+        co = CO[g['company_id']]['name_th'] if g['company_id'] in CO else ''
+        st = 'new' if (t['unread_count'] > 0 or t['status'] == 'รอพนักงาน') else 'done'
+        c = {'id': i, 'name': 'คุณ' + g['nickname'], 'line': t['line_display_name'], 'ago': ago, 'st': st,
+             'room': b['room'] if b else '', 'stay': stay_txt(b) if b else '', 'co': co, 'stays': n_st, 'sum': '', 'm': msgs}
+        CV.append(c)
+        if b:
+            BKN[str(i)] = b['no']; BD[str(i)] = bd_of(b)
+        else:
+            BD[str(i)] = {'k': 'none'}
+        PF[str(i)] = {'real': g['first_name'] + ' ' + g['last_name'], 'mem': 1 if g['is_member'] else 0, 'seg': seg_of(n_st)}
+        LCX[str(i)] = {'line': t['line_display_name'], 'co': co, 'stays': n_st}
+    purp = {str(i): (BKBY[t['linked_booking_id']]['purpose'] if t['linked_booking_id'] in BKBY else '') for i, t in enumerate(sorted(m['line_chats'], key=lambda x: x['thread_id']), 1)}
+    return CV, BKN, BD, PF, LCX, purp
+
+def patch(h):
+    CV, BKN, BD, PF, LCX, purp = build()
+    i = h.index('const CV=['); j = h.index("const stageOf=")
+    h = h[:i] + 'const CV=' + J(CV) + ';\nconst BKN=' + J(BKN) + ';\n' + h[j:]
+    # ลบ CV.push(id 10) ... ถึงก่อน BS
+    i = h.index("CV.push({id:10,"); j = h.index("const BS={")
+    h = h[:i] + 'const BD=' + J(BD) + ';\nconst PF=' + J(PF) + ';\nconst LCX=' + J(LCX) + ';\nconst PURP=' + J(purp) + ';\n' + \
+        "CV.forEach(c=>{if(LCX[c.id])Object.assign(c,LCX[c.id])});\nCV.forEach(c=>{c.purp=PURP[c.id]||'';c.bd=BD[c.id];Object.assign(c,PF[c.id]);c.sn=[]});\n" + h[j:]
+    h = R(h, "<option ${c.own==='พลอย'?'selected':''}>พลอย</option><option ${c.own==='เมท'?'selected':''}>เมท</option>",
+          "<option ${c.own==='ป้าใจ'?'selected':''}>ป้าใจ</option><option ${c.own==='ดวน'?'selected':''}>ดวน</option><option ${c.own==='ใบ'?'selected':''}>ใบ</option><option ${c.own==='เจ้าของ'?'selected':''}>เจ้าของ</option>", 1, 'lc-own')
+    return h

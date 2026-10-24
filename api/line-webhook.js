@@ -30,9 +30,8 @@ async function handleEvent(ev) {
 
   await rpc('pp_chat_log', { p_line_user_id: userId, p_display_name: name, p_sender: 'ลูกค้า', p_body: ev.message.text });
 
-  // ถ้าเรื่องนี้ส่งต่อพนักงานแล้ว AI จะเงียบ ให้พนักงานตอบเองจนกว่าจะกด "จบเรื่อง" ในระบบ
-  const ctx = await rpc('pp_chat_context', { p_line_user_id: userId, p_limit: 1 });
-  if (ctx?.thread?.needs_staff) return;
+  // ถ้าเรื่องนี้ส่งต่อพนักงานแล้ว AI จะเงียบ ให้พนักงานตอบเองใน LINE OA (AI กลับมาตอบเองหลัง 6 ชั่วโมง)
+  if (await rpc('pp_staff_active', { p_line_user_id: userId })) return;
 
   await showLoading(userId, 40);
   let text, actions = [];
