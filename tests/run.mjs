@@ -201,9 +201,9 @@ ok('AI สรุปกล่อง CRM: กันโค้ดแปลกปล�
   ok('เช็คเอาท์ + คืนเงินประกัน บันทึกจริง (การ์ดยังอยู่หน้าแรกวันนี้)');
 
   // ปิดห้อง → AI/ห้องว่างไม่นับ · เปิดคืน
-  const before = rpc(`pp_availability('${plus(30)}','${plus(31)}')`).types.reduce((s, t) => s + t.free_rooms, 0);
+  const before = rpc(`pp_availability('${plus(90)}','${plus(91)}')`).types.reduce((s, t) => s + t.free_rooms, 0);
   await act({ k: 'room', room, open: false });
-  assert.equal(rpc(`pp_availability('${plus(30)}','${plus(31)}')`).types.reduce((s, t) => s + t.free_rooms, 0), before - 1);
+  assert.equal(rpc(`pp_availability('${plus(90)}','${plus(91)}')`).types.reduce((s, t) => s + t.free_rooms, 0), before - 1);
   M = await mods(); assert.ok(M.book.includes(`"code":"${room}","zone":`) && /"open":false/.test(M.book));
   await act({ k: 'room', room, open: true });
   ok('ปิด/เปิดห้องบันทึกจริง (ห้องที่ปิด AI จองไม่ได้)');
