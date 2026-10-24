@@ -104,5 +104,13 @@ def apply(M, ref):
         old = '· ${lv[5]} · เกณฑ์ US AQI`;'
         assert h.count(old) == 1, 'home pm title'
         h = h.replace(old, '· ${lv[5]} · เกณฑ์กรมควบคุมมลพิษ · ค่าประมาณจาก Open-Meteo (CAMS)`;')
+        # ที่ตั้งจริงของรีสอร์ท
+        old = '<div class="src" title="${src}">น้ำพอง ขอนแก่น</div>'
+        assert h.count(old) == 1, 'home location'
+        h = h.replace(old, '<div class="src" title="${src}">อุบลรัตน์ ขอนแก่น</div>')
         M['home'] = h
+    if 'fin' in M:
+        old = '<div class="sub">อ.น้ำพอง จ.ขอนแก่น'
+        assert M['fin'].count(old) == 1, 'fin address'
+        M['fin'] = M['fin'].replace(old, '<div class="sub">อ.อุบลรัตน์ จ.ขอนแก่น')
     return M
