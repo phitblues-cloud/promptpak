@@ -8,7 +8,7 @@ NAMES = {'owner': 'เจ้าของรีสอร์ท', 'staff': 'พน
 
 
 def _secret():
-    s = os.environ.get('APP_SECRET')
+    s = (os.environ.get('APP_SECRET') or '').strip()
     if not s:
         raise RuntimeError('ยังไม่ได้ตั้งค่า APP_SECRET')
     return s.encode()
@@ -33,7 +33,7 @@ def verify(value):
 
 
 def check_pin(role, pin):
-    want = os.environ.get('OWNER_PIN' if role == 'owner' else 'STAFF_PIN') or ''
+    want = (os.environ.get('OWNER_PIN' if role == 'owner' else 'STAFF_PIN') or '').strip()
     return bool(want) and hmac.compare_digest(str(pin).strip(), want)
 
 
