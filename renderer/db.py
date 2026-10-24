@@ -28,7 +28,8 @@ def rpc(name, args=None):
             raise DbError(r.stderr.strip())
         out = r.stdout.strip()
         return json.loads(out) if out else None
-    url, key = os.environ.get('SUPABASE_URL'), os.environ.get('SUPABASE_SERVICE_ROLE_KEY')
+    url = (os.environ.get('SUPABASE_URL') or '').strip()
+    key = (os.environ.get('SUPABASE_SERVICE_ROLE_KEY') or '').strip()
     if not url or not key:
         raise DbError('ยังไม่ได้ตั้งค่า SUPABASE_URL / SUPABASE_SERVICE_ROLE_KEY')
     headers = {'apikey': key, 'Content-Type': 'application/json'}
