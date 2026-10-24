@@ -40,6 +40,13 @@ def rooms_2569(M):
              "return o.map(r=>r.a===r.b?r.a:r.a+'–'+r.b).join(', ')};"),
             # เลขห้องที่ไม่ต่อเนื่อง แสดงเป็นช่วงจริง เช่น A01, B04–B05
             ("เลขห้อง ${codes[0]}–${codes[codes.length-1]}", "เลขห้อง ${codeRuns(codes)}"),
+            # รูปห้องจริงลงช่องรูปเดิม 3 ช่อง (ไฟล์อยู่ใน public/rooms)
+            ("<div class=\"gphotos\">${[1,2,3].map(()=>`<div class=\"gphoto\">${ico('image')}</div>`).join('')}</div>",
+             "<div class=\"gphotos\">${[1,2,3].map(i=>{const k=ROOM_PHOTO[g.zone+'|'+g.type];"
+             "return k?`<div class=\"gphoto\" style=\"position:relative;min-width:0;overflow:hidden;border-style:solid\"><img src=\"/rooms/${k}-${i}.jpg\" alt=\"${esc(ZN(g.zone)+' '+g.type)} รูปที่ ${i}\" loading=\"lazy\" "
+             "style=\"position:absolute;inset:0;width:100%;height:100%;object-fit:cover\"></div>`:`<div class=\"gphoto\">${ico('image')}</div>`}).join('')}</div>"),
+            ("let ROOMS=[", "const ROOM_PHOTO={'A|เตียงเดี่ยว':'tower-single','A|เตียงคู่':'tower-twin','A|ห้องครอบครัว':'tower-family',"
+             "'B|เตียงเดี่ยว':'house-single','B|เตียงคู่':'house-twin'};\nlet ROOMS=["),
         ]:
             assert h.count(old) == 1, ('book-rooms', old[:40])
             h = h.replace(old, new)
