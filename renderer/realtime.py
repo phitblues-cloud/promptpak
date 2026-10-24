@@ -18,6 +18,19 @@ def apply(M, ref):
         M['crm'] = h
     if 'mkt' in M:
         M['mkt'] = M['mkt'].replace('· 24 ต.ค. 2569</small>', f'· {th(d)}</small>').replace('24 ต.ค. – 30 พ.ย. 2569', f'{th(d)[:-5]} – 30 พ.ย. 2569')
+    if 'book' in M:
+        # จองได้โดยไม่บังคับเลขบัตรประชาชนและภาพบัตร (ถ้ากรอกเลข ต้องครบ 13 หลัก)
+        h = M['book']
+        for old, new in [
+            ("if(!isCo&&digits(F.idno).length!==13)p.push('เลขบัตรประชาชน 13 หลัก');",
+             "if(!isCo&&digits(F.idno).length&&digits(F.idno).length!==13)p.push('เลขบัตรประชาชนให้ครบ 13 หลัก (หรือเว้นว่าง)');"),
+            ("if(!isCo&&!F.idfile)p.push('ภาพถ่ายบัตรประชาชน');", ""),
+            ('<label for="fId">เลขประจำตัวประชาชน *</label>', '<label for="fId">เลขประจำตัวประชาชน (ถ้ามี)</label>'),
+            ('<label for="fFile">ภาพถ่ายบัตรประชาชน *</label>', '<label for="fFile">ภาพถ่ายบัตรประชาชน (ถ้ามี)</label>'),
+        ]:
+            assert h.count(old) == 1, ('book-id', old[:40])
+            h = h.replace(old, new)
+        M['book'] = h
     if 'home' in M:
         h = M['home']
         fake_wx = "showWx(WX.clear,32,33,24,null,'ข้อมูลจริงล่าสุด 22 ต.ค. 12:00 น. (IQAir) — ออฟไลน์');"
