@@ -91,5 +91,18 @@ def apply(M, ref):
         h = h.replace('}catch(e){ PMV=4; }', '}catch(e){ PMV=null; window.__pmFail=1; }')
         h = h.replace("if(PMV==null){ e.innerHTML='PM2.5 กำลังโหลด…'; return; }",
                       "if(PMV==null){ e.innerHTML=window.__pmFail?'PM2.5 –':'PM2.5 กำลังโหลด…'; return; }")
+        # ระดับ PM2.5 ตามเกณฑ์ไทย (กรมควบคุมมลพิษ ประกาศ ก.ค. 2566) แทนเกณฑ์สหรัฐฯ
+        a = h.index('const PM_LV=['); b = h.index('];', a) + 2
+        h = h[:a] + (
+            "const PM_LV=[\n"
+            "  [15,'ดีมาก','#3BB8F0','#2E1F2B','smile','ดีมาก (0–15)'],\n"
+            "  [25,'ดี','#7CCB5B','#2E1F2B','smile','ดี (15.1–25)'],\n"
+            "  [37.5,'ปานกลาง','#FDD74B','#2E1F2B','flat','ปานกลาง (25.1–37.5)'],\n"
+            "  [75,'เริ่มมีผล','#FE9B57','#2E1F2B','frown','เริ่มมีผลต่อสุขภาพ (37.6–75)'],\n"
+            "  [1e9,'มีผลต่อสุขภาพ','#E5484D','#FFFFFF','mask','มีผลต่อสุขภาพ (75.1 ขึ้นไป)']\n"
+            "];") + h[b:]
+        old = '· ${lv[5]} · เกณฑ์ US AQI`;'
+        assert h.count(old) == 1, 'home pm title'
+        h = h.replace(old, '· ${lv[5]} · เกณฑ์กรมควบคุมมลพิษ · ค่าประมาณจาก Open-Meteo (CAMS)`;')
         M['home'] = h
     return M
