@@ -67,15 +67,17 @@ const stamp0 = (await call('/api/app?part=mods&since=x')).body.stamp;
 const U = 'Uabc123';
 const plus = n => { const t = new Date(d0.date + 'T00:00:00Z'); t.setUTCDate(t.getUTCDate() + n); return t.toISOString().slice(0, 10); };
 const ci = plus(3), co = plus(5);
-script.push(toolUse('check_availability', { check_in: ci, check_out: co }), say('ว่างค่ะ ตึกสแตนดาร์ด 700 บาท/คืน 2 ห้อง 2 คืน รวม 2,800 บาท ขอชื่อและเบอร์โทรค่ะ'));
+script.push(toolUse('check_availability', { check_in: ci, check_out: co }), say('ว่างค่ะ ตึกใหม่เตียงเดี่ยว 700 บาท/คืน 2 ห้อง 2 คืน รวม 2,800 บาท ขอชื่อและเบอร์โทรค่ะ'));
 assert.equal(await webhook([lineEvent(U, 'ขอห้องตึก 2 ห้อง')]), 200);
 assert.match(replies()[0].body.messages[0].text, /ว่างค่ะ/);
-assert.match(seen[0].system, /พรุ่งนี้/); assert.match(seen[0].system, /700 บาท/);
-assert.match(seen[1].messages.at(-1).content[0].content, /free_rooms/);
+assert.match(seen[0].system, /พรุ่งนี้/); assert.match(seen[0].system, /700 บาท/); assert.match(seen[0].system, /เตียงสองชั้น/);
+const av = JSON.parse(seen[1].messages.at(-1).content[0].content);
+assert.equal(av.types.length, 5); assert.equal(av.types.reduce((a, t) => a + t.total_rooms, 0), 31);
+assert.ok(av.types.every(t => 'free_ground_floor' in t));
 ok('AI เช็คห้องว่างจากฐานข้อมูลจริงแล้วตอบลูกค้า');
 
 script.push(toolUse('create_booking', { guest_name: 'สมชาย ทดสอบ', phone: '081-111-2222', company: 'บริษัททดสอบ', check_in: ci, check_out: co,
-  items: [{ room_type: 'สแตนดาร์ด (เตียงคู่)', count: 2 }] }), p => {
+  items: [{ zone: 'ตึกใหม่', room_type: 'เตียงเดี่ยว', count: 2 }] }), p => {
   const res = JSON.parse(p.messages.at(-1).content[0].content);
   return say(`จองสำเร็จค่ะ เลขที่ ${res.bookings.map(b => b.booking_no).join(', ')} รวม ${res.room_total} บาท`)();
 });
@@ -94,6 +96,9 @@ assert.ok(mods.mods.linechat.includes('จองสำเร็จค่ะ'), '
 const same = (await call('/api/app?part=mods&since=' + encodeURIComponent(mods.stamp))).body;
 assert.equal(same.mods, undefined);
 ok('การจองจาก LINE เข้าโมดูลการจองและแชทเดิม · ข้อมูลไม่เปลี่ยนก็ไม่ส่งซ้ำ');
+for (const [k, v] of Object.entries(mods.mods)) assert.ok(!/(?<![A-Za-z0-9#])[AB]0\d\d(?![0-9A-Za-z])/.test(v), 'รหัสห้องเก่าเหลือในโมดูล ' + k);
+assert.ok(mods.mods.book.includes('"code":"C15"') && mods.mods.book.includes("'บ้านหลัง'") && !mods.mods.book.includes("'B014').open=false"));
+ok('หน้าจอใช้รหัสห้อง/ชื่อโซนจริง ไม่มีรหัสเก่าเหลือ');
 
 // 6) ประวัติแชทถูกส่งให้ AI ถูกลำดับ
 const msgs2 = seen[2].messages;
@@ -109,11 +114,27 @@ assert.equal(replies().length, before + 1);
 ok('ข้อความซ้ำไม่ถูกประมวลผลสองครั้ง');
 
 // 8) ราวกันตก: AI จอง 5 ห้อง → ฐานข้อมูลปฏิเสธ
-script.push(toolUse('create_booking', { guest_name: 'ทีมใหญ่', phone: '0899999999', check_in: ci, check_out: co, items: [{ room_type: 'บ้านพัก', count: 5 }] }),
+script.push(toolUse('create_booking', { guest_name: 'ทีมใหญ่', phone: '0899999999', check_in: ci, check_out: co, items: [{ zone: 'บ้านหลัง', room_type: 'เตียงเดี่ยว', count: 5 }] }),
   p => { assert.equal(p.messages.at(-1).content[0].is_error, true); return say('ขอส่งให้พนักงานค่ะ')(); });
 await webhook([lineEvent('Ubig', 'จอง 5 หลัง')]);
 assert.equal(rpc(`pp_bookings('${ci}','${co}')`).bookings.filter(b => b.guest_name === 'ทีมใหญ่').length, 0);
 ok('AI จอง 5 ห้องเองไม่ได้ (ฐานข้อมูลปฏิเสธ)');
+
+// 8b) ห้องจริง: ขอชั้นล่าง → ได้ห้อง A (ชั้น 1) · ชั้นล่างไม่พอ → ไม่จอง · ไม่ระบุโซนเมื่อชื่อประเภทซ้ำ → ปฏิเสธ
+const ci2 = plus(40), co2 = plus(41);
+script.push(toolUse('create_booking', { guest_name: 'คุณแม่ ชั้นล่าง', phone: '0812223333', check_in: ci2, check_out: co2, prefer_ground_floor: true,
+  items: [{ zone: 'ตึกใหม่', room_type: 'เตียงเดี่ยว', count: 1 }] }), p => {
+  const res = JSON.parse(p.messages.at(-1).content[0].content);
+  assert.equal(res.bookings[0].floor, 1); return say('จองห้อง ' + res.bookings[0].room_id + ' ค่ะ')(); });
+await webhook([lineEvent('Ufloor', 'ขอห้องชั้นล่างนะคะ เดินขึ้นบันไดไม่ไหว')]);
+assert.match(replies().at(-1).body.messages[0].text, /จองห้อง A0\d ค่ะ/);
+const freeG = rpc(`pp_availability('${ci2}','${co2}')`).types.find(t => t.zone === 'ตึกใหม่' && t.room_type === 'เตียงเดี่ยว').free_ground_floor;
+const bookG = n => psql('-c', `select pp_book('{"guest_name":"x","phone":"0811111111","check_in":"${ci2}","check_out":"${co2}","prefer_ground_floor":true,"items":[{"zone":"ตึกใหม่","room_type":"เตียงเดี่ยว","count":${n}}]}')`);
+assert.throws(() => bookG(freeG + 1), /ห้องชั้นล่าง/);
+assert.throws(() => psql('-c', `select pp_book('{"guest_name":"x","phone":"0811111111","check_in":"${ci2}","check_out":"${co2}","items":[{"room_type":"เตียงเดี่ยว","count":1}]}')`), /ต้องระบุโซน/);
+const fam = JSON.parse(psql('-c', `select pp_book('{"guest_name":"ครอบครัว","phone":"0811111112","check_in":"${ci2}","check_out":"${co2}","items":[{"room_type":"ห้องครอบครัว","count":1}]}')`));
+assert.match(fam.bookings[0].room_id, /^A0[45]$/); assert.equal(fam.bookings[0].rate, 800);
+ok('ห้องจริง: ขอชั้นล่างได้ห้องชั้น 1 · ชั้นล่างไม่พอไม่จอง · ห้องครอบครัว 800 บาท');
 
 // 9) ส่งต่อพนักงาน → AI เงียบ → ครบ 6 ชม. AI กลับมาตอบ
 script.push(toolUse('handoff_to_staff', { reason: 'ขอเครดิตบริษัท' }), say('พนักงานจะติดต่อกลับค่ะ'));

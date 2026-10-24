@@ -1,9 +1,10 @@
-"""สร้าง supabase/02_seed.sql จากชุดข้อมูลสมมติ (mock_shifted_24oct.json)
-ใช้: python3 tools/make_seed.py <path/to/mock_shifted_24oct.json>
+"""สร้าง supabase/02_seed.sql จากชุดข้อมูลสมมติ (renderer/base_mock.json)
+ใช้: python3 tools/make_seed.py
 """
 import json, sys, pathlib
 
-src = json.load(open(sys.argv[1], encoding="utf-8"))
+ROOT = pathlib.Path(__file__).resolve().parent.parent
+src = json.load(open(sys.argv[1] if len(sys.argv) > 1 else ROOT / "renderer" / "base_mock.json", encoding="utf-8"))
 out = pathlib.Path(__file__).resolve().parent.parent / "supabase" / "02_seed.sql"
 
 
@@ -24,10 +25,10 @@ L = ["-- PROMPT PAK · ข้อมูลตัวอย่าง (ห้อง�
      "delete from chat_threads where is_seed;"]
 
 for r in src["rooms"]:
-    L.append("insert into rooms (id, zone, room_type, bed, rate, max_guests) values (%s,%s,%s,%s,%s,%s) "
+    L.append("insert into rooms (id, zone, room_type, bed, rate, max_guests, floor) values (%s,%s,%s,%s,%s,%s,%s) "
              "on conflict (id) do update set zone=excluded.zone, room_type=excluded.room_type, bed=excluded.bed, "
-             "rate=excluded.rate, max_guests=excluded.max_guests;"
-             % (q(r["room_id"]), q(r["zone"]), q(r["room_type"]), q(r["bed"]), r["rack_rate"], r["max_guests"]))
+             "rate=excluded.rate, max_guests=excluded.max_guests, floor=excluded.floor;"
+             % (q(r["room_id"]), q(r["zone"]), q(r["room_type"]), q(r["bed"]), r["rack_rate"], r["max_guests"], r["floor"]))
 
 comp = {c["company_id"]: c["name_short"] for c in src["companies"]}
 guests = {g["guest_id"]: g for g in src["guests"]}

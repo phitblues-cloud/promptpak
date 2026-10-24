@@ -7,6 +7,7 @@
 - แชท LINE จริงต่อท้ายแชทตัวอย่าง
 """
 import copy, datetime, re
+from roomcodes import OLD2NEW
 
 TZ = '+07:00'
 
@@ -132,6 +133,7 @@ def build(base, export, now):
     m['meta'] = dict(m['meta'], reference_datetime=now + ':00' + TZ)
     m['hotel'] = dict(m['hotel'], reference_datetime=now + ':00' + TZ)
     rooms = {r['room_id']: r for r in m['rooms']}
+    rooms.update({old: rooms[new] for old, new in OLD2NEW.items() if new in rooms})   # ฐานข้อมูลยังไม่อัปเดตรหัสห้อง
     by_no = {b['booking_id']: b for b in m['bookings']}
     credit_ids = {c['company_id'] for c in m['companies'] if (c.get('credit_days') or 0) > 0}
     tmpl_g = m['guests'][0]
@@ -223,7 +225,7 @@ def build(base, export, now):
         st, b = (('มีแขก – เช็คเอาท์วันนี้', dep) if dep else ('มีแขกพัก', stay) if stay else
                  ('เตรียมรับแขกวันนี้', arr) if arr else ('ว่าง สะอาด พร้อมขาย', None))
         hk.append({'room_id': r['room_id'], 'zone': r['zone'], 'status_at_ref': st,
-                   'guest_id': b['guest_id'] if b else None, 'assigned_to': 'S03' if r['room_id'].startswith('A') else 'S04'})
+                   'guest_id': b['guest_id'] if b else None, 'assigned_to': 'S03' if r['zone'] == 'ตึกใหม่' else 'S04'})
     m['housekeeping_at_ref'] = hk
 
     # อัตราเข้าพักรายวัน (ใช้ในรายงาน) คำนวณใหม่จากการจองจริง

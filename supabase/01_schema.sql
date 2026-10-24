@@ -5,10 +5,10 @@ create extension if not exists btree_gist;
 
 -- ---------- ตาราง ----------
 create table if not exists rooms (
-  id          text primary key,                       -- A001..A016, B001..B015
-  zone        text not null check (zone in ('ตึก','บ้าน')),
-  room_type   text not null,                          -- สแตนดาร์ด (เตียงคู่) / ดีลักซ์ (เตียงใหญ่) / บ้านพัก / บ้านพัก (ใหญ่)
-  bed         text,
+  id          text primary key,                       -- ตึกใหม่ A01–A08 (ชั้น 1), B01–B08 (ชั้น 2) · บ้านหลัง C01–C15
+  zone        text not null,                          -- ตึกใหม่ / บ้านหลัง (ดูท้ายไฟล์)
+  room_type   text not null,                          -- เตียงเดี่ยว / เตียงคู่ / ห้องครอบครัว
+  bed         text,                                   -- รายละเอียดเตียง เช่น เตียงสองชั้น
   rate        int  not null check (rate > 0),          -- ราคาต่อคืน รวม VAT แล้ว
   max_guests  int  not null default 2,
   active      boolean not null default true
@@ -438,3 +438,197 @@ grant usage on schema public to service_role;
 grant all on all tables in schema public to service_role;
 grant all on all sequences in schema public to service_role;
 grant execute on all functions in schema public to service_role;
+
+-- ---------- ห้องจริง 2569: รหัส/โซน/ประเภทใหม่ (รันซ้ำได้) ----------
+-- โซนตึกใหม่ 16 ห้อง (A = ชั้น 1, B = ชั้น 2) · โซนบ้านหลัง 15 ห้อง (C01–C15 ชั้นเดียว)
+alter table rooms drop constraint if exists rooms_zone_check;
+alter table rooms add column if not exists floor int not null default 1;
+
+insert into rooms (id, zone, room_type, bed, rate, max_guests, floor) values
+  ('A01', 'ตึกใหม่', 'เตียงคู่', 'เตียงสองชั้น (ชั้นบนเตียงเดี่ยว + ชั้นล่างเตียงเดี่ยว)', 700, 2, 1),
+  ('A02', 'ตึกใหม่', 'เตียงเดี่ยว', 'เตียงใหญ่ 1 เตียง', 700, 2, 1),
+  ('A03', 'ตึกใหม่', 'เตียงเดี่ยว', 'เตียงใหญ่ 1 เตียง', 700, 2, 1),
+  ('A04', 'ตึกใหม่', 'ห้องครอบครัว', 'เตียงสองชั้น (ชั้นล่างเตียงใหญ่ 2 คน + ชั้นบนเตียงเดี่ยว 1 คน)', 800, 3, 1),
+  ('A05', 'ตึกใหม่', 'ห้องครอบครัว', 'เตียงสองชั้น (ชั้นล่างเตียงใหญ่ 2 คน + ชั้นบนเตียงเดี่ยว 1 คน)', 800, 3, 1),
+  ('A06', 'ตึกใหม่', 'เตียงเดี่ยว', 'เตียงใหญ่ 1 เตียง', 700, 2, 1),
+  ('A07', 'ตึกใหม่', 'เตียงเดี่ยว', 'เตียงใหญ่ 1 เตียง', 700, 2, 1),
+  ('A08', 'ตึกใหม่', 'เตียงเดี่ยว', 'เตียงใหญ่ 1 เตียง', 700, 2, 1),
+  ('B01', 'ตึกใหม่', 'เตียงเดี่ยว', 'เตียงใหญ่ 1 เตียง', 700, 2, 2),
+  ('B02', 'ตึกใหม่', 'เตียงเดี่ยว', 'เตียงใหญ่ 1 เตียง', 700, 2, 2),
+  ('B03', 'ตึกใหม่', 'เตียงเดี่ยว', 'เตียงใหญ่ 1 เตียง', 700, 2, 2),
+  ('B04', 'ตึกใหม่', 'เตียงคู่', 'เตียงสองชั้น (ชั้นบนเตียงเดี่ยว + ชั้นล่างเตียงเดี่ยว)', 700, 2, 2),
+  ('B05', 'ตึกใหม่', 'เตียงคู่', 'เตียงสองชั้น (ชั้นบนเตียงเดี่ยว + ชั้นล่างเตียงเดี่ยว)', 700, 2, 2),
+  ('B06', 'ตึกใหม่', 'เตียงเดี่ยว', 'เตียงใหญ่ 1 เตียง', 700, 2, 2),
+  ('B07', 'ตึกใหม่', 'เตียงเดี่ยว', 'เตียงใหญ่ 1 เตียง', 700, 2, 2),
+  ('B08', 'ตึกใหม่', 'เตียงเดี่ยว', 'เตียงใหญ่ 1 เตียง', 700, 2, 2),
+  ('C01', 'บ้านหลัง', 'เตียงเดี่ยว', 'เตียงใหญ่ 1 เตียง', 400, 2, 1),
+  ('C02', 'บ้านหลัง', 'เตียงเดี่ยว', 'เตียงใหญ่ 1 เตียง', 400, 2, 1),
+  ('C03', 'บ้านหลัง', 'เตียงเดี่ยว', 'เตียงใหญ่ 1 เตียง', 400, 2, 1),
+  ('C04', 'บ้านหลัง', 'เตียงเดี่ยว', 'เตียงใหญ่ 1 เตียง', 400, 2, 1),
+  ('C05', 'บ้านหลัง', 'เตียงเดี่ยว', 'เตียงใหญ่ 1 เตียง', 400, 2, 1),
+  ('C06', 'บ้านหลัง', 'เตียงเดี่ยว', 'เตียงใหญ่ 1 เตียง', 400, 2, 1),
+  ('C07', 'บ้านหลัง', 'เตียงเดี่ยว', 'เตียงใหญ่ 1 เตียง', 400, 2, 1),
+  ('C08', 'บ้านหลัง', 'เตียงเดี่ยว', 'เตียงใหญ่ 1 เตียง', 400, 2, 1),
+  ('C09', 'บ้านหลัง', 'เตียงเดี่ยว', 'เตียงใหญ่ 1 เตียง', 400, 2, 1),
+  ('C10', 'บ้านหลัง', 'เตียงเดี่ยว', 'เตียงใหญ่ 1 เตียง', 400, 2, 1),
+  ('C11', 'บ้านหลัง', 'เตียงเดี่ยว', 'เตียงใหญ่ 1 เตียง', 400, 2, 1),
+  ('C12', 'บ้านหลัง', 'เตียงเดี่ยว', 'เตียงใหญ่ 1 เตียง', 400, 2, 1),
+  ('C13', 'บ้านหลัง', 'เตียงคู่', 'เตียงเดี่ยว 2 เตียง วางแยกกัน', 500, 2, 1),
+  ('C14', 'บ้านหลัง', 'เตียงคู่', 'เตียงเดี่ยว 2 เตียง วางแยกกัน', 500, 2, 1),
+  ('C15', 'บ้านหลัง', 'เตียงคู่', 'เตียงเดี่ยว 2 เตียง วางแยกกัน', 500, 2, 1)
+on conflict (id) do update set zone = excluded.zone, room_type = excluded.room_type, bed = excluded.bed,
+  rate = excluded.rate, max_guests = excluded.max_guests, floor = excluded.floor, active = true;
+
+-- ย้ายการจองทุกรายการ (รวมการจองจริงจาก LINE) จากรหัสเก่าไปรหัสใหม่ แล้วลบห้องรหัสเก่า
+update bookings b set room_id = m.new_id
+from (values
+  ('A001', 'A02'),
+  ('A002', 'A03'),
+  ('A003', 'A06'),
+  ('A004', 'A07'),
+  ('A005', 'A08'),
+  ('A006', 'B01'),
+  ('A007', 'B02'),
+  ('A008', 'B03'),
+  ('A009', 'B06'),
+  ('A010', 'B07'),
+  ('A011', 'B08'),
+  ('A012', 'A01'),
+  ('A013', 'B04'),
+  ('A014', 'B05'),
+  ('A015', 'A04'),
+  ('A016', 'A05'),
+  ('B001', 'C01'),
+  ('B002', 'C02'),
+  ('B003', 'C03'),
+  ('B004', 'C04'),
+  ('B005', 'C05'),
+  ('B006', 'C06'),
+  ('B007', 'C07'),
+  ('B008', 'C08'),
+  ('B009', 'C09'),
+  ('B010', 'C10'),
+  ('B011', 'C11'),
+  ('B012', 'C12'),
+  ('B013', 'C13'),
+  ('B014', 'C14'),
+  ('B015', 'C15')
+) as m(old_id, new_id)
+where b.room_id = m.old_id;
+delete from rooms where id ~ '^[AB]0[0-9][0-9]$';
+alter table rooms add constraint rooms_zone_check check (zone in ('ตึกใหม่', 'บ้านหลัง'));
+
+-- ห้องว่างแยกตามโซน + ประเภท (นับห้องชั้น 1 ที่ว่างด้วย)
+create or replace function pp_availability(p_check_in date, p_check_out date)
+returns jsonb language sql stable as $$
+  with free as (
+    select r.* from rooms r
+    where r.active and not exists (
+      select 1 from bookings b
+      where b.room_id = r.id and b.status <> 'ยกเลิก'
+        and daterange(b.check_in, b.check_out, '[)') && daterange(p_check_in, p_check_out, '[)'))
+  )
+  select jsonb_build_object(
+    'check_in', p_check_in, 'check_out', p_check_out, 'nights', p_check_out - p_check_in,
+    'types', coalesce((
+      select jsonb_agg(jsonb_build_object(
+        'zone', t.zone, 'room_type', t.room_type, 'rate', t.rate, 'max_guests', t.max_guests,
+        'bed', t.bed, 'total_rooms', t.total,
+        'free_rooms', (select count(*) from free f where f.zone = t.zone and f.room_type = t.room_type),
+        'free_ground_floor', (select count(*) from free f where f.zone = t.zone and f.room_type = t.room_type and f.floor = 1))
+        order by t.zone desc, t.rate, t.room_type)
+      from (select zone, room_type, max(rate) rate, max(max_guests) max_guests, max(bed) bed, count(*) total
+            from rooms where active group by zone, room_type) t), '[]'::jsonb))
+$$;
+
+-- จองห้อง (ทำทั้งหมดหรือไม่ทำเลย)
+-- p = {guest_name, phone, company, line_user_id, check_in, check_out, created_by, note, prefer_ground_floor,
+--      items:[{zone, room_type, count}]}
+-- prefer_ground_floor = true -> จัดเฉพาะห้องชั้น 1 ถ้าไม่พอจะไม่จอง (ให้พนักงานดูแลต่อ)
+create or replace function pp_book(p jsonb) returns jsonb language plpgsql as $$
+declare
+  v_in date := (p->>'check_in')::date;
+  v_out date := (p->>'check_out')::date;
+  v_by text := coalesce(p->>'created_by', 'staff');
+  v_name text := nullif(trim(p->>'guest_name'), '');
+  v_phone text := nullif(regexp_replace(coalesce(p->>'phone', ''), '[^0-9+]', '', 'g'), '');
+  v_ground boolean := coalesce((p->>'prefer_ground_floor')::boolean, false);
+  v_guest uuid; v_group text; v_no text; v_total_rooms int := 0; v_zone text;
+  it jsonb; r record; v_cnt int; v_got int; out_rows jsonb := '[]'::jsonb;
+begin
+  if v_name is null then raise exception 'ต้องมีชื่อผู้จอง'; end if;
+  if v_phone is null or length(v_phone) < 9 then raise exception 'ต้องมีเบอร์โทรที่ถูกต้อง'; end if;
+  if v_in is null or v_out is null or v_out <= v_in then raise exception 'วันเข้าพัก/วันออกไม่ถูกต้อง'; end if;
+  if v_in < pp_today() then raise exception 'วันเข้าพักต้องไม่ใช่วันที่ผ่านมาแล้ว'; end if;
+  if v_out - v_in > 30 then raise exception 'จองได้ครั้งละไม่เกิน 30 คืน'; end if;
+  select coalesce(sum((x->>'count')::int), 0) into v_total_rooms from jsonb_array_elements(p->'items') x;
+  if v_total_rooms < 1 then raise exception 'ต้องระบุจำนวนห้องอย่างน้อย 1 ห้อง'; end if;
+  -- ราวกันตกชั้นที่ 3: AI ยืนยันเองได้ไม่เกิน 4 ห้อง (5 ห้องขึ้นไปส่งพนักงาน)
+  if v_by = 'ai' and v_total_rooms > 4 then raise exception 'จอง 5 ห้องขึ้นไปต้องให้พนักงานยืนยัน'; end if;
+
+  if p->>'line_user_id' is not null then
+    insert into guests (full_name, phone, company, line_user_id, line_display_name)
+    values (v_name, v_phone, p->>'company', p->>'line_user_id', p->>'line_display_name')
+    on conflict (line_user_id) do update
+      set full_name = excluded.full_name, phone = excluded.phone,
+          company = coalesce(excluded.company, guests.company)
+    returning id into v_guest;
+  end if;
+
+  v_group := case when v_total_rooms > 1 then 'G' || to_char(now(), 'YYMMDDHH24MISS') end;
+
+  for it in select * from jsonb_array_elements(p->'items') loop
+    v_cnt := (it->>'count')::int; v_got := 0; v_zone := nullif(it->>'zone', '');
+    if v_cnt is null or v_cnt < 1 then continue; end if;
+    if v_zone is null and (select count(distinct zone) from rooms where room_type = it->>'room_type' and active) > 1 then
+      raise exception 'ประเภท % มีทั้งโซนตึกใหม่และโซนบ้านหลัง ต้องระบุโซน', it->>'room_type';
+    end if;
+    if not exists (select 1 from rooms where room_type = it->>'room_type' and (v_zone is null or zone = v_zone) and active) then
+      raise exception 'ไม่มีห้องประเภท % ในโซน %', it->>'room_type', coalesce(v_zone, '-');
+    end if;
+    for r in
+      select rm.* from rooms rm
+      where rm.active and rm.room_type = it->>'room_type' and (v_zone is null or rm.zone = v_zone)
+        and (not v_ground or rm.floor = 1)
+        and not exists (
+          select 1 from bookings b where b.room_id = rm.id and b.status <> 'ยกเลิก'
+            and daterange(b.check_in, b.check_out, '[)') && daterange(v_in, v_out, '[)'))
+      order by rm.id limit v_cnt
+      for update
+    loop
+      v_no := pp_next_booking_no();
+      insert into bookings (booking_no, group_no, guest_id, guest_name, phone, company, room_id,
+                            check_in, check_out, rate, created_by, channel, note)
+      values (v_no, v_group, v_guest, v_name, v_phone, p->>'company', r.id,
+              v_in, v_out, r.rate, v_by, coalesce(p->>'channel', 'LINE OA'),
+              nullif(concat_ws(' · ', case when v_ground then 'ขอห้องชั้นล่าง' end, p->>'note'), ''));
+      out_rows := out_rows || jsonb_build_object('booking_no', v_no, 'room_id', r.id, 'zone', r.zone, 'floor', r.floor,
+                    'room_type', r.room_type, 'rate', r.rate, 'room_total', r.rate * (v_out - v_in));
+      v_got := v_got + 1;
+    end loop;
+    if v_got < v_cnt then
+      if v_ground then
+        raise exception 'ห้องชั้นล่าง % % ว่างไม่พอ (ต้องการ % ว่าง %)', coalesce(v_zone, ''), it->>'room_type', v_cnt, v_got;
+      end if;
+      raise exception 'ห้อง % % ว่างไม่พอ (ต้องการ % ว่าง %)', coalesce(v_zone, ''), it->>'room_type', v_cnt, v_got;
+    end if;
+  end loop;
+
+  return jsonb_build_object('ok', true, 'group_no', v_group, 'check_in', v_in, 'check_out', v_out,
+    'nights', v_out - v_in, 'bookings', out_rows,
+    'room_total', (select coalesce(sum((x->>'room_total')::int), 0) from jsonb_array_elements(out_rows) x),
+    'deposit_total', 300 * jsonb_array_length(out_rows));
+end $$;
+
+do $$ declare f record; begin
+  for f in select p.oid::regprocedure sig from pg_proc p join pg_namespace n on n.oid = p.pronamespace
+           where n.nspname = 'public' and p.proname in ('pp_availability', 'pp_book') loop
+    execute format('revoke all on function %s from public', f.sig);
+    if exists (select 1 from pg_roles where rolname = 'anon') then
+      execute format('revoke all on function %s from anon, authenticated', f.sig);
+    end if;
+    if exists (select 1 from pg_roles where rolname = 'service_role') then
+      execute format('grant execute on function %s to service_role', f.sig);
+    end if;
+  end loop;
+end $$;

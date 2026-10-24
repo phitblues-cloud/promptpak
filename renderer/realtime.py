@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 """ให้ทุกโมดูลใช้วันที่จริง และไม่แสดงค่าอากาศ/ฝุ่นปลอมเมื่อดึงข้อมูลจริงไม่ได้"""
-import datetime
+import datetime, re
+from roomcodes import remap_text
 
 MON = ['ม.ค.', 'ก.พ.', 'มี.ค.', 'เม.ย.', 'พ.ค.', 'มิ.ย.', 'ก.ค.', 'ส.ค.', 'ก.ย.', 'ต.ค.', 'พ.ย.', 'ธ.ค.']
 
@@ -9,7 +10,44 @@ def th(d):
     return f'{d.day} {MON[d.month - 1]} {d.year + 543}'
 
 
+ZONE_FIX = [
+    # ต้นแบบแยกโซนจากตัวอักษรแรกของรหัสห้อง (A = ตึก) แต่รหัสจริง A/B = ตึกใหม่, C = บ้านหลัง
+    ("code[0]==='A'?'โซนตึก':'โซนบ้าน'", "code[0]!=='C'?'โซนตึก':'โซนบ้าน'"),
+    ("id[0]==='A'?'โซนตึก':'โซนบ้าน'", "id[0]!=='C'?'โซนตึก':'โซนบ้าน'"),
+    ("/^[AB]\\d/.test(x.room)", "/^[ABC]\\d/.test(x.room)"),
+    # รายการห้องในโมดูลการตลาด
+    ("{n:'โซนตึก · เตียงคู่ (ราคา 800)',price:800,photo:'v5'}", "{n:'โซนตึก · ห้องครอบครัว',price:800,photo:'v5'}"),
+]
+ZONE_LABEL = [(re.compile('โซนตึก(?!ใหม่)'), 'โซนตึกใหม่'), (re.compile('โซนบ้าน(?!หลัง)'), 'โซนบ้านหลัง')]
+
+
+def rooms_2569(M):
+    """ห้องจริง: ชื่อโซนใหม่ + รหัสห้องใหม่ในข้อความตัวอย่างที่ยังเหลือ"""
+    for k, h in M.items():
+        for old, new in ZONE_FIX:
+            h = h.replace(old, new)
+        for rx, new in ZONE_LABEL:
+            h = rx.sub(new, h)
+        M[k] = remap_text(h)
+    if 'book' in M:
+        h = M['book']
+        for old, new in [
+            # ชื่อโซนในโมดูลการจอง (ไม่ใส่คำว่า "โซน" เพื่อให้ความยาวเท่าเดิมในหัวปฏิทิน)
+            ("const ZN=z=>z==='A'?'โซนตึกใหม่':z==='B'?'โซนบ้านหลัง':'โซน '+z;",
+             "const ZN=z=>z==='A'?'ตึกใหม่':z==='B'?'บ้านหลัง':'โซน '+z;\n"
+             "const codeRuns=cs=>{const o=[];cs.forEach(c=>{const l=o[o.length-1],n=+c.slice(1);"
+             "if(l&&l.p===c[0]&&l.n+1===n){l.n=n;l.b=c}else o.push({p:c[0],n,a:c,b:c})});"
+             "return o.map(r=>r.a===r.b?r.a:r.a+'–'+r.b).join(', ')};"),
+            # เลขห้องที่ไม่ต่อเนื่อง แสดงเป็นช่วงจริง เช่น A01, B04–B05
+            ("เลขห้อง ${codes[0]}–${codes[codes.length-1]}", "เลขห้อง ${codeRuns(codes)}"),
+        ]:
+            assert h.count(old) == 1, ('book-rooms', old[:40])
+            h = h.replace(old, new)
+        M['book'] = h
+
+
 def apply(M, ref):
+    rooms_2569(M)
     d = datetime.date.fromisoformat(ref)
     if 'crm' in M:
         h = M['crm']

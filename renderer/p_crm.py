@@ -8,11 +8,12 @@ BASE = dno('2026-01-01')
 PUL = ['ทำงาน', 'แวะพัก', 'งานบุญ', 'ราชการ/อบรม']
 RTL = []
 for r in ROOMS:
-    t = ('ตึก ' if r['zone'] == 'A' else 'บ้าน ') + r['type']
+    t = ('ตึกใหม่ ' if r['zone'] == 'A' else 'บ้านหลัง ') + r['type']
     if t not in RTL: RTL.append(t)
 RTL_IDX = {}
 for r in ROOMS:
-    RTL_IDX[r['code']] = RTL.index(('ตึก ' if r['zone'] == 'A' else 'บ้าน ') + r['type'])
+    RTL_IDX[r['code']] = RTL.index(('ตึกใหม่ ' if r['zone'] == 'A' else 'บ้านหลัง ') + r['type'])
+N_TOWER_TYPES = sum(1 for t in RTL if t.startswith('ตึก'))
 CHI = {'LINE OA': 0, 'โทรศัพท์': 1, 'Walk-in': 2}
 GIDX = {g['guest_id']: i for i, g in enumerate(m['guests'])}
 
@@ -66,10 +67,10 @@ def regen_embedded(s, ovp):
     s = R(s, "d1:'2026-10-01',d2:'2026-10-24'", "d1:'2026-10-01',d2:'2026-10-24'", 1, 'emb-ps')
     i = s.index('const RT=['); j = s.index('];', i) + 2
     s = s[:i] + 'const RT=' + J(RTL) + ';' + s[j:]
-    s = R(s, "f:s=>s.rt<3?'โซนตึก':'โซนบ้าน'", "f:s=>s.rt<2?'โซนตึก':'โซนบ้าน'", 1, 'emb-zone')
+    s = R(s, "f:s=>s.rt<3?'โซนตึก':'โซนบ้าน'", "f:s=>s.rt<%d?'โซนตึก':'โซนบ้าน'" % N_TOWER_TYPES, 1, 'emb-zone')
     s = R(s, "const PU=['ทำงาน','ท่องเที่ยว','กิจกรรม'];", "const PU=" + J(PUL) + ";", 1, 'emb-PU')
     i = s.index("const ROOM=["); j = s.index("rk=t=>t===0?0:t<=2?1:t===3?2:3;", i) + len("rk=t=>t===0?0:t<=2?1:t===3?2:3;")
-    rooms4 = ['โซนตึก · ' + t.split(' ', 1)[1] if t.startswith('ตึก') else 'โซนบ้าน · ' + t.split(' ', 1)[1] for t in RTL]
+    rooms4 = ['โซน' + t.replace(' ', ' · ', 1) for t in RTL]
     s = s[:i] + 'const ROOM=' + J(rooms4) + ',rk=t=>t;' + s[j:]
     if ovp:
         s = R(s, "const PUC=[C('t4'),C('t1'),C('t3')];", "const PUC=[C('t4'),C('t1'),C('t3'),C('t5')];", 1, 'emb-PUC')

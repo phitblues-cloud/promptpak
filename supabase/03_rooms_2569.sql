@@ -1,0 +1,403 @@
+-- PROMPT PAK · อัปเดตห้องจริง (24 ต.ค. 2569) + โหลดข้อมูลตัวอย่างใหม่
+-- วิธีใช้: Supabase > SQL Editor > New query > วางทั้งไฟล์ > Run (รันซ้ำได้ การจองจริงจาก LINE ไม่หาย แค่ย้ายไปรหัสห้องใหม่)
+begin;
+-- ---------- ห้องจริง 2569: รหัส/โซน/ประเภทใหม่ (รันซ้ำได้) ----------
+-- โซนตึกใหม่ 16 ห้อง (A = ชั้น 1, B = ชั้น 2) · โซนบ้านหลัง 15 ห้อง (C01–C15 ชั้นเดียว)
+alter table rooms drop constraint if exists rooms_zone_check;
+alter table rooms add column if not exists floor int not null default 1;
+
+insert into rooms (id, zone, room_type, bed, rate, max_guests, floor) values
+  ('A01', 'ตึกใหม่', 'เตียงคู่', 'เตียงสองชั้น (ชั้นบนเตียงเดี่ยว + ชั้นล่างเตียงเดี่ยว)', 700, 2, 1),
+  ('A02', 'ตึกใหม่', 'เตียงเดี่ยว', 'เตียงใหญ่ 1 เตียง', 700, 2, 1),
+  ('A03', 'ตึกใหม่', 'เตียงเดี่ยว', 'เตียงใหญ่ 1 เตียง', 700, 2, 1),
+  ('A04', 'ตึกใหม่', 'ห้องครอบครัว', 'เตียงสองชั้น (ชั้นล่างเตียงใหญ่ 2 คน + ชั้นบนเตียงเดี่ยว 1 คน)', 800, 3, 1),
+  ('A05', 'ตึกใหม่', 'ห้องครอบครัว', 'เตียงสองชั้น (ชั้นล่างเตียงใหญ่ 2 คน + ชั้นบนเตียงเดี่ยว 1 คน)', 800, 3, 1),
+  ('A06', 'ตึกใหม่', 'เตียงเดี่ยว', 'เตียงใหญ่ 1 เตียง', 700, 2, 1),
+  ('A07', 'ตึกใหม่', 'เตียงเดี่ยว', 'เตียงใหญ่ 1 เตียง', 700, 2, 1),
+  ('A08', 'ตึกใหม่', 'เตียงเดี่ยว', 'เตียงใหญ่ 1 เตียง', 700, 2, 1),
+  ('B01', 'ตึกใหม่', 'เตียงเดี่ยว', 'เตียงใหญ่ 1 เตียง', 700, 2, 2),
+  ('B02', 'ตึกใหม่', 'เตียงเดี่ยว', 'เตียงใหญ่ 1 เตียง', 700, 2, 2),
+  ('B03', 'ตึกใหม่', 'เตียงเดี่ยว', 'เตียงใหญ่ 1 เตียง', 700, 2, 2),
+  ('B04', 'ตึกใหม่', 'เตียงคู่', 'เตียงสองชั้น (ชั้นบนเตียงเดี่ยว + ชั้นล่างเตียงเดี่ยว)', 700, 2, 2),
+  ('B05', 'ตึกใหม่', 'เตียงคู่', 'เตียงสองชั้น (ชั้นบนเตียงเดี่ยว + ชั้นล่างเตียงเดี่ยว)', 700, 2, 2),
+  ('B06', 'ตึกใหม่', 'เตียงเดี่ยว', 'เตียงใหญ่ 1 เตียง', 700, 2, 2),
+  ('B07', 'ตึกใหม่', 'เตียงเดี่ยว', 'เตียงใหญ่ 1 เตียง', 700, 2, 2),
+  ('B08', 'ตึกใหม่', 'เตียงเดี่ยว', 'เตียงใหญ่ 1 เตียง', 700, 2, 2),
+  ('C01', 'บ้านหลัง', 'เตียงเดี่ยว', 'เตียงใหญ่ 1 เตียง', 400, 2, 1),
+  ('C02', 'บ้านหลัง', 'เตียงเดี่ยว', 'เตียงใหญ่ 1 เตียง', 400, 2, 1),
+  ('C03', 'บ้านหลัง', 'เตียงเดี่ยว', 'เตียงใหญ่ 1 เตียง', 400, 2, 1),
+  ('C04', 'บ้านหลัง', 'เตียงเดี่ยว', 'เตียงใหญ่ 1 เตียง', 400, 2, 1),
+  ('C05', 'บ้านหลัง', 'เตียงเดี่ยว', 'เตียงใหญ่ 1 เตียง', 400, 2, 1),
+  ('C06', 'บ้านหลัง', 'เตียงเดี่ยว', 'เตียงใหญ่ 1 เตียง', 400, 2, 1),
+  ('C07', 'บ้านหลัง', 'เตียงเดี่ยว', 'เตียงใหญ่ 1 เตียง', 400, 2, 1),
+  ('C08', 'บ้านหลัง', 'เตียงเดี่ยว', 'เตียงใหญ่ 1 เตียง', 400, 2, 1),
+  ('C09', 'บ้านหลัง', 'เตียงเดี่ยว', 'เตียงใหญ่ 1 เตียง', 400, 2, 1),
+  ('C10', 'บ้านหลัง', 'เตียงเดี่ยว', 'เตียงใหญ่ 1 เตียง', 400, 2, 1),
+  ('C11', 'บ้านหลัง', 'เตียงเดี่ยว', 'เตียงใหญ่ 1 เตียง', 400, 2, 1),
+  ('C12', 'บ้านหลัง', 'เตียงเดี่ยว', 'เตียงใหญ่ 1 เตียง', 400, 2, 1),
+  ('C13', 'บ้านหลัง', 'เตียงคู่', 'เตียงเดี่ยว 2 เตียง วางแยกกัน', 500, 2, 1),
+  ('C14', 'บ้านหลัง', 'เตียงคู่', 'เตียงเดี่ยว 2 เตียง วางแยกกัน', 500, 2, 1),
+  ('C15', 'บ้านหลัง', 'เตียงคู่', 'เตียงเดี่ยว 2 เตียง วางแยกกัน', 500, 2, 1)
+on conflict (id) do update set zone = excluded.zone, room_type = excluded.room_type, bed = excluded.bed,
+  rate = excluded.rate, max_guests = excluded.max_guests, floor = excluded.floor, active = true;
+
+-- ย้ายการจองทุกรายการ (รวมการจองจริงจาก LINE) จากรหัสเก่าไปรหัสใหม่ แล้วลบห้องรหัสเก่า
+update bookings b set room_id = m.new_id
+from (values
+  ('A001', 'A02'),
+  ('A002', 'A03'),
+  ('A003', 'A06'),
+  ('A004', 'A07'),
+  ('A005', 'A08'),
+  ('A006', 'B01'),
+  ('A007', 'B02'),
+  ('A008', 'B03'),
+  ('A009', 'B06'),
+  ('A010', 'B07'),
+  ('A011', 'B08'),
+  ('A012', 'A01'),
+  ('A013', 'B04'),
+  ('A014', 'B05'),
+  ('A015', 'A04'),
+  ('A016', 'A05'),
+  ('B001', 'C01'),
+  ('B002', 'C02'),
+  ('B003', 'C03'),
+  ('B004', 'C04'),
+  ('B005', 'C05'),
+  ('B006', 'C06'),
+  ('B007', 'C07'),
+  ('B008', 'C08'),
+  ('B009', 'C09'),
+  ('B010', 'C10'),
+  ('B011', 'C11'),
+  ('B012', 'C12'),
+  ('B013', 'C13'),
+  ('B014', 'C14'),
+  ('B015', 'C15')
+) as m(old_id, new_id)
+where b.room_id = m.old_id;
+delete from rooms where id ~ '^[AB]0[0-9][0-9]$';
+alter table rooms add constraint rooms_zone_check check (zone in ('ตึกใหม่', 'บ้านหลัง'));
+
+-- ห้องว่างแยกตามโซน + ประเภท (นับห้องชั้น 1 ที่ว่างด้วย)
+create or replace function pp_availability(p_check_in date, p_check_out date)
+returns jsonb language sql stable as $$
+  with free as (
+    select r.* from rooms r
+    where r.active and not exists (
+      select 1 from bookings b
+      where b.room_id = r.id and b.status <> 'ยกเลิก'
+        and daterange(b.check_in, b.check_out, '[)') && daterange(p_check_in, p_check_out, '[)'))
+  )
+  select jsonb_build_object(
+    'check_in', p_check_in, 'check_out', p_check_out, 'nights', p_check_out - p_check_in,
+    'types', coalesce((
+      select jsonb_agg(jsonb_build_object(
+        'zone', t.zone, 'room_type', t.room_type, 'rate', t.rate, 'max_guests', t.max_guests,
+        'bed', t.bed, 'total_rooms', t.total,
+        'free_rooms', (select count(*) from free f where f.zone = t.zone and f.room_type = t.room_type),
+        'free_ground_floor', (select count(*) from free f where f.zone = t.zone and f.room_type = t.room_type and f.floor = 1))
+        order by t.zone desc, t.rate, t.room_type)
+      from (select zone, room_type, max(rate) rate, max(max_guests) max_guests, max(bed) bed, count(*) total
+            from rooms where active group by zone, room_type) t), '[]'::jsonb))
+$$;
+
+-- จองห้อง (ทำทั้งหมดหรือไม่ทำเลย)
+-- p = {guest_name, phone, company, line_user_id, check_in, check_out, created_by, note, prefer_ground_floor,
+--      items:[{zone, room_type, count}]}
+-- prefer_ground_floor = true -> จัดเฉพาะห้องชั้น 1 ถ้าไม่พอจะไม่จอง (ให้พนักงานดูแลต่อ)
+create or replace function pp_book(p jsonb) returns jsonb language plpgsql as $$
+declare
+  v_in date := (p->>'check_in')::date;
+  v_out date := (p->>'check_out')::date;
+  v_by text := coalesce(p->>'created_by', 'staff');
+  v_name text := nullif(trim(p->>'guest_name'), '');
+  v_phone text := nullif(regexp_replace(coalesce(p->>'phone', ''), '[^0-9+]', '', 'g'), '');
+  v_ground boolean := coalesce((p->>'prefer_ground_floor')::boolean, false);
+  v_guest uuid; v_group text; v_no text; v_total_rooms int := 0; v_zone text;
+  it jsonb; r record; v_cnt int; v_got int; out_rows jsonb := '[]'::jsonb;
+begin
+  if v_name is null then raise exception 'ต้องมีชื่อผู้จอง'; end if;
+  if v_phone is null or length(v_phone) < 9 then raise exception 'ต้องมีเบอร์โทรที่ถูกต้อง'; end if;
+  if v_in is null or v_out is null or v_out <= v_in then raise exception 'วันเข้าพัก/วันออกไม่ถูกต้อง'; end if;
+  if v_in < pp_today() then raise exception 'วันเข้าพักต้องไม่ใช่วันที่ผ่านมาแล้ว'; end if;
+  if v_out - v_in > 30 then raise exception 'จองได้ครั้งละไม่เกิน 30 คืน'; end if;
+  select coalesce(sum((x->>'count')::int), 0) into v_total_rooms from jsonb_array_elements(p->'items') x;
+  if v_total_rooms < 1 then raise exception 'ต้องระบุจำนวนห้องอย่างน้อย 1 ห้อง'; end if;
+  -- ราวกันตกชั้นที่ 3: AI ยืนยันเองได้ไม่เกิน 4 ห้อง (5 ห้องขึ้นไปส่งพนักงาน)
+  if v_by = 'ai' and v_total_rooms > 4 then raise exception 'จอง 5 ห้องขึ้นไปต้องให้พนักงานยืนยัน'; end if;
+
+  if p->>'line_user_id' is not null then
+    insert into guests (full_name, phone, company, line_user_id, line_display_name)
+    values (v_name, v_phone, p->>'company', p->>'line_user_id', p->>'line_display_name')
+    on conflict (line_user_id) do update
+      set full_name = excluded.full_name, phone = excluded.phone,
+          company = coalesce(excluded.company, guests.company)
+    returning id into v_guest;
+  end if;
+
+  v_group := case when v_total_rooms > 1 then 'G' || to_char(now(), 'YYMMDDHH24MISS') end;
+
+  for it in select * from jsonb_array_elements(p->'items') loop
+    v_cnt := (it->>'count')::int; v_got := 0; v_zone := nullif(it->>'zone', '');
+    if v_cnt is null or v_cnt < 1 then continue; end if;
+    if v_zone is null and (select count(distinct zone) from rooms where room_type = it->>'room_type' and active) > 1 then
+      raise exception 'ประเภท % มีทั้งโซนตึกใหม่และโซนบ้านหลัง ต้องระบุโซน', it->>'room_type';
+    end if;
+    if not exists (select 1 from rooms where room_type = it->>'room_type' and (v_zone is null or zone = v_zone) and active) then
+      raise exception 'ไม่มีห้องประเภท % ในโซน %', it->>'room_type', coalesce(v_zone, '-');
+    end if;
+    for r in
+      select rm.* from rooms rm
+      where rm.active and rm.room_type = it->>'room_type' and (v_zone is null or rm.zone = v_zone)
+        and (not v_ground or rm.floor = 1)
+        and not exists (
+          select 1 from bookings b where b.room_id = rm.id and b.status <> 'ยกเลิก'
+            and daterange(b.check_in, b.check_out, '[)') && daterange(v_in, v_out, '[)'))
+      order by rm.id limit v_cnt
+      for update
+    loop
+      v_no := pp_next_booking_no();
+      insert into bookings (booking_no, group_no, guest_id, guest_name, phone, company, room_id,
+                            check_in, check_out, rate, created_by, channel, note)
+      values (v_no, v_group, v_guest, v_name, v_phone, p->>'company', r.id,
+              v_in, v_out, r.rate, v_by, coalesce(p->>'channel', 'LINE OA'),
+              nullif(concat_ws(' · ', case when v_ground then 'ขอห้องชั้นล่าง' end, p->>'note'), ''));
+      out_rows := out_rows || jsonb_build_object('booking_no', v_no, 'room_id', r.id, 'zone', r.zone, 'floor', r.floor,
+                    'room_type', r.room_type, 'rate', r.rate, 'room_total', r.rate * (v_out - v_in));
+      v_got := v_got + 1;
+    end loop;
+    if v_got < v_cnt then
+      if v_ground then
+        raise exception 'ห้องชั้นล่าง % % ว่างไม่พอ (ต้องการ % ว่าง %)', coalesce(v_zone, ''), it->>'room_type', v_cnt, v_got;
+      end if;
+      raise exception 'ห้อง % % ว่างไม่พอ (ต้องการ % ว่าง %)', coalesce(v_zone, ''), it->>'room_type', v_cnt, v_got;
+    end if;
+  end loop;
+
+  return jsonb_build_object('ok', true, 'group_no', v_group, 'check_in', v_in, 'check_out', v_out,
+    'nights', v_out - v_in, 'bookings', out_rows,
+    'room_total', (select coalesce(sum((x->>'room_total')::int), 0) from jsonb_array_elements(out_rows) x),
+    'deposit_total', 300 * jsonb_array_length(out_rows));
+end $$;
+
+do $$ declare f record; begin
+  for f in select p.oid::regprocedure sig from pg_proc p join pg_namespace n on n.oid = p.pronamespace
+           where n.nspname = 'public' and p.proname in ('pp_availability', 'pp_book') loop
+    execute format('revoke all on function %s from public', f.sig);
+    if exists (select 1 from pg_roles where rolname = 'anon') then
+      execute format('revoke all on function %s from anon, authenticated', f.sig);
+    end if;
+    if exists (select 1 from pg_roles where rolname = 'service_role') then
+      execute format('grant execute on function %s to service_role', f.sig);
+    end if;
+  end loop;
+end $$;
+commit;
+
+-- PROMPT PAK · ข้อมูลตัวอย่าง (ห้องจริง 31 ห้อง + การจอง/แชทสมมติ)
+-- วิธีใช้: รันหลัง 01_schema.sql · รันซ้ำได้ (ข้อมูลตัวอย่างเดิมจะถูกแทนที่ ไม่แตะข้อมูลจริง)
+begin;
+delete from bookings where created_by = 'seed';
+delete from chat_threads where is_seed;
+insert into rooms (id, zone, room_type, bed, rate, max_guests, floor) values ('A01','ตึกใหม่','เตียงคู่','เตียงสองชั้น (ชั้นบนเตียงเดี่ยว + ชั้นล่างเตียงเดี่ยว)',700,2,1) on conflict (id) do update set zone=excluded.zone, room_type=excluded.room_type, bed=excluded.bed, rate=excluded.rate, max_guests=excluded.max_guests, floor=excluded.floor;
+insert into rooms (id, zone, room_type, bed, rate, max_guests, floor) values ('A02','ตึกใหม่','เตียงเดี่ยว','เตียงใหญ่ 1 เตียง',700,2,1) on conflict (id) do update set zone=excluded.zone, room_type=excluded.room_type, bed=excluded.bed, rate=excluded.rate, max_guests=excluded.max_guests, floor=excluded.floor;
+insert into rooms (id, zone, room_type, bed, rate, max_guests, floor) values ('A03','ตึกใหม่','เตียงเดี่ยว','เตียงใหญ่ 1 เตียง',700,2,1) on conflict (id) do update set zone=excluded.zone, room_type=excluded.room_type, bed=excluded.bed, rate=excluded.rate, max_guests=excluded.max_guests, floor=excluded.floor;
+insert into rooms (id, zone, room_type, bed, rate, max_guests, floor) values ('A04','ตึกใหม่','ห้องครอบครัว','เตียงสองชั้น (ชั้นล่างเตียงใหญ่ 2 คน + ชั้นบนเตียงเดี่ยว 1 คน)',800,3,1) on conflict (id) do update set zone=excluded.zone, room_type=excluded.room_type, bed=excluded.bed, rate=excluded.rate, max_guests=excluded.max_guests, floor=excluded.floor;
+insert into rooms (id, zone, room_type, bed, rate, max_guests, floor) values ('A05','ตึกใหม่','ห้องครอบครัว','เตียงสองชั้น (ชั้นล่างเตียงใหญ่ 2 คน + ชั้นบนเตียงเดี่ยว 1 คน)',800,3,1) on conflict (id) do update set zone=excluded.zone, room_type=excluded.room_type, bed=excluded.bed, rate=excluded.rate, max_guests=excluded.max_guests, floor=excluded.floor;
+insert into rooms (id, zone, room_type, bed, rate, max_guests, floor) values ('A06','ตึกใหม่','เตียงเดี่ยว','เตียงใหญ่ 1 เตียง',700,2,1) on conflict (id) do update set zone=excluded.zone, room_type=excluded.room_type, bed=excluded.bed, rate=excluded.rate, max_guests=excluded.max_guests, floor=excluded.floor;
+insert into rooms (id, zone, room_type, bed, rate, max_guests, floor) values ('A07','ตึกใหม่','เตียงเดี่ยว','เตียงใหญ่ 1 เตียง',700,2,1) on conflict (id) do update set zone=excluded.zone, room_type=excluded.room_type, bed=excluded.bed, rate=excluded.rate, max_guests=excluded.max_guests, floor=excluded.floor;
+insert into rooms (id, zone, room_type, bed, rate, max_guests, floor) values ('A08','ตึกใหม่','เตียงเดี่ยว','เตียงใหญ่ 1 เตียง',700,2,1) on conflict (id) do update set zone=excluded.zone, room_type=excluded.room_type, bed=excluded.bed, rate=excluded.rate, max_guests=excluded.max_guests, floor=excluded.floor;
+insert into rooms (id, zone, room_type, bed, rate, max_guests, floor) values ('B01','ตึกใหม่','เตียงเดี่ยว','เตียงใหญ่ 1 เตียง',700,2,2) on conflict (id) do update set zone=excluded.zone, room_type=excluded.room_type, bed=excluded.bed, rate=excluded.rate, max_guests=excluded.max_guests, floor=excluded.floor;
+insert into rooms (id, zone, room_type, bed, rate, max_guests, floor) values ('B02','ตึกใหม่','เตียงเดี่ยว','เตียงใหญ่ 1 เตียง',700,2,2) on conflict (id) do update set zone=excluded.zone, room_type=excluded.room_type, bed=excluded.bed, rate=excluded.rate, max_guests=excluded.max_guests, floor=excluded.floor;
+insert into rooms (id, zone, room_type, bed, rate, max_guests, floor) values ('B03','ตึกใหม่','เตียงเดี่ยว','เตียงใหญ่ 1 เตียง',700,2,2) on conflict (id) do update set zone=excluded.zone, room_type=excluded.room_type, bed=excluded.bed, rate=excluded.rate, max_guests=excluded.max_guests, floor=excluded.floor;
+insert into rooms (id, zone, room_type, bed, rate, max_guests, floor) values ('B04','ตึกใหม่','เตียงคู่','เตียงสองชั้น (ชั้นบนเตียงเดี่ยว + ชั้นล่างเตียงเดี่ยว)',700,2,2) on conflict (id) do update set zone=excluded.zone, room_type=excluded.room_type, bed=excluded.bed, rate=excluded.rate, max_guests=excluded.max_guests, floor=excluded.floor;
+insert into rooms (id, zone, room_type, bed, rate, max_guests, floor) values ('B05','ตึกใหม่','เตียงคู่','เตียงสองชั้น (ชั้นบนเตียงเดี่ยว + ชั้นล่างเตียงเดี่ยว)',700,2,2) on conflict (id) do update set zone=excluded.zone, room_type=excluded.room_type, bed=excluded.bed, rate=excluded.rate, max_guests=excluded.max_guests, floor=excluded.floor;
+insert into rooms (id, zone, room_type, bed, rate, max_guests, floor) values ('B06','ตึกใหม่','เตียงเดี่ยว','เตียงใหญ่ 1 เตียง',700,2,2) on conflict (id) do update set zone=excluded.zone, room_type=excluded.room_type, bed=excluded.bed, rate=excluded.rate, max_guests=excluded.max_guests, floor=excluded.floor;
+insert into rooms (id, zone, room_type, bed, rate, max_guests, floor) values ('B07','ตึกใหม่','เตียงเดี่ยว','เตียงใหญ่ 1 เตียง',700,2,2) on conflict (id) do update set zone=excluded.zone, room_type=excluded.room_type, bed=excluded.bed, rate=excluded.rate, max_guests=excluded.max_guests, floor=excluded.floor;
+insert into rooms (id, zone, room_type, bed, rate, max_guests, floor) values ('B08','ตึกใหม่','เตียงเดี่ยว','เตียงใหญ่ 1 เตียง',700,2,2) on conflict (id) do update set zone=excluded.zone, room_type=excluded.room_type, bed=excluded.bed, rate=excluded.rate, max_guests=excluded.max_guests, floor=excluded.floor;
+insert into rooms (id, zone, room_type, bed, rate, max_guests, floor) values ('C01','บ้านหลัง','เตียงเดี่ยว','เตียงใหญ่ 1 เตียง',400,2,1) on conflict (id) do update set zone=excluded.zone, room_type=excluded.room_type, bed=excluded.bed, rate=excluded.rate, max_guests=excluded.max_guests, floor=excluded.floor;
+insert into rooms (id, zone, room_type, bed, rate, max_guests, floor) values ('C02','บ้านหลัง','เตียงเดี่ยว','เตียงใหญ่ 1 เตียง',400,2,1) on conflict (id) do update set zone=excluded.zone, room_type=excluded.room_type, bed=excluded.bed, rate=excluded.rate, max_guests=excluded.max_guests, floor=excluded.floor;
+insert into rooms (id, zone, room_type, bed, rate, max_guests, floor) values ('C03','บ้านหลัง','เตียงเดี่ยว','เตียงใหญ่ 1 เตียง',400,2,1) on conflict (id) do update set zone=excluded.zone, room_type=excluded.room_type, bed=excluded.bed, rate=excluded.rate, max_guests=excluded.max_guests, floor=excluded.floor;
+insert into rooms (id, zone, room_type, bed, rate, max_guests, floor) values ('C04','บ้านหลัง','เตียงเดี่ยว','เตียงใหญ่ 1 เตียง',400,2,1) on conflict (id) do update set zone=excluded.zone, room_type=excluded.room_type, bed=excluded.bed, rate=excluded.rate, max_guests=excluded.max_guests, floor=excluded.floor;
+insert into rooms (id, zone, room_type, bed, rate, max_guests, floor) values ('C05','บ้านหลัง','เตียงเดี่ยว','เตียงใหญ่ 1 เตียง',400,2,1) on conflict (id) do update set zone=excluded.zone, room_type=excluded.room_type, bed=excluded.bed, rate=excluded.rate, max_guests=excluded.max_guests, floor=excluded.floor;
+insert into rooms (id, zone, room_type, bed, rate, max_guests, floor) values ('C06','บ้านหลัง','เตียงเดี่ยว','เตียงใหญ่ 1 เตียง',400,2,1) on conflict (id) do update set zone=excluded.zone, room_type=excluded.room_type, bed=excluded.bed, rate=excluded.rate, max_guests=excluded.max_guests, floor=excluded.floor;
+insert into rooms (id, zone, room_type, bed, rate, max_guests, floor) values ('C07','บ้านหลัง','เตียงเดี่ยว','เตียงใหญ่ 1 เตียง',400,2,1) on conflict (id) do update set zone=excluded.zone, room_type=excluded.room_type, bed=excluded.bed, rate=excluded.rate, max_guests=excluded.max_guests, floor=excluded.floor;
+insert into rooms (id, zone, room_type, bed, rate, max_guests, floor) values ('C08','บ้านหลัง','เตียงเดี่ยว','เตียงใหญ่ 1 เตียง',400,2,1) on conflict (id) do update set zone=excluded.zone, room_type=excluded.room_type, bed=excluded.bed, rate=excluded.rate, max_guests=excluded.max_guests, floor=excluded.floor;
+insert into rooms (id, zone, room_type, bed, rate, max_guests, floor) values ('C09','บ้านหลัง','เตียงเดี่ยว','เตียงใหญ่ 1 เตียง',400,2,1) on conflict (id) do update set zone=excluded.zone, room_type=excluded.room_type, bed=excluded.bed, rate=excluded.rate, max_guests=excluded.max_guests, floor=excluded.floor;
+insert into rooms (id, zone, room_type, bed, rate, max_guests, floor) values ('C10','บ้านหลัง','เตียงเดี่ยว','เตียงใหญ่ 1 เตียง',400,2,1) on conflict (id) do update set zone=excluded.zone, room_type=excluded.room_type, bed=excluded.bed, rate=excluded.rate, max_guests=excluded.max_guests, floor=excluded.floor;
+insert into rooms (id, zone, room_type, bed, rate, max_guests, floor) values ('C11','บ้านหลัง','เตียงเดี่ยว','เตียงใหญ่ 1 เตียง',400,2,1) on conflict (id) do update set zone=excluded.zone, room_type=excluded.room_type, bed=excluded.bed, rate=excluded.rate, max_guests=excluded.max_guests, floor=excluded.floor;
+insert into rooms (id, zone, room_type, bed, rate, max_guests, floor) values ('C12','บ้านหลัง','เตียงเดี่ยว','เตียงใหญ่ 1 เตียง',400,2,1) on conflict (id) do update set zone=excluded.zone, room_type=excluded.room_type, bed=excluded.bed, rate=excluded.rate, max_guests=excluded.max_guests, floor=excluded.floor;
+insert into rooms (id, zone, room_type, bed, rate, max_guests, floor) values ('C13','บ้านหลัง','เตียงคู่','เตียงเดี่ยว 2 เตียง วางแยกกัน',500,2,1) on conflict (id) do update set zone=excluded.zone, room_type=excluded.room_type, bed=excluded.bed, rate=excluded.rate, max_guests=excluded.max_guests, floor=excluded.floor;
+insert into rooms (id, zone, room_type, bed, rate, max_guests, floor) values ('C14','บ้านหลัง','เตียงคู่','เตียงเดี่ยว 2 เตียง วางแยกกัน',500,2,1) on conflict (id) do update set zone=excluded.zone, room_type=excluded.room_type, bed=excluded.bed, rate=excluded.rate, max_guests=excluded.max_guests, floor=excluded.floor;
+insert into rooms (id, zone, room_type, bed, rate, max_guests, floor) values ('C15','บ้านหลัง','เตียงคู่','เตียงเดี่ยว 2 เตียง วางแยกกัน',500,2,1) on conflict (id) do update set zone=excluded.zone, room_type=excluded.room_type, bed=excluded.bed, rate=excluded.rate, max_guests=excluded.max_guests, floor=excluded.floor;
+insert into bookings (booking_no, group_no, guest_name, phone, company, room_id, check_in, check_out, rate, deposit, status, payment_status, channel, created_by, note, created_at) values ('BK6910001','GR01','นายธนกฤต วงศ์ศรีแก้ว','089-450-2182','กฟผ.','B06','2026-10-13','2026-10-16',700,300,'ยืนยันแล้ว','ชำระแล้ว','LINE OA','seed',null,'2026-10-06T19:42:00+07:00') on conflict (booking_no) do nothing;
+insert into bookings (booking_no, group_no, guest_name, phone, company, room_id, check_in, check_out, rate, deposit, status, payment_status, channel, created_by, note, created_at) values ('BK6910002','GR01','นายวีรยุทธ ศรีสุข','067-741-3053','กฟผ.','A02','2026-10-13','2026-10-16',700,300,'ยืนยันแล้ว','ชำระแล้ว','LINE OA','seed',null,'2026-10-06T19:42:00+07:00') on conflict (booking_no) do nothing;
+insert into bookings (booking_no, group_no, guest_name, phone, company, room_id, check_in, check_out, rate, deposit, status, payment_status, channel, created_by, note, created_at) values ('BK6910003','GR01','นายสมศักดิ์ ทองดี','092-890-7526','กฟผ.','C01','2026-10-13','2026-10-16',400,300,'ยืนยันแล้ว','ชำระแล้ว','LINE OA','seed',null,'2026-10-06T19:42:00+07:00') on conflict (booking_no) do nothing;
+insert into bookings (booking_no, group_no, guest_name, phone, company, room_id, check_in, check_out, rate, deposit, status, payment_status, channel, created_by, note, created_at) values ('BK6910004','GR01','นายประสิทธิ์ จันทร์หอม','081-730-3633','กฟผ.','C02','2026-10-13','2026-10-16',400,300,'ยืนยันแล้ว','ชำระแล้ว','LINE OA','seed',null,'2026-10-06T19:42:00+07:00') on conflict (booking_no) do nothing;
+insert into bookings (booking_no, group_no, guest_name, phone, company, room_id, check_in, check_out, rate, deposit, status, payment_status, channel, created_by, note, created_at) values ('BK6910005','GR02','นายพงศกร เจริญวงศ์','086-935-3050','ไบโอเทค','B07','2026-10-13','2026-10-16',700,300,'ยืนยันแล้ว','ชำระแล้ว','LINE OA','seed',null,'2026-10-08T10:05:00+07:00') on conflict (booking_no) do nothing;
+insert into bookings (booking_no, group_no, guest_name, phone, company, room_id, check_in, check_out, rate, deposit, status, payment_status, channel, created_by, note, created_at) values ('BK6910006','GR02','นายศุภชัย อินทรประเสริฐ','094-820-4272','ไบโอเทค','A03','2026-10-13','2026-10-16',700,300,'ยืนยันแล้ว','ชำระแล้ว','LINE OA','seed',null,'2026-10-08T10:05:00+07:00') on conflict (booking_no) do nothing;
+insert into bookings (booking_no, group_no, guest_name, phone, company, room_id, check_in, check_out, rate, deposit, status, payment_status, channel, created_by, note, created_at) values ('BK6910007','GR02','นายสุรชัย พรมมา','065-420-3948','ไบโอเทค','C03','2026-10-13','2026-10-16',400,300,'ยืนยันแล้ว','ชำระแล้ว','LINE OA','seed',null,'2026-10-08T10:05:00+07:00') on conflict (booking_no) do nothing;
+insert into bookings (booking_no, group_no, guest_name, phone, company, room_id, check_in, check_out, rate, deposit, status, payment_status, channel, created_by, note, created_at) values ('BK6910008','GR03','นายชาญวิทย์ ศักดิ์สิทธิ์','087-314-6185','ฟินิคซ (PPPC)','B08','2026-10-14','2026-10-16',700,300,'ยืนยันแล้ว','ชำระแล้ว','LINE OA','seed',null,'2026-10-09T14:20:00+07:00') on conflict (booking_no) do nothing;
+insert into bookings (booking_no, group_no, guest_name, phone, company, room_id, check_in, check_out, rate, deposit, status, payment_status, channel, created_by, note, created_at) values ('BK6910009','GR03','นายสิทธิชัย แสนสุข','069-548-3781','ฟินิคซ (PPPC)','A06','2026-10-14','2026-10-16',700,300,'ยืนยันแล้ว','ชำระแล้ว','LINE OA','seed',null,'2026-10-09T14:20:00+07:00') on conflict (booking_no) do nothing;
+insert into bookings (booking_no, group_no, guest_name, phone, company, room_id, check_in, check_out, rate, deposit, status, payment_status, channel, created_by, note, created_at) values ('BK6910010','GR03','นายปิยะพงษ์ ชัยมงคล','083-203-1267','ฟินิคซ (PPPC)','A07','2026-10-15','2026-10-17',700,300,'ยกเลิก','คืนเงินแล้ว','LINE OA','seed',null,'2026-10-09T14:20:00+07:00') on conflict (booking_no) do nothing;
+insert into bookings (booking_no, group_no, guest_name, phone, company, room_id, check_in, check_out, rate, deposit, status, payment_status, channel, created_by, note, created_at) values ('BK6910011',null,'นายวัชระ ปัญญาดี','089-645-3540',null,'C11','2026-10-15','2026-10-16',400,300,'ยืนยันแล้ว','ชำระแล้ว','โทรศัพท์','seed','เดินทางขอนแก่น–อุดรฯ ขอใบเสร็จเบิกบริษัท','2026-10-15T16:40:00+07:00') on conflict (booking_no) do nothing;
+insert into bookings (booking_no, group_no, guest_name, phone, company, room_id, check_in, check_out, rate, deposit, status, payment_status, channel, created_by, note, created_at) values ('BK6910012','GR04','นายธนกฤต วงศ์ศรีแก้ว','089-450-2182','กฟผ.','B06','2026-10-19','2026-10-31',700,300,'ยืนยันแล้ว','ชำระแล้ว','LINE OA','seed',null,'2026-10-07T20:10:00+07:00') on conflict (booking_no) do nothing;
+insert into bookings (booking_no, group_no, guest_name, phone, company, room_id, check_in, check_out, rate, deposit, status, payment_status, channel, created_by, note, created_at) values ('BK6910013','GR04','นายวีรยุทธ ศรีสุข','067-741-3053','กฟผ.','A02','2026-10-19','2026-10-31',700,300,'ยืนยันแล้ว','ชำระแล้ว','LINE OA','seed',null,'2026-10-07T20:10:00+07:00') on conflict (booking_no) do nothing;
+insert into bookings (booking_no, group_no, guest_name, phone, company, room_id, check_in, check_out, rate, deposit, status, payment_status, channel, created_by, note, created_at) values ('BK6910014','GR04','นายณัฐพล ภูมิสะอาด','083-706-4855','กฟผ.','A03','2026-10-19','2026-10-31',700,300,'ยืนยันแล้ว','ชำระแล้ว','LINE OA','seed',null,'2026-10-07T20:10:00+07:00') on conflict (booking_no) do nothing;
+insert into bookings (booking_no, group_no, guest_name, phone, company, room_id, check_in, check_out, rate, deposit, status, payment_status, channel, created_by, note, created_at) values ('BK6910015','GR04','นางสาวพิมพ์ชนก แสงอรุณ','099-974-9333','กฟผ.','A06','2026-10-19','2026-10-31',700,300,'ยืนยันแล้ว','ชำระแล้ว','LINE OA','seed',null,'2026-10-07T20:10:00+07:00') on conflict (booking_no) do nothing;
+insert into bookings (booking_no, group_no, guest_name, phone, company, room_id, check_in, check_out, rate, deposit, status, payment_status, channel, created_by, note, created_at) values ('BK6910016','GR04','นายสมศักดิ์ ทองดี','092-890-7526','กฟผ.','C01','2026-10-19','2026-10-31',400,300,'ยืนยันแล้ว','ชำระแล้ว','LINE OA','seed',null,'2026-10-07T20:10:00+07:00') on conflict (booking_no) do nothing;
+insert into bookings (booking_no, group_no, guest_name, phone, company, room_id, check_in, check_out, rate, deposit, status, payment_status, channel, created_by, note, created_at) values ('BK6910017','GR04','นายประสิทธิ์ จันทร์หอม','081-730-3633','กฟผ.','C02','2026-10-19','2026-10-31',400,300,'ยืนยันแล้ว','ชำระแล้ว','LINE OA','seed',null,'2026-10-07T20:10:00+07:00') on conflict (booking_no) do nothing;
+insert into bookings (booking_no, group_no, guest_name, phone, company, room_id, check_in, check_out, rate, deposit, status, payment_status, channel, created_by, note, created_at) values ('BK6910018','GR04','นายอนุชา บุญมา','087-314-8847','กฟผ.','C03','2026-10-19','2026-10-31',400,300,'ยืนยันแล้ว','ชำระแล้ว','LINE OA','seed',null,'2026-10-07T20:10:00+07:00') on conflict (booking_no) do nothing;
+insert into bookings (booking_no, group_no, guest_name, phone, company, room_id, check_in, check_out, rate, deposit, status, payment_status, channel, created_by, note, created_at) values ('BK6910019','GR04','นายกิตติศักดิ์ แก้วประเสริฐ','093-506-1524','กฟผ.','C04','2026-10-19','2026-10-31',400,300,'ยืนยันแล้ว','ชำระแล้ว','LINE OA','seed',null,'2026-10-07T20:10:00+07:00') on conflict (booking_no) do nothing;
+insert into bookings (booking_no, group_no, guest_name, phone, company, room_id, check_in, check_out, rate, deposit, status, payment_status, channel, created_by, note, created_at) values ('BK6910020','GR04','นายจักรพันธ์ พลสงคราม','092-481-8588','กฟผ.','A07','2026-10-19','2026-10-31',700,300,'ยืนยันแล้ว','ชำระแล้ว','LINE OA','seed',null,'2026-10-07T20:10:00+07:00') on conflict (booking_no) do nothing;
+insert into bookings (booking_no, group_no, guest_name, phone, company, room_id, check_in, check_out, rate, deposit, status, payment_status, channel, created_by, note, created_at) values ('BK6910021','GR05','นายพงศกร เจริญวงศ์','086-935-3050','ไบโอเทค','B07','2026-10-19','2026-10-23',700,300,'ยืนยันแล้ว','ชำระแล้ว','LINE OA','seed',null,'2026-10-14T16:30:00+07:00') on conflict (booking_no) do nothing;
+insert into bookings (booking_no, group_no, guest_name, phone, company, room_id, check_in, check_out, rate, deposit, status, payment_status, channel, created_by, note, created_at) values ('BK6910022','GR05','นายศุภชัย อินทรประเสริฐ','094-820-4272','ไบโอเทค','A08','2026-10-19','2026-10-23',700,300,'ยืนยันแล้ว','ชำระแล้ว','LINE OA','seed',null,'2026-10-14T16:30:00+07:00') on conflict (booking_no) do nothing;
+insert into bookings (booking_no, group_no, guest_name, phone, company, room_id, check_in, check_out, rate, deposit, status, payment_status, channel, created_by, note, created_at) values ('BK6910023','GR05','นางสาวกนกวรรณ ศรีมงคล','091-392-3191','ไบโอเทค','B01','2026-10-19','2026-10-23',700,300,'ยืนยันแล้ว','ชำระแล้ว','LINE OA','seed',null,'2026-10-14T16:30:00+07:00') on conflict (booking_no) do nothing;
+insert into bookings (booking_no, group_no, guest_name, phone, company, room_id, check_in, check_out, rate, deposit, status, payment_status, channel, created_by, note, created_at) values ('BK6910024','GR05','นายธีรวัฒน์ มณีรัตน์','099-658-2639','ไบโอเทค','B02','2026-10-19','2026-10-23',700,300,'ยืนยันแล้ว','ชำระแล้ว','LINE OA','seed',null,'2026-10-14T16:30:00+07:00') on conflict (booking_no) do nothing;
+insert into bookings (booking_no, group_no, guest_name, phone, company, room_id, check_in, check_out, rate, deposit, status, payment_status, channel, created_by, note, created_at) values ('BK6910025','GR05','นายสุรชัย พรมมา','065-420-3948','ไบโอเทค','C05','2026-10-19','2026-10-23',400,300,'ยืนยันแล้ว','ชำระแล้ว','LINE OA','seed',null,'2026-10-14T16:30:00+07:00') on conflict (booking_no) do nothing;
+insert into bookings (booking_no, group_no, guest_name, phone, company, room_id, check_in, check_out, rate, deposit, status, payment_status, channel, created_by, note, created_at) values ('BK6910026','GR05','นายวรวุฒิ คำแก้ว','081-881-9021','ไบโอเทค','C06','2026-10-19','2026-10-23',400,300,'ยืนยันแล้ว','ชำระแล้ว','LINE OA','seed',null,'2026-10-14T16:30:00+07:00') on conflict (booking_no) do nothing;
+insert into bookings (booking_no, group_no, guest_name, phone, company, room_id, check_in, check_out, rate, deposit, status, payment_status, channel, created_by, note, created_at) values ('BK6910027','GR05','นายภานุวัฒน์ สีดา','089-987-7238','ไบโอเทค','C07','2026-10-19','2026-10-23',400,300,'ยืนยันแล้ว','ชำระแล้ว','LINE OA','seed',null,'2026-10-14T16:30:00+07:00') on conflict (booking_no) do nothing;
+insert into bookings (booking_no, group_no, guest_name, phone, company, room_id, check_in, check_out, rate, deposit, status, payment_status, channel, created_by, note, created_at) values ('BK6910028','GR06','นายชาญวิทย์ ศักดิ์สิทธิ์','087-314-6185','ฟินิคซ (PPPC)','B08','2026-10-20','2026-10-23',700,300,'ยืนยันแล้ว','ชำระแล้ว','LINE OA','seed',null,'2026-10-15T09:12:00+07:00') on conflict (booking_no) do nothing;
+insert into bookings (booking_no, group_no, guest_name, phone, company, room_id, check_in, check_out, rate, deposit, status, payment_status, channel, created_by, note, created_at) values ('BK6910029','GR06','นางสาววรรณิศา บุญเรือง','062-382-9288','ฟินิคซ (PPPC)','B03','2026-10-20','2026-10-23',700,300,'ยืนยันแล้ว','ชำระแล้ว','LINE OA','seed',null,'2026-10-15T09:12:00+07:00') on conflict (booking_no) do nothing;
+insert into bookings (booking_no, group_no, guest_name, phone, company, room_id, check_in, check_out, rate, deposit, status, payment_status, channel, created_by, note, created_at) values ('BK6910030','GR06','นายปิยะพงษ์ ชัยมงคล','083-203-1267','ฟินิคซ (PPPC)','A01','2026-10-20','2026-10-23',700,300,'ยืนยันแล้ว','ชำระแล้ว','LINE OA','seed',null,'2026-10-15T09:12:00+07:00') on conflict (booking_no) do nothing;
+insert into bookings (booking_no, group_no, guest_name, phone, company, room_id, check_in, check_out, rate, deposit, status, payment_status, channel, created_by, note, created_at) values ('BK6910031','GR06','นายธนวัฒน์ สุขเจริญ','089-623-7877','ฟินิคซ (PPPC)','B04','2026-10-20','2026-10-23',700,300,'ยืนยันแล้ว','ชำระแล้ว','LINE OA','seed',null,'2026-10-15T09:12:00+07:00') on conflict (booking_no) do nothing;
+insert into bookings (booking_no, group_no, guest_name, phone, company, room_id, check_in, check_out, rate, deposit, status, payment_status, channel, created_by, note, created_at) values ('BK6910032','GR06','นายบุญเลิศ นาคสวัสดิ์','063-715-1330','ฟินิคซ (PPPC)','C08','2026-10-20','2026-10-23',400,300,'ยืนยันแล้ว','ชำระแล้ว','LINE OA','seed',null,'2026-10-15T09:12:00+07:00') on conflict (booking_no) do nothing;
+insert into bookings (booking_no, group_no, guest_name, phone, company, room_id, check_in, check_out, rate, deposit, status, payment_status, channel, created_by, note, created_at) values ('BK6910033','GR06','นายสิทธิชัย แสนสุข','069-548-3781','ฟินิคซ (PPPC)','B05','2026-10-20','2026-10-23',700,300,'ยืนยันแล้ว','ชำระแล้ว','LINE OA','seed',null,'2026-10-15T09:12:00+07:00') on conflict (booking_no) do nothing;
+insert into bookings (booking_no, group_no, guest_name, phone, company, room_id, check_in, check_out, rate, deposit, status, payment_status, channel, created_by, note, created_at) values ('BK6910034','GR07','นายสุรเชษฐ์ วงศ์ไทย','064-524-1802','Valmet','A04','2026-10-21','2026-10-24',800,300,'ยืนยันแล้ว','เครดิตบริษัท','โทรศัพท์','seed',null,'2026-10-19T11:48:00+07:00') on conflict (booking_no) do nothing;
+insert into bookings (booking_no, group_no, guest_name, phone, company, room_id, check_in, check_out, rate, deposit, status, payment_status, channel, created_by, note, created_at) values ('BK6910035','GR07','นางสาวศิริพร ใจดี','086-866-5570','Valmet','A05','2026-10-21','2026-10-24',800,300,'ยืนยันแล้ว','เครดิตบริษัท','โทรศัพท์','seed',null,'2026-10-19T11:48:00+07:00') on conflict (booking_no) do nothing;
+insert into bookings (booking_no, group_no, guest_name, phone, company, room_id, check_in, check_out, rate, deposit, status, payment_status, channel, created_by, note, created_at) values ('BK6910036',null,'นายอดิศร มีสุข','081-567-8095',null,'C11','2026-10-22','2026-10-23',400,300,'ยกเลิก','ยังไม่ชำระ','LINE OA','seed','จองคืนเดียว ไม่ได้ชำระล่วงหน้า','2026-10-21T21:05:00+07:00') on conflict (booking_no) do nothing;
+insert into bookings (booking_no, group_no, guest_name, phone, company, room_id, check_in, check_out, rate, deposit, status, payment_status, channel, created_by, note, created_at) values ('BK6910076','GR05','นางสาวกนกวรรณ ศรีมงคล','091-392-3191','ไบโอเทค','B01','2026-10-23','2026-10-24',700,300,'ยืนยันแล้ว','ยังไม่ชำระ','LINE OA','seed','ต่อ 1 คืน ห้องเดิม (งาน QA ยังไม่จบ) จ่ายเองแล้วเบิก','2026-10-22T18:22:00+07:00') on conflict (booking_no) do nothing;
+insert into bookings (booking_no, group_no, guest_name, phone, company, room_id, check_in, check_out, rate, deposit, status, payment_status, channel, created_by, note, created_at) values ('BK6910037','GR17','นางบุญเรือน พรหมสุวรรณ','096-957-5640',null,'C11','2026-10-24','2026-10-26',400,300,'ยืนยันแล้ว','ชำระแล้ว','LINE OA','seed','ห้องที่ 1 ของครอบครัว (ญาติพักห้องนี้) ขอเช็คอินก่อนเวลา 11:00','2026-10-17T20:15:00+07:00') on conflict (booking_no) do nothing;
+insert into bookings (booking_no, group_no, guest_name, phone, company, room_id, check_in, check_out, rate, deposit, status, payment_status, channel, created_by, note, created_at) values ('BK6910038','GR17','นางบุญเรือน พรหมสุวรรณ','096-957-5640',null,'C12','2026-10-24','2026-10-26',400,300,'ยืนยันแล้ว','ชำระแล้ว','LINE OA','seed','ห้องที่ 2 ของครอบครัว (ญาติพักห้องนี้) ขอเช็คอินก่อนเวลา 11:00','2026-10-17T20:15:00+07:00') on conflict (booking_no) do nothing;
+insert into bookings (booking_no, group_no, guest_name, phone, company, room_id, check_in, check_out, rate, deposit, status, payment_status, channel, created_by, note, created_at) values ('BK6910039',null,'นายเฉลิมพล สายทอง','086-784-9640',null,'C13','2026-10-24','2026-10-25',500,300,'ยืนยันแล้ว','ยังไม่ชำระ','LINE OA','seed','ขับรถไปหนองคาย ถึงประมาณ 16:00','2026-10-23T22:18:00+07:00') on conflict (booking_no) do nothing;
+insert into bookings (booking_no, group_no, guest_name, phone, company, room_id, check_in, check_out, rate, deposit, status, payment_status, channel, created_by, note, created_at) values ('BK6910040','GR04','นายเอกชัย ศรีวงษ์','099-211-5513','กฟผ.','C05','2026-10-26','2026-10-31',400,300,'ยืนยันแล้ว','ยังไม่ชำระ','LINE OA','seed',null,'2026-10-07T20:10:00+07:00') on conflict (booking_no) do nothing;
+insert into bookings (booking_no, group_no, guest_name, phone, company, room_id, check_in, check_out, rate, deposit, status, payment_status, channel, created_by, note, created_at) values ('BK6910041',null,'นายสมพร ไชยศรี','095-530-8445',null,'A03','2026-10-31','2026-11-01',700,300,'ยืนยันแล้ว','ยังไม่ชำระ','LINE OA','seed','กลับบ้านงานบวชหลาน มากับภรรยา ขอห้องตึก','2026-10-18T19:30:00+07:00') on conflict (booking_no) do nothing;
+insert into bookings (booking_no, group_no, guest_name, phone, company, room_id, check_in, check_out, rate, deposit, status, payment_status, channel, created_by, note, created_at) values ('BK6910077','GR04','นายณัฐพล ภูมิสะอาด','083-706-4855','กฟผ.','A02','2026-10-31','2026-11-02',700,300,'ยืนยันแล้ว','ยังไม่ชำระ','LINE OA','seed','ต่อ 2 คืน ห้องเดิม A03 มีจองคืน 31 ต.ค. → ย้ายไป A02 (ลูกค้ายินยอม)','2026-10-23T19:48:00+07:00') on conflict (booking_no) do nothing;
+insert into bookings (booking_no, group_no, guest_name, phone, company, room_id, check_in, check_out, rate, deposit, status, payment_status, channel, created_by, note, created_at) values ('BK6910042','GR08','นายศุภชัย อินทรประเสริฐ','094-820-4272','ไบโอเทค','A08','2026-11-02','2026-11-06',700,300,'ยืนยันแล้ว','ยังไม่ชำระ','LINE OA','seed',null,'2026-10-22T13:02:00+07:00') on conflict (booking_no) do nothing;
+insert into bookings (booking_no, group_no, guest_name, phone, company, room_id, check_in, check_out, rate, deposit, status, payment_status, channel, created_by, note, created_at) values ('BK6910043','GR08','นายธีรวัฒน์ มณีรัตน์','099-658-2639','ไบโอเทค','B02','2026-11-02','2026-11-06',700,300,'ยืนยันแล้ว','ยังไม่ชำระ','LINE OA','seed',null,'2026-10-22T13:02:00+07:00') on conflict (booking_no) do nothing;
+insert into bookings (booking_no, group_no, guest_name, phone, company, room_id, check_in, check_out, rate, deposit, status, payment_status, channel, created_by, note, created_at) values ('BK6910044','GR08','นายวรวุฒิ คำแก้ว','081-881-9021','ไบโอเทค','C06','2026-11-02','2026-11-06',400,300,'ยืนยันแล้ว','ยังไม่ชำระ','LINE OA','seed',null,'2026-10-22T13:02:00+07:00') on conflict (booking_no) do nothing;
+insert into bookings (booking_no, group_no, guest_name, phone, company, room_id, check_in, check_out, rate, deposit, status, payment_status, channel, created_by, note, created_at) values ('BK6910045','GR08','นายอภิสิทธิ์ ทองสุข','084-550-8855','ไบโอเทค','A02','2026-11-02','2026-11-06',700,300,'ยืนยันแล้ว','ยังไม่ชำระ','LINE OA','seed',null,'2026-10-22T13:02:00+07:00') on conflict (booking_no) do nothing;
+insert into bookings (booking_no, group_no, guest_name, phone, company, room_id, check_in, check_out, rate, deposit, status, payment_status, channel, created_by, note, created_at) values ('BK6910046','GR09','นายปิยะพงษ์ ชัยมงคล','083-203-1267','ฟินิคซ (PPPC)','A01','2026-11-09','2026-11-13',700,300,'ยืนยันแล้ว','ยังไม่ชำระ','LINE OA','seed',null,'2026-10-23T15:40:00+07:00') on conflict (booking_no) do nothing;
+insert into bookings (booking_no, group_no, guest_name, phone, company, room_id, check_in, check_out, rate, deposit, status, payment_status, channel, created_by, note, created_at) values ('BK6910047','GR09','นายธนวัฒน์ สุขเจริญ','089-623-7877','ฟินิคซ (PPPC)','B04','2026-11-09','2026-11-13',700,300,'ยืนยันแล้ว','ยังไม่ชำระ','LINE OA','seed',null,'2026-10-23T15:40:00+07:00') on conflict (booking_no) do nothing;
+insert into bookings (booking_no, group_no, guest_name, phone, company, room_id, check_in, check_out, rate, deposit, status, payment_status, channel, created_by, note, created_at) values ('BK6910048','GR09','นายสิทธิชัย แสนสุข','069-548-3781','ฟินิคซ (PPPC)','B05','2026-11-09','2026-11-13',700,300,'ยืนยันแล้ว','ยังไม่ชำระ','LINE OA','seed',null,'2026-10-23T15:40:00+07:00') on conflict (booking_no) do nothing;
+insert into bookings (booking_no, group_no, guest_name, phone, company, room_id, check_in, check_out, rate, deposit, status, payment_status, channel, created_by, note, created_at) values ('BK6910049','GR10','นายไพโรจน์ คำสุข','093-211-7564','กรมชลฯ','A02','2026-11-10','2026-11-13',700,300,'ยืนยันแล้ว','เครดิตบริษัท','LINE OA','seed',null,'2026-10-20T10:25:00+07:00') on conflict (booking_no) do nothing;
+insert into bookings (booking_no, group_no, guest_name, phone, company, room_id, check_in, check_out, rate, deposit, status, payment_status, channel, created_by, note, created_at) values ('BK6910050','GR10','นางสาวจิราภรณ์ เพชรรัตน์','098-596-9159','กรมชลฯ','A03','2026-11-10','2026-11-13',700,300,'ยืนยันแล้ว','เครดิตบริษัท','LINE OA','seed',null,'2026-10-20T10:25:00+07:00') on conflict (booking_no) do nothing;
+insert into bookings (booking_no, group_no, guest_name, phone, company, room_id, check_in, check_out, rate, deposit, status, payment_status, channel, created_by, note, created_at) values ('BK6910051',null,'นายวัชระ ปัญญาดี','089-645-3540',null,'C11','2026-11-12','2026-11-13',400,300,'ยืนยันแล้ว','ยังไม่ชำระ','LINE OA','seed','ลูกค้าเดิม ขอห้องเดิม','2026-10-24T07:55:00+07:00') on conflict (booking_no) do nothing;
+insert into bookings (booking_no, group_no, guest_name, phone, company, room_id, check_in, check_out, rate, deposit, status, payment_status, channel, created_by, note, created_at) values ('BK6910052','GR12','นายพงศกร เจริญวงศ์','086-935-3050','ไบโอเทค','B07','2026-11-16','2026-11-20',700,300,'ยืนยันแล้ว','ยังไม่ชำระ','LINE OA','seed',null,'2026-10-23T09:30:00+07:00') on conflict (booking_no) do nothing;
+insert into bookings (booking_no, group_no, guest_name, phone, company, room_id, check_in, check_out, rate, deposit, status, payment_status, channel, created_by, note, created_at) values ('BK6910053','GR12','นางสาวกนกวรรณ ศรีมงคล','091-392-3191','ไบโอเทค','B01','2026-11-16','2026-11-20',700,300,'ยืนยันแล้ว','ยังไม่ชำระ','LINE OA','seed',null,'2026-10-23T09:30:00+07:00') on conflict (booking_no) do nothing;
+insert into bookings (booking_no, group_no, guest_name, phone, company, room_id, check_in, check_out, rate, deposit, status, payment_status, channel, created_by, note, created_at) values ('BK6910054','GR12','นายอภิสิทธิ์ ทองสุข','084-550-8855','ไบโอเทค','A02','2026-11-16','2026-11-20',700,300,'ยืนยันแล้ว','ยังไม่ชำระ','LINE OA','seed',null,'2026-10-23T09:30:00+07:00') on conflict (booking_no) do nothing;
+insert into bookings (booking_no, group_no, guest_name, phone, company, room_id, check_in, check_out, rate, deposit, status, payment_status, channel, created_by, note, created_at) values ('BK6910055','GR11','นายธนกฤต วงศ์ศรีแก้ว','089-450-2182','กฟผ.','B06','2026-11-16','2026-11-19',700,300,'ยืนยันแล้ว','ยังไม่ชำระ','LINE OA','seed',null,'2026-10-23T18:05:00+07:00') on conflict (booking_no) do nothing;
+insert into bookings (booking_no, group_no, guest_name, phone, company, room_id, check_in, check_out, rate, deposit, status, payment_status, channel, created_by, note, created_at) values ('BK6910056','GR11','นายจักรพันธ์ พลสงคราม','092-481-8588','กฟผ.','A07','2026-11-16','2026-11-19',700,300,'ยืนยันแล้ว','ยังไม่ชำระ','LINE OA','seed',null,'2026-10-23T18:05:00+07:00') on conflict (booking_no) do nothing;
+insert into bookings (booking_no, group_no, guest_name, phone, company, room_id, check_in, check_out, rate, deposit, status, payment_status, channel, created_by, note, created_at) values ('BK6910057','GR13','นายสุรเชษฐ์ วงศ์ไทย','064-524-1802','Valmet','A04','2026-11-23','2026-12-05',750,300,'ยืนยันแล้ว','เครดิตบริษัท','LINE OA','seed',null,'2026-10-23T14:55:00+07:00') on conflict (booking_no) do nothing;
+insert into bookings (booking_no, group_no, guest_name, phone, company, room_id, check_in, check_out, rate, deposit, status, payment_status, channel, created_by, note, created_at) values ('BK6910058','GR13','นายอรรถพล คงสมบูรณ์','094-607-1519','Valmet','A02','2026-11-23','2026-12-05',700,300,'ยืนยันแล้ว','เครดิตบริษัท','LINE OA','seed',null,'2026-10-23T14:55:00+07:00') on conflict (booking_no) do nothing;
+insert into bookings (booking_no, group_no, guest_name, phone, company, room_id, check_in, check_out, rate, deposit, status, payment_status, channel, created_by, note, created_at) values ('BK6910059','GR13','นายเกียรติศักดิ์ ไชยวงศ์','098-447-3756','Valmet','A03','2026-11-23','2026-12-05',700,300,'ยืนยันแล้ว','เครดิตบริษัท','LINE OA','seed',null,'2026-10-23T14:55:00+07:00') on conflict (booking_no) do nothing;
+insert into bookings (booking_no, group_no, guest_name, phone, company, room_id, check_in, check_out, rate, deposit, status, payment_status, channel, created_by, note, created_at) values ('BK6910060','GR13','นายมานพ ศรีสะอาด','095-512-9345','Valmet','C01','2026-11-23','2026-12-05',400,300,'ยืนยันแล้ว','เครดิตบริษัท','LINE OA','seed',null,'2026-10-23T14:55:00+07:00') on conflict (booking_no) do nothing;
+insert into bookings (booking_no, group_no, guest_name, phone, company, room_id, check_in, check_out, rate, deposit, status, payment_status, channel, created_by, note, created_at) values ('BK6910061','GR13','นายณรงค์ฤทธิ์ บุตรดี','063-902-5828','Valmet','C02','2026-11-23','2026-12-05',400,300,'ยืนยันแล้ว','เครดิตบริษัท','LINE OA','seed',null,'2026-10-23T14:55:00+07:00') on conflict (booking_no) do nothing;
+insert into bookings (booking_no, group_no, guest_name, phone, company, room_id, check_in, check_out, rate, deposit, status, payment_status, channel, created_by, note, created_at) values ('BK6910062','GR13','นายวิทยา พันธุ์ดี','081-542-2315','Valmet','C03','2026-11-23','2026-12-05',400,300,'ยืนยันแล้ว','เครดิตบริษัท','LINE OA','seed',null,'2026-10-23T14:55:00+07:00') on conflict (booking_no) do nothing;
+insert into bookings (booking_no, group_no, guest_name, phone, company, room_id, check_in, check_out, rate, deposit, status, payment_status, channel, created_by, note, created_at) values ('BK6910063','GR13','นายชยพล ทองมา','068-197-7588','Valmet','C04','2026-11-23','2026-12-05',400,300,'ยืนยันแล้ว','เครดิตบริษัท','LINE OA','seed',null,'2026-10-23T14:55:00+07:00') on conflict (booking_no) do nothing;
+insert into bookings (booking_no, group_no, guest_name, phone, company, room_id, check_in, check_out, rate, deposit, status, payment_status, channel, created_by, note, created_at) values ('BK6910064','GR14','นายชาญวิทย์ ศักดิ์สิทธิ์','087-314-6185','ฟินิคซ (PPPC)','B08','2026-11-24','2026-11-27',700,300,'ยืนยันแล้ว','ยังไม่ชำระ','LINE OA','seed',null,'2026-10-23T16:20:00+07:00') on conflict (booking_no) do nothing;
+insert into bookings (booking_no, group_no, guest_name, phone, company, room_id, check_in, check_out, rate, deposit, status, payment_status, channel, created_by, note, created_at) values ('BK6910065','GR14','นายปิยะพงษ์ ชัยมงคล','083-203-1267','ฟินิคซ (PPPC)','A01','2026-11-24','2026-12-04',700,300,'ยืนยันแล้ว','ยังไม่ชำระ','LINE OA','seed',null,'2026-10-23T16:20:00+07:00') on conflict (booking_no) do nothing;
+insert into bookings (booking_no, group_no, guest_name, phone, company, room_id, check_in, check_out, rate, deposit, status, payment_status, channel, created_by, note, created_at) values ('BK6910066','GR14','นายธนวัฒน์ สุขเจริญ','089-623-7877','ฟินิคซ (PPPC)','B04','2026-11-24','2026-12-04',700,300,'ยืนยันแล้ว','ยังไม่ชำระ','LINE OA','seed',null,'2026-10-23T16:20:00+07:00') on conflict (booking_no) do nothing;
+insert into bookings (booking_no, group_no, guest_name, phone, company, room_id, check_in, check_out, rate, deposit, status, payment_status, channel, created_by, note, created_at) values ('BK6910067','GR14','นายบุญเลิศ นาคสวัสดิ์','063-715-1330','ฟินิคซ (PPPC)','C08','2026-11-24','2026-12-04',400,300,'ยืนยันแล้ว','ยังไม่ชำระ','LINE OA','seed',null,'2026-10-23T16:20:00+07:00') on conflict (booking_no) do nothing;
+insert into bookings (booking_no, group_no, guest_name, phone, company, room_id, check_in, check_out, rate, deposit, status, payment_status, channel, created_by, note, created_at) values ('BK6910068','GR14','นายสิทธิชัย แสนสุข','069-548-3781','ฟินิคซ (PPPC)','B05','2026-11-24','2026-12-04',700,300,'ยืนยันแล้ว','ยังไม่ชำระ','LINE OA','seed',null,'2026-10-23T16:20:00+07:00') on conflict (booking_no) do nothing;
+insert into bookings (booking_no, group_no, guest_name, phone, company, room_id, check_in, check_out, rate, deposit, status, payment_status, channel, created_by, note, created_at) values ('BK6910069',null,'นายเฉลิมพล สายทอง','086-784-9640',null,'C13','2026-11-27','2026-11-28',500,300,'ยืนยันแล้ว','ยังไม่ชำระ','LINE OA','seed','วันหยุดยาววันพ่อ','2026-10-24T09:12:00+07:00') on conflict (booking_no) do nothing;
+insert into bookings (booking_no, group_no, guest_name, phone, company, room_id, check_in, check_out, rate, deposit, status, payment_status, channel, created_by, note, created_at) values ('BK6910070','GR16','นายศุภชัย อินทรประเสริฐ','094-820-4272','ไบโอเทค','A08','2026-11-30','2026-12-04',700,300,'ยืนยันแล้ว','ยังไม่ชำระ','LINE OA','seed',null,'2026-10-23T09:35:00+07:00') on conflict (booking_no) do nothing;
+insert into bookings (booking_no, group_no, guest_name, phone, company, room_id, check_in, check_out, rate, deposit, status, payment_status, channel, created_by, note, created_at) values ('BK6910071','GR16','นายภานุวัฒน์ สีดา','089-987-7238','ไบโอเทค','C07','2026-11-30','2026-12-04',400,300,'ยืนยันแล้ว','ยังไม่ชำระ','LINE OA','seed',null,'2026-10-23T09:35:00+07:00') on conflict (booking_no) do nothing;
+insert into bookings (booking_no, group_no, guest_name, phone, company, room_id, check_in, check_out, rate, deposit, status, payment_status, channel, created_by, note, created_at) values ('BK6910072','GR14','นางสาววรรณิศา บุญเรือง','062-382-9288','ฟินิคซ (PPPC)','B03','2026-11-30','2026-12-04',700,300,'ยืนยันแล้ว','ยังไม่ชำระ','LINE OA','seed',null,'2026-10-23T16:20:00+07:00') on conflict (booking_no) do nothing;
+insert into bookings (booking_no, group_no, guest_name, phone, company, room_id, check_in, check_out, rate, deposit, status, payment_status, channel, created_by, note, created_at) values ('BK6910073','GR15','นายวีรยุทธ ศรีสุข','067-741-3053','กฟผ.','A06','2026-11-30','2026-12-03',700,300,'ยืนยันแล้ว','ยังไม่ชำระ','LINE OA','seed',null,'2026-10-24T08:40:00+07:00') on conflict (booking_no) do nothing;
+insert into bookings (booking_no, group_no, guest_name, phone, company, room_id, check_in, check_out, rate, deposit, status, payment_status, channel, created_by, note, created_at) values ('BK6910074','GR15','นายเอกชัย ศรีวงษ์','099-211-5513','กฟผ.','C05','2026-11-30','2026-12-03',400,300,'ยืนยันแล้ว','ยังไม่ชำระ','LINE OA','seed',null,'2026-10-24T08:40:00+07:00') on conflict (booking_no) do nothing;
+insert into bookings (booking_no, group_no, guest_name, phone, company, room_id, check_in, check_out, rate, deposit, status, payment_status, channel, created_by, note, created_at) values ('BK6910075',null,'นางสาวสุภาวดี ดวงแก้ว','097-211-8929',null,'C11','2026-12-05','2026-12-06',400,300,'ยกเลิก','คืนเงินแล้ว','LINE OA','seed','งานแต่งญาติ','2026-10-11T12:00:00+07:00') on conflict (booking_no) do nothing;
+insert into chat_threads (line_user_id, display_name, is_seed, last_message_at) values ('seed-T001','Ton Thanakrit',true,'2026-10-07T20:20:00+07:00');
+insert into chat_messages (thread_id, sender, body, created_at) select id, 'ลูกค้า', 'สวัสดีครับ ผมต้น จาก กฟผ. ปลายเดือนนี้ทีมผมจะเข้ามาซ่อมบำรุงที่เขื่อนอีกรอบครับ', '2026-10-07T19:58:00+07:00' from chat_threads where line_user_id = 'seed-T001';
+insert into chat_messages (thread_id, sender, body, created_at) select id, 'ระบบ', 'สวัสดีค่ะ พบรักรีสอร์ทยินดีให้บริการ 🙏 แอดมินจะตอบกลับโดยเร็วค่ะ (เวลาทำการ 07:00–21:00)', '2026-10-07T19:58:05+07:00' from chat_threads where line_user_id = 'seed-T001';
+insert into chat_messages (thread_id, sender, body, created_at) select id, 'พนักงาน', 'สวัสดีค่ะคุณต้น ยินดีต้อนรับกลับค่ะ รอบนี้มากี่ท่าน วันไหนถึงวันไหนคะ', '2026-10-07T20:03:00+07:00' from chat_threads where line_user_id = 'seed-T001';
+insert into chat_messages (thread_id, sender, body, created_at) select id, 'ลูกค้า', '19 ต.ค. – 31 ต.ค. ครับ 9 คน วิศวกร 5 ขอตึก ช่าง 4 ขอบ้านเหมือนเดิม ผมขอห้องใหญ่ชั้นบน 1 ห้อง', '2026-10-07T20:05:00+07:00' from chat_threads where line_user_id = 'seed-T001';
+insert into chat_messages (thread_id, sender, body, created_at) select id, 'ลูกค้า', 'แล้วมีน้องช่างอีกคนตามมาวันที่ 26 ต.ค. ครับ ทุกคนจ่ายเองนะครับ แต่ขอใบกำกับภาษีในนาม กฟผ. สำนักงานใหญ่ แยกรายคน', '2026-10-07T20:06:00+07:00' from chat_threads where line_user_id = 'seed-T001';
+insert into chat_messages (thread_id, sender, body, created_at) select id, 'พนักงาน', 'รับทราบค่ะ ว่างครบค่ะ ตึก 5 ห้อง (ห้องใหญ่ชั้นบน 1) บ้าน 4 หลัง รวม 12 คืน ชำระตอนเช็คอินได้เลยค่ะ ส่วนน้องที่มา 26 ต.ค. จองให้แล้วค่ะ', '2026-10-07T20:15:00+07:00' from chat_threads where line_user_id = 'seed-T001';
+insert into chat_messages (thread_id, sender, body, created_at) select id, 'ลูกค้า', 'ขอบคุณครับ WiFi ตึกแรงพอประชุมออนไลน์ไหมครับ ตอนเย็นต้องส่งรายงานเข้าส่วนกลาง', '2026-10-07T20:16:00+07:00' from chat_threads where line_user_id = 'seed-T001';
+insert into chat_messages (thread_id, sender, body, created_at) select id, 'พนักงาน', 'ตึกใช้ได้ดีค่ะ ฝั่งบ้านสัญญาณอ่อนกว่า ถ้าประชุมแนะนำนั่งที่ล็อบบี้ค่ะ', '2026-10-07T20:18:00+07:00' from chat_threads where line_user_id = 'seed-T001';
+insert into chat_messages (thread_id, sender, body, created_at) select id, 'ระบบ', '📋 สรุปการจอง: ทีม กฟผ. 10 ห้อง 19 ต.ค.–31 ต.ค. 2569 | เช็คอิน 14:00 เช็คเอาท์ 12:00 | มัดจำห้องละ 300 บาท (คืนตอนเช็คเอาท์)', '2026-10-07T20:20:00+07:00' from chat_threads where line_user_id = 'seed-T001';
+insert into chat_threads (line_user_id, display_name, is_seed, last_message_at) values ('seed-T002','Fai Siriporn',true,'2026-10-23T14:58:00+07:00');
+insert into chat_messages (thread_id, sender, body, created_at) select id, 'ลูกค้า', 'สวัสดีค่ะ ฝ้ายจาก Valmet นะคะ ตอนนี้พักอยู่ห้อง A05 ค่ะ ปลายเดือนพฤศจิกายนทีมช่างจะมางาน shutdown ที่โรงงานฟินิคซค่ะ', '2026-10-22T13:10:00+07:00' from chat_threads where line_user_id = 'seed-T002';
+insert into chat_messages (thread_id, sender, body, created_at) select id, 'ลูกค้า', 'ขอใบเสนอราคา 7 ห้อง 23 พ.ย. – 5 ธ.ค. (12 คืน) วิศวกร 3 ห้องตึก ช่าง 4 หลังบ้านค่ะ บริษัทจะเอาเข้าระบบจัดซื้อ', '2026-10-22T13:11:00+07:00' from chat_threads where line_user_id = 'seed-T002';
+insert into chat_messages (thread_id, sender, body, created_at) select id, 'พนักงาน', 'ได้ค่ะคุณฝ้าย ราคาปกติ ตึกใหญ่ 800 / ตึกมาตรฐาน 700 / บ้านใหญ่ 500 / บ้าน 400 บาทต่อคืน รวม VAT แล้วค่ะ', '2026-10-22T13:25:00+07:00' from chat_threads where line_user_id = 'seed-T002';
+insert into chat_messages (thread_id, sender, body, created_at) select id, 'ลูกค้า', 'พักยาว 12 คืน 7 ห้อง มีราคาพิเศษไหมคะ แล้ววางบิลเครดิต 30 วันได้ไหมคะ บริษัทไม่จ่ายเงินสดล่วงหน้าค่ะ', '2026-10-22T13:28:00+07:00' from chat_threads where line_user_id = 'seed-T002';
+insert into chat_messages (thread_id, sender, body, created_at) select id, 'พนักงาน', 'เจ้าของอนุมัติราคาพิเศษให้ค่ะ ตึกใหญ่ 750 บ้านใหญ่ 450 (ห้องอื่นราคาเดิม) และรับเครดิต 30 วันได้ค่ะ ขอหนังสือรับรองบริษัทกับ PO ด้วยนะคะ', '2026-10-22T14:40:00+07:00' from chat_threads where line_user_id = 'seed-T002';
+insert into chat_messages (thread_id, sender, body, created_at) select id, 'พนักงาน', 'ใบเสนอราคา_Valmet_พ.ย.2569.pdf', '2026-10-22T14:42:00+07:00' from chat_threads where line_user_id = 'seed-T002';
+insert into chat_messages (thread_id, sender, body, created_at) select id, 'ลูกค้า', 'หัวหน้าอนุมัติแล้วค่ะ ส่ง PO ให้ทางอีเมลแล้วนะคะ ยืนยันจองเลยค่ะ 🙏', '2026-10-23T14:50:00+07:00' from chat_threads where line_user_id = 'seed-T002';
+insert into chat_messages (thread_id, sender, body, created_at) select id, 'พนักงาน', 'ยืนยันการจองเรียบร้อยค่ะ ห้องจะออกใบแจ้งหนี้รวมหลังทีมเช็คเอาท์ ครบกำหนดชำระ 30 วันนะคะ', '2026-10-23T14:58:00+07:00' from chat_threads where line_user_id = 'seed-T002';
+insert into chat_threads (line_user_id, display_name, is_seed, last_message_at) values ('seed-T003','Kon PM',true,'2026-10-16T10:08:00+07:00');
+insert into chat_messages (thread_id, sender, body, created_at) select id, 'ลูกค้า', 'สวัสดีครับ บัญชีโอนค่าห้องรอบ 19–23 ต.ค. 7 ห้องแล้วนะครับ', '2026-10-16T09:40:00+07:00' from chat_threads where line_user_id = 'seed-T003';
+insert into chat_messages (thread_id, sender, body, created_at) select id, 'ลูกค้า', 'สลิปโอนเงิน_ไบโอเทค.jpg', '2026-10-16T09:40:30+07:00' from chat_threads where line_user_id = 'seed-T003';
+insert into chat_messages (thread_id, sender, body, created_at) select id, 'พนักงาน', 'ได้รับยอดแล้วค่ะ ขอบคุณค่ะ ใบกำกับรวมกลุ่มจะส่งให้ทางอีเมลบัญชีภายในวันนี้ค่ะ', '2026-10-16T10:05:00+07:00' from chat_threads where line_user_id = 'seed-T003';
+insert into chat_messages (thread_id, sender, body, created_at) select id, 'ลูกค้า', 'ออกในนามบริษัท ไบโอเทค อินดัสทรีส์ จำกัด สำนักงานใหญ่ เหมือนรอบก่อนครับ มัดจำน้องๆ จ่ายเองหน้าเคาน์เตอร์นะครับ', '2026-10-16T10:07:00+07:00' from chat_threads where line_user_id = 'seed-T003';
+insert into chat_messages (thread_id, sender, body, created_at) select id, 'พนักงาน', 'รับทราบค่ะ 👍', '2026-10-16T10:08:00+07:00' from chat_threads where line_user_id = 'seed-T003';
+insert into chat_threads (line_user_id, display_name, is_seed, last_message_at) values ('seed-T004','Oat Sittichai',true,'2026-10-16T17:05:00+07:00');
+insert into chat_messages (thread_id, sender, body, created_at) select id, 'ลูกค้า', 'ขอโทษนะครับ ใบกำกับที่ได้ไปเมื่อเช้าเขียนสาขาน้ำพอง บัญชีบอกต้องเป็น ''สำนักงานใหญ่'' ครับ', '2026-10-16T16:20:00+07:00' from chat_threads where line_user_id = 'seed-T004';
+insert into chat_messages (thread_id, sender, body, created_at) select id, 'พนักงาน', 'ขออภัยค่ะ เดี๋ยวยกเลิกฉบับเดิมแล้วออกใหม่ให้นะคะ ส่งเป็นไฟล์ PDF ได้เลยไหมคะ', '2026-10-16T16:31:00+07:00' from chat_threads where line_user_id = 'seed-T004';
+insert into chat_messages (thread_id, sender, body, created_at) select id, 'ลูกค้า', 'ได้ครับ ส่ง PDF ใน LINE ก็ได้ครับ ฉบับเดิมผมทิ้งให้', '2026-10-16T16:32:00+07:00' from chat_threads where line_user_id = 'seed-T004';
+insert into chat_messages (thread_id, sender, body, created_at) select id, 'พนักงาน', 'ใบกำกับภาษี_ฉบับแก้ไข.pdf', '2026-10-16T17:05:00+07:00' from chat_threads where line_user_id = 'seed-T004';
+insert into chat_threads (line_user_id, display_name, is_seed, last_message_at) values ('seed-T005','Kit_tisak',true,'2026-10-21T08:10:00+07:00');
+insert into chat_messages (thread_id, sender, body, created_at) select id, 'ลูกค้า', 'แอร์บ้าน C04 ไม่เย็นครับ เปิด 18 องศาแล้วยังร้อน', '2026-10-20T21:42:00+07:00' from chat_threads where line_user_id = 'seed-T005';
+insert into chat_messages (thread_id, sender, body, created_at) select id, 'ระบบ', 'ขณะนี้อยู่นอกเวลาทำการ (07:00–21:00) ระบบได้ส่งเรื่องให้แม่บ้านเวรแล้วค่ะ หากเร่งด่วนโทร 08x-xxx-xxxx', '2026-10-20T21:42:05+07:00' from chat_threads where line_user_id = 'seed-T005';
+insert into chat_messages (thread_id, sender, body, created_at) select id, 'พนักงาน', 'ขอโทษค่ะคุณกิต ป้าใจกำลังไปดูให้นะคะ ถ้าไม่หายคืนนี้ย้ายไปบ้านว่างได้ค่ะ', '2026-10-20T21:55:00+07:00' from chat_threads where line_user_id = 'seed-T005';
+insert into chat_messages (thread_id, sender, body, created_at) select id, 'ลูกค้า', 'ล้างฟิลเตอร์แล้วเย็นขึ้นครับ ไม่ต้องย้าย ขอบคุณครับ', '2026-10-20T22:20:00+07:00' from chat_threads where line_user_id = 'seed-T005';
+insert into chat_messages (thread_id, sender, body, created_at) select id, 'พนักงาน', 'ช่างแอร์จะเข้าเติมน้ำยาช่วงที่คุณกิตไปทำงานนะคะ ประมาณ 10 โมงค่ะ', '2026-10-21T08:10:00+07:00' from chat_threads where line_user_id = 'seed-T005';
+insert into chat_threads (line_user_id, display_name, is_seed, last_message_at) values ('seed-T006','pim.safety🌷',true,'2026-10-19T20:21:00+07:00');
+insert into chat_messages (thread_id, sender, body, created_at) select id, 'ระบบ', 'ยินดีต้อนรับคุณพิม 🙏 ห้อง A06 | WiFi: Pobrak_A / รหัส pobrak2569 | อาหารเช้า 06:30–09:00 | เช็คเอาท์ 12:00 | ติดต่อแม่บ้านกดเมนู ''แจ้งเรื่อง''', '2026-10-19T17:20:00+07:00' from chat_threads where line_user_id = 'seed-T006';
+insert into chat_messages (thread_id, sender, body, created_at) select id, 'ลูกค้า', 'ขอเตารีดได้ไหมคะ แล้วแถวนี้มีร้านซักผ้าไหมคะ อยู่ยาว 12 คืน', '2026-10-19T20:12:00+07:00' from chat_threads where line_user_id = 'seed-T006';
+insert into chat_messages (thread_id, sender, body, created_at) select id, 'พนักงาน', 'มีเตารีดให้ยืมค่ะ เดี๋ยวน้องดวนเอาไปให้ ร้านซักผ้าหยอดเหรียญอยู่หน้าตลาดเขื่อน ห่างไป 2 กม.ค่ะ หรือฝากซักกับรีสอร์ทได้ กิโลละ 40 บาทค่ะ', '2026-10-19T20:20:00+07:00' from chat_threads where line_user_id = 'seed-T006';
+insert into chat_messages (thread_id, sender, body, created_at) select id, 'ลูกค้า', 'ฝากซักกับรีสอร์ทดีกว่าค่ะ ขอบคุณค่ะ 😊', '2026-10-19T20:21:00+07:00' from chat_threads where line_user_id = 'seed-T006';
+insert into chat_threads (line_user_id, display_name, is_seed, last_message_at) values ('seed-T007','Nan Kanokwan 🌼',true,'2026-10-22T18:23:00+07:00');
+insert into chat_messages (thread_id, sender, body, created_at) select id, 'ลูกค้า', 'ขอต่อ 1 คืนถึงวันเสาร์ได้ไหมคะ งานตรวจคุณภาพยังไม่เสร็จ ห้องเดิม B01 ค่ะ', '2026-10-22T18:15:00+07:00' from chat_threads where line_user_id = 'seed-T007';
+insert into chat_messages (thread_id, sender, body, created_at) select id, 'พนักงาน', 'ห้องเดิมว่างค่ะ ต่อให้แล้วนะคะ คืนนี้บริษัทไม่ได้โอนส่วนนี้ ชำระตอนเช็คเอาท์ได้เลยค่ะ', '2026-10-22T18:22:00+07:00' from chat_threads where line_user_id = 'seed-T007';
+insert into chat_messages (thread_id, sender, body, created_at) select id, 'ลูกค้า', 'ได้ค่ะ ขอใบกำกับในนามบริษัทเหมือนเดิมนะคะ จะเอาไปเบิก', '2026-10-22T18:23:00+07:00' from chat_threads where line_user_id = 'seed-T007';
+insert into chat_threads (line_user_id, display_name, is_seed, last_message_at) values ('seed-T008','Nat Phumsaard',true,'2026-10-23T19:48:00+07:00');
+insert into chat_messages (thread_id, sender, body, created_at) select id, 'ลูกค้า', 'งานที่เขื่อนน่าจะเลยไป 2 วันครับ ขอต่อถึง 2 พ.ย. ได้ไหมครับ', '2026-10-23T19:30:00+07:00' from chat_threads where line_user_id = 'seed-T008';
+insert into chat_messages (thread_id, sender, body, created_at) select id, 'พนักงาน', 'คืนวันที่ 7 ห้อง A03 มีแขกจองแล้วค่ะ ต้องย้ายไปห้อง A02 ราคาเท่าเดิม สะดวกไหมคะ', '2026-10-23T19:41:00+07:00' from chat_threads where line_user_id = 'seed-T008';
+insert into chat_messages (thread_id, sender, body, created_at) select id, 'ลูกค้า', 'ได้ครับ ย้ายเช้าวันเสาร์ก่อนออกงานได้ไหมครับ', '2026-10-23T19:44:00+07:00' from chat_threads where line_user_id = 'seed-T008';
+insert into chat_messages (thread_id, sender, body, created_at) select id, 'พนักงาน', 'ได้ค่ะ ฝากกระเป๋าไว้ที่ล็อบบี้ได้เลย แม่บ้านย้ายของให้ค่ะ ✅', '2026-10-23T19:48:00+07:00' from chat_threads where line_user_id = 'seed-T008';
+insert into chat_threads (line_user_id, display_name, is_seed, last_message_at) values ('seed-T009','บุญเลิศ นาค',true,'2026-10-22T18:02:00+07:00');
+insert into chat_messages (thread_id, sender, body, created_at) select id, 'ลูกค้า', 'บ้านข้างๆ เสียงดังมากครับ ตั้งวงกันถึงตอนนี้ พรุ่งนี้ผมต้องเข้าโรงงานตีห้า', '2026-10-21T23:35:00+07:00' from chat_threads where line_user_id = 'seed-T009';
+insert into chat_messages (thread_id, sender, body, created_at) select id, 'ระบบ', 'ขณะนี้อยู่นอกเวลาทำการ ระบบได้แจ้งแม่บ้านเวรแล้วค่ะ', '2026-10-21T23:35:04+07:00' from chat_threads where line_user_id = 'seed-T009';
+insert into chat_messages (thread_id, sender, body, created_at) select id, 'พนักงาน', 'ขอโทษมากค่ะ ป้าใจไปขอให้เบาเสียงแล้วนะคะ', '2026-10-21T23:48:00+07:00' from chat_threads where line_user_id = 'seed-T009';
+insert into chat_messages (thread_id, sender, body, created_at) select id, 'พนักงาน', 'เมื่อคืนต้องขออภัยอีกครั้งค่ะ คืนนี้ถ้าอยากย้ายไปหลังที่เงียบกว่า แจ้งได้เลยค่ะ มีกาแฟเย็นให้ตอนกลับจากงานนะคะ ☕', '2026-10-22T07:30:00+07:00' from chat_threads where line_user_id = 'seed-T009';
+insert into chat_messages (thread_id, sender, body, created_at) select id, 'ลูกค้า', 'ไม่เป็นไรครับ เมื่อคืนหลังเที่ยงคืนก็เงียบแล้ว', '2026-10-22T18:02:00+07:00' from chat_threads where line_user_id = 'seed-T009';
+insert into chat_threads (line_user_id, display_name, is_seed, last_message_at) values ('seed-T010','Pik Piyapong',true,'2026-10-14T11:30:20+07:00');
+insert into chat_messages (thread_id, sender, body, created_at) select id, 'ลูกค้า', 'ขอยกเลิกห้องวันที่ 22–24 ครับ งานเลื่อน ผมโอนไปแล้ว 1,400 บาท', '2026-10-14T08:05:00+07:00' from chat_threads where line_user_id = 'seed-T010';
+insert into chat_messages (thread_id, sender, body, created_at) select id, 'พนักงาน', 'รับทราบค่ะ ยกเลิกให้แล้ว คืนเงินเต็มจำนวนนะคะ ขอเลขบัญชีหรือพร้อมเพย์ค่ะ', '2026-10-14T08:15:00+07:00' from chat_threads where line_user_id = 'seed-T010';
+insert into chat_messages (thread_id, sender, body, created_at) select id, 'ลูกค้า', 'พร้อมเพย์เบอร์นี้เลยครับ', '2026-10-14T08:16:00+07:00' from chat_threads where line_user_id = 'seed-T010';
+insert into chat_messages (thread_id, sender, body, created_at) select id, 'พนักงาน', 'โอนคืนแล้วค่ะ 1,400 บาท สลิปตามนี้ค่ะ', '2026-10-14T11:30:00+07:00' from chat_threads where line_user_id = 'seed-T010';
+insert into chat_messages (thread_id, sender, body, created_at) select id, 'พนักงาน', 'สลิปคืนเงิน.jpg', '2026-10-14T11:30:20+07:00' from chat_threads where line_user_id = 'seed-T010';
+insert into chat_threads (line_user_id, display_name, is_seed, last_message_at) values ('seed-T011','เรือน พรหมสุวรรณ',true,'2026-10-18T08:30:00+07:00');
+insert into chat_messages (thread_id, sender, body, created_at) select id, 'ลูกค้า', 'สวัสดีค่ะ จะกลับไปทอดกฐินที่บ้าน 25 ต.ค. ขอบ้าน 2 หลัง 24 ต.ค. – 26 ต.ค. ค่ะ ไป 5 คน', '2026-10-17T20:10:00+07:00' from chat_threads where line_user_id = 'seed-T011';
+insert into chat_messages (thread_id, sender, body, created_at) select id, 'พนักงาน', 'ว่างค่ะ บ้านใหญ่ 2 หลัง หลังละ 500 บาท 2 คืน รวม 2,000 บาทค่ะ', '2026-10-17T20:15:00+07:00' from chat_threads where line_user_id = 'seed-T011';
+insert into chat_messages (thread_id, sender, body, created_at) select id, 'ลูกค้า', 'โอนแล้วนะคะ', '2026-10-18T08:09:00+07:00' from chat_threads where line_user_id = 'seed-T011';
+insert into chat_messages (thread_id, sender, body, created_at) select id, 'ลูกค้า', 'สลิป.jpg', '2026-10-18T08:09:20+07:00' from chat_threads where line_user_id = 'seed-T011';
+insert into chat_messages (thread_id, sender, body, created_at) select id, 'ลูกค้า', 'ไปถึงประมาณ 11 โมง เข้าห้องก่อนได้ไหมคะ มีผู้สูงอายุไปด้วย', '2026-10-18T08:11:00+07:00' from chat_threads where line_user_id = 'seed-T011';
+insert into chat_messages (thread_id, sender, body, created_at) select id, 'พนักงาน', 'ได้ค่ะ จะเตรียมบ้านให้ก่อนนะคะ ✅', '2026-10-18T08:30:00+07:00' from chat_threads where line_user_id = 'seed-T011';
+insert into chat_threads (line_user_id, display_name, is_seed, last_message_at) values ('seed-T012','M Chalermpon',true,'2026-10-24T09:12:00+07:00');
+insert into chat_messages (thread_id, sender, body, created_at) select id, 'ลูกค้า', 'สวัสดีครับ วันนี้ไปถึงประมาณ 4 โมงเย็น จ่ายตอนถึงได้ไหมครับ แล้วมีที่จอดรถหน้าห้องไหม', '2026-10-24T09:05:00+07:00' from chat_threads where line_user_id = 'seed-T012';
+insert into chat_messages (thread_id, sender, body, created_at) select id, 'ระบบ', 'ขอบคุณที่ติดต่อค่ะ แอดมินกำลังตอบกลับ 🙏 (ส่งต่อให้พนักงาน)', '2026-10-24T09:05:04+07:00' from chat_threads where line_user_id = 'seed-T012';
+insert into chat_messages (thread_id, sender, body, created_at) select id, 'ลูกค้า', 'อ้อ แล้วจอง 27 พ.ย. เพิ่มอีกคืนด้วยครับ ขาไปหนองคายวันหยุดยาว', '2026-10-24T09:12:00+07:00' from chat_threads where line_user_id = 'seed-T012';
+insert into chat_threads (line_user_id, display_name, is_seed, last_message_at) values ('seed-T013','Pairoj K.',true,'2026-10-20T15:00:00+07:00');
+insert into chat_messages (thread_id, sender, body, created_at) select id, 'ลูกค้า', 'สวัสดีครับ จากกรมชลประทานครับ จะมีอบรม 10–13 พ.ย. ขอห้อง 2 ห้อง ทางกรมจะเป็นผู้ชำระครับ', '2026-10-20T10:10:00+07:00' from chat_threads where line_user_id = 'seed-T013';
+insert into chat_messages (thread_id, sender, body, created_at) select id, 'พนักงาน', 'ยินดีค่ะ ห้องตึก 700 บาท ได้ค่ะ ต้องการเอกสารแบบไหนคะ', '2026-10-20T10:18:00+07:00' from chat_threads where line_user_id = 'seed-T013';
+insert into chat_messages (thread_id, sender, body, created_at) select id, 'ลูกค้า', 'ขอใบเสนอราคาในนามกรมชลประทาน แล้วหลังพักขอใบแจ้งหนี้ + ใบเสร็จที่มีเลขผู้เสียภาษีของรีสอร์ทครับ เบิกจ่ายประมาณ 30–45 วัน', '2026-10-20T10:20:00+07:00' from chat_threads where line_user_id = 'seed-T013';
+insert into chat_messages (thread_id, sender, body, created_at) select id, 'พนักงาน', 'ได้ค่ะ รีสอร์ทรับเครดิตหน่วยงานราชการค่ะ เช็คอินได้เลยไม่ต้องสำรองจ่าย ใบเสนอราคาส่งให้ภายในวันนี้ค่ะ', '2026-10-20T10:25:00+07:00' from chat_threads where line_user_id = 'seed-T013';
+insert into chat_messages (thread_id, sender, body, created_at) select id, 'พนักงาน', 'ใบเสนอราคา_กรมชลประทาน.pdf', '2026-10-20T15:00:00+07:00' from chat_threads where line_user_id = 'seed-T013';
+insert into chat_threads (line_user_id, display_name, is_seed, last_message_at) values ('seed-T014','สมศักดิ์ ทองดี',true,'2026-10-19T18:55:00+07:00');
+insert into chat_messages (thread_id, sender, body, created_at) select id, 'ลูกค้า', 'น้อง อยู่ 12 คืน ลดให้พี่หน่อยได้ไหม บ้านหลังละ 400 เบิกได้ 350 เอง', '2026-10-19T18:40:00+07:00' from chat_threads where line_user_id = 'seed-T014';
+insert into chat_messages (thread_id, sender, body, created_at) select id, 'พนักงาน', 'ขอโทษค่ะพี่ ราคาบ้านเป็นราคาต่ำสุดแล้วค่ะ แต่ให้น้ำดื่มกับกาแฟเติมฟรีทุกวัน และเช็คเอาท์ช้าได้ถึงบ่ายโมงวันสุดท้ายนะคะ', '2026-10-19T18:52:00+07:00' from chat_threads where line_user_id = 'seed-T014';
+insert into chat_messages (thread_id, sender, body, created_at) select id, 'ลูกค้า', 'โอเคๆ ได้ๆ 👍', '2026-10-19T18:55:00+07:00' from chat_threads where line_user_id = 'seed-T014';
+insert into chat_threads (line_user_id, display_name, is_seed, last_message_at) values ('seed-T015','Sit Janhom',true,'2026-10-23T12:15:00+07:00');
+insert into chat_messages (thread_id, sender, body, created_at) select id, 'ระบบ', '🎂 สุขสันต์วันเกิดคุณสิทธิ์ค่ะ ขอให้สุขภาพแข็งแรง งานราบรื่น คืนนี้แม่บ้านมีเค้กเล็กๆ วางไว้ในห้องนะคะ — พบรักรีสอร์ท', '2026-10-23T08:00:00+07:00' from chat_threads where line_user_id = 'seed-T015';
+insert into chat_messages (thread_id, sender, body, created_at) select id, 'ลูกค้า', 'ขอบคุณมากครับ ไม่คิดว่าจะจำได้ 😄🙏', '2026-10-23T12:15:00+07:00' from chat_threads where line_user_id = 'seed-T015';
+insert into chat_threads (line_user_id, display_name, is_seed, last_message_at) values ('seed-T016','Dew Adisorn',true,'2026-10-22T22:30:00+07:00');
+insert into chat_messages (thread_id, sender, body, created_at) select id, 'ลูกค้า', 'มีห้องพรุ่งนี้คืนเดียวไหมครับ', '2026-10-21T21:00:00+07:00' from chat_threads where line_user_id = 'seed-T016';
+insert into chat_messages (thread_id, sender, body, created_at) select id, 'พนักงาน', 'มีค่ะ บ้านใหญ่ 500 บาท จองไว้ให้นะคะ ชำระตอนถึงได้ค่ะ', '2026-10-21T21:05:00+07:00' from chat_threads where line_user_id = 'seed-T016';
+insert into chat_messages (thread_id, sender, body, created_at) select id, 'ระบบ', 'เตือนการเข้าพักวันนี้ บ้าน C11 เช็คอินได้ตั้งแต่ 14:00 ค่ะ หากเปลี่ยนแผนแจ้งได้เลยนะคะ', '2026-10-22T18:00:00+07:00' from chat_threads where line_user_id = 'seed-T016';
+insert into chat_messages (thread_id, sender, body, created_at) select id, 'พนักงาน', 'คุณดิวยังเดินทางอยู่ไหมคะ ทางรีสอร์ทรอเปิดห้องให้ค่ะ', '2026-10-22T22:30:00+07:00' from chat_threads where line_user_id = 'seed-T016';
+commit;

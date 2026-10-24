@@ -22,7 +22,7 @@ def patch(h):
     for rid, r in sorted(HKAT.items()):
         if r['status_at_ref'] == 'เตรียมรับแขกวันนี้':
             b = next(x for x in BK if x['room'] == rid and x['start'] == D0)
-            note = 'ลูกค้าขอเช็คอินก่อนเวลา' if rid in ('B011', 'B012') else 'ลูกค้าเช็คอินวันนี้'
+            note = 'ลูกค้าขอเช็คอินก่อนเวลา' if rid in ('C11', 'C12') else 'ลูกค้าเช็คอินวันนี้'
             tasks.append((rid, SN[r['assigned_to']], note))
     js = "let TASKS=[\n" + ",\n".join("  mkT(%s,'arrive',%s,1,null,null,%s)" % (J(a), J(b), J(c)) for a, b, c in tasks) + "\n];"
     i = h.index("let TASKS=["); j = h.index("];", i) + 2

@@ -69,7 +69,7 @@ def build_gu():
         bdM = (nxt - RD).days <= 30
         latest = act[-1] if act else (bs[-1] if bs else None)
         nights = latest['nights'] if latest else 1
-        room = 'ตึก' if (latest and latest['room'][0] == 'A') else 'บ้าน'
+        room = 'ตึก' if (latest and ROOMBY[latest['room']]['zone'] == 'A') else 'บ้าน'
         ch = latest['ch'] if latest else 'LINE OA'
         joined = dno(mb['joined_at']) if mb else None
         out.append({'n': disp(g), 'seg': seg, 'roles': roles, 'line': line, 'member': bool(g['is_member']), 'room': room, 'ch': ch,
@@ -94,7 +94,7 @@ def co_stats(cid):
     people = len({b['gid'] for b in st})
     rn = sum(b['nights'] for b in st)
     spend = sum(b['total'] for b in st)
-    zones = sorted({('ตึก' if b['room'][0] == 'A' else 'บ้าน') for b in st})
+    zones = sorted({('ตึกใหม่' if ROOMBY[b['room']]['zone'] == 'A' else 'บ้านหลัง') for b in st})
     nxt = min((b['start'] for b in fut), default=None)
     return dict(times=times, people=people, rn=rn, spend=spend, zones=zones, fut=len(fut), nxt=nxt, avg=(rn / len(st) if st else 0))
 

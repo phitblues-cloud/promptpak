@@ -49,9 +49,9 @@ def patch(h):
     h = h[:i] + 'let B = ' + J(cards) + ';\n' + h[j:]
     # --- tasks ---
     i = h.index('let tasks = ['); j = h.index('const DEP = 200;')
-    tasks = [{'t': 'เตรียมห้อง B011 B012 ให้พร้อมก่อน 11:00 (ครอบครัวขอเช็คอินก่อนเวลา) และ B013 ก่อนบ่ายนี้', 'done': False},
-             {'t': 'ออกใบแจ้งหนี้รวม Valmet ห้อง A015–A016 ตอนเช็คเอาท์ (เครดิต 30 วัน)', 'done': False},
-             {'t': 'เก็บค่าห้องต่อ 1 คืนของห้อง A006 ตอนเช็คเอาท์ แล้วออกใบกำกับภาษี ไบโอเทค', 'done': False},
+    tasks = [{'t': 'เตรียมห้อง C11 C12 ให้พร้อมก่อน 11:00 (ครอบครัวขอเช็คอินก่อนเวลา) และ C13 ก่อนบ่ายนี้', 'done': False},
+             {'t': 'ออกใบแจ้งหนี้รวม Valmet ห้อง A04–A05 ตอนเช็คเอาท์ (เครดิต 30 วัน)', 'done': False},
+             {'t': 'เก็บค่าห้องต่อ 1 คืนของห้อง B01 ตอนเช็คเอาท์ แล้วออกใบกำกับภาษี ไบโอเทค', 'done': False},
              {'t': 'ตอบแชท LINE OA ที่ยังค้างอยู่', 'done': False}]
     h = h[:i] + 'let tasks = ' + J(tasks) + ';\n\n' + h[j:]
     h = R(h, 'const DEP = 200;', 'const DEP = 300;', 1, 'home-dep')
@@ -83,7 +83,7 @@ def patch(h):
     # FREE (ไม่ได้ใช้งานจริง) เป็นค่าว่าง
     h = R(h, "const FREE = {A005:0, A006:1};", "const FREE = {};", 1, 'home-free')
     # สถานะทำความสะอาดห้องที่แขกจะมา
-    h = R(h, "const CLN={A011:1,B001:2};", "const CLN={B011:2,B012:1,B013:1};", 1, 'home-cln')
+    h = R(h, "const CLN={A011:1,B001:2};", "const CLN={C11:2,C12:1,C13:1};", 1, 'home-cln')
     h = R(h, "(b.svcRemain||0)+(b.extraDue||0)+(b.paid?0:RT(b)); if(sv>0&&b.stage==='out')", "(b.svcRemain||0)+(b.extraDue||0)+((b.paid||b.credit)?0:RT(b)); if(sv>0&&b.stage==='out')", 1, 'home-credit-out')
     h = R(h, "out:()=>[['รอเช็คเอาท์','b5']],", "out:b=>b&&b.credit?[['รอเช็คเอาท์','b5'],['เครดิต · รอเบิกจ่าย','b6']]:[['รอเช็คเอาท์','b5']],", 1, 'home-credit-badge')
     h = R(h, "function renderTasks(){\n", "var CRMN={leads:[],cos:[]};\nfunction crmRows(){const r=(k,lab,x)=>`<div class=\"task urgent crmn\"><span class=\"ub\" aria-hidden=\"true\" style=\"background:var(--purple);font-size:.62rem\">${lab}</span><p><b>${x.name}</b><small>เครื่องมือ CRM · ${x.d||'ยังไม่ได้ดู'}</small></p><button class=\"btn sm\" data-crmgo=\"1\">เปิดดู</button></div>`;return CRMN.leads.map(x=>r('l','ลีดใหม่',x)).join('')+CRMN.cos.map(x=>r('c','บริษัทใหม่',x)).join('')}\ndocument.addEventListener('click',e=>{if(e.target.closest('[data-crmgo]'))try{parent.postMessage({pbr:'goto',sub:'crmtool:main'},'*')}catch(_){}});\nfunction renderTasks(){\n", 1, 'home-crmrows')
