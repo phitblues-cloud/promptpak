@@ -37,7 +37,8 @@ async function enter(k,pin){
   const top=window.parent!==window?window.parent:window;
   let r,msg='PIN ไม่ถูกต้อง';
   try{r=await fetch(top.location.origin+'/api/app?part=pin',{method:'POST',headers:{'Content-Type':'application/json'},credentials:'same-origin',body:JSON.stringify({role:k,pin})});
-    if(r.status===429)msg='ใส่ PIN ผิดหลายครั้ง กรุณารอ 15 นาที';}catch(_){msg='เชื่อมต่อไม่ได้ ลองใหม่อีกครั้ง'}
+    if(r.status===429)msg='ใส่ PIN ผิดหลายครั้ง กรุณารอ 15 นาที';
+    else if(r.status!==401&&!r.ok){let t='';try{t=(await r.json()).error||''}catch(_){}msg='ระบบขัดข้อง (รหัส '+r.status+') '+t}}catch(_){msg='เชื่อมต่อไม่ได้ ลองใหม่อีกครั้ง'}
   if(r&&r.ok){top.location.reload();return}
   enter(k);const er=document.getElementById('er');er.textContent=msg;er.hidden=false;
 }
@@ -129,6 +130,18 @@ def handle(method, query, cookie_header, body, ip):
                 return 200, dict(J, **{'Set-Cookie': session.cookie_header(session.sign(r), session.TTL)}), '{"ok":true}'
             rpc('pp_pin_fail', {'p_ip': ip})
             return 401, J, json.dumps({'error': 'bad pin'})
+        if part == 'diag':   # ตรวจส่วนล็อกอิน (ไม่เปิดเผยค่าลับ)
+            out = {'python': 'ok'}
+            try:
+                out['db_pin_lock'] = 'ok (ล็อกอยู่)' if rpc('pp_pin_locked', {'p_ip': ip}) else 'ok (ไม่ล็อก)'
+            except Exception as e:
+                out['db_pin_lock'] = 'ผิดพลาด: ' + str(e)[:200]
+            try:
+                session.sign('owner'); out['app_secret'] = 'ok'
+            except Exception as e:
+                out['app_secret'] = 'ผิดพลาด: ' + str(e)
+            out['owner_pin_set'] = bool(session.norm_pin(os.environ.get('OWNER_PIN')))
+            return 200, J, json.dumps(out, ensure_ascii=False)
         if method == 'POST' and part == 'logout':
             return 200, dict(J, **{'Set-Cookie': session.cookie_header('', 0)}), '{"ok":true}'
         if part == 'mods':
@@ -144,4 +157,6 @@ def handle(method, query, cookie_header, body, ip):
         html = page(role)
         return 200, {'Content-Type': 'text/html; charset=utf-8', 'Cache-Control': 'no-store'}, html
     except DbError as e:
-        return 500, J, json.dumps({'error': 'ฐานข้อมูล: ' + str(e)}, ensure_ascii=False)
+        return 500, J, json.dumps({'error': 'ฐานข้อมูล: ' + str(e)[:200]}, ensure_ascii=False)
+    except Exception as e:
+        return 500, J, json.dumps({'error': type(e).__name__ + ': ' + str(e)[:200]}, ensure_ascii=False)
