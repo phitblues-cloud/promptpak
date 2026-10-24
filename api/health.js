@@ -11,7 +11,19 @@ export async function GET() {
     const d = await rpc('pp_availability', { p_check_in: '2030-01-01', p_check_out: '2030-01-02' });
     if (!d?.types?.length) database = 'เชื่อมได้ แต่ยังไม่มีข้อมูลห้อง (ยังไม่ได้รัน 02_seed.sql)';
   } catch (e) { database = 'ผิดพลาด: ' + e.message; }
-  return json({ env, database, supabase_key_type: keyType(process.env.SUPABASE_SERVICE_ROLE_KEY), model: process.env.ANTHROPIC_MODEL || 'claude-sonnet-5-5' });
+  return json({ env, database, supabase_key_type: keyType(process.env.SUPABASE_SERVICE_ROLE_KEY),
+    pin_check: { owner: pinFmt(process.env.OWNER_PIN), staff: pinFmt(process.env.STAFF_PIN) }, model: process.env.ANTHROPIC_MODEL || 'claude-sonnet-5-5' });
+}
+
+// ตรวจรูปแบบ PIN โดยไม่เปิดเผยตัวเลข
+function pinFmt(v) {
+  if (!v) return 'ไม่มี';
+  const n = String(v).replace(/[๐-๙]/g, c => '๐๑๒๓๔๕๖๗๘๙'.indexOf(c)).replace(/\s/g, '');
+  const notes = [];
+  if (n !== v) notes.push('มีช่องว่างหรือเลขไทยปน (ระบบแก้ให้แล้ว)');
+  if (!/^[0-9]+$/.test(n)) notes.push('มีตัวอักษรที่ไม่ใช่ตัวเลข');
+  if (n.length !== 6) notes.push('ไม่ใช่ 6 หลัก');
+  return notes.length ? notes.join(' · ') : 'ตัวเลข 6 หลัก ถูกต้อง';
 }
 
 // บอกชนิดของคีย์ Supabase โดยไม่เปิดเผยตัวคีย์ (ต้องเป็น sb_secret หรือ jwt:service_role)

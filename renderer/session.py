@@ -32,9 +32,17 @@ def verify(value):
     return None
 
 
+THAI_DIGITS = str.maketrans('๐๑๒๓๔๕๖๗๘๙', '0123456789')
+
+
+def norm_pin(v):
+    """ตัดช่องว่าง และแปลงเลขไทยเป็นเลขอารบิก"""
+    return ''.join(str(v or '').translate(THAI_DIGITS).split())
+
+
 def check_pin(role, pin):
-    want = (os.environ.get('OWNER_PIN' if role == 'owner' else 'STAFF_PIN') or '').strip()
-    return bool(want) and hmac.compare_digest(str(pin).strip(), want)
+    want = norm_pin(os.environ.get('OWNER_PIN' if role == 'owner' else 'STAFF_PIN'))
+    return bool(want) and hmac.compare_digest(norm_pin(pin), want)
 
 
 def cookie_header(value, max_age):
