@@ -1,0 +1,14 @@
+{
+  "name": "promptpak",
+  "private": true,
+  "version": "0.1.0",
+  "description": "PROMPT PAK — PMS + AI สำหรับโรงแรมเล็ก (ระบบจริง เฟส 1)",
+  "type": "module",
+  "scripts": {
+    "dev": "node dev/server.mjs",
+    "test": "node tests/run.mjs"
+  },
+  "dependencies": {
+    "@vercel/functions": "^1.5.0"
+  }
+}

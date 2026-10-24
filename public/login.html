@@ -1,0 +1,43 @@
+<!doctype html>
+<html lang="th">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>เข้าสู่ระบบ · PROMPT PAK</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,700&family=Noto+Sans+Thai:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/assets/app.css">
+</head>
+<body>
+<div class="login">
+  <form class="box" id="f">
+    <div class="mark" id="mk"></div>
+    <h1>PROMPT PAK</h1>
+    <p>พบรักรีสอร์ท · ระบบบริหารโรงแรม</p>
+    <label for="email">อีเมล</label>
+    <input id="email" type="email" autocomplete="username" required>
+    <label for="pw">รหัสผ่าน</label>
+    <input id="pw" type="password" autocomplete="current-password" required>
+    <button class="btn pri" id="go">เข้าสู่ระบบ</button>
+    <div class="err" id="err" role="alert"></div>
+  </form>
+</div>
+<script type="module">
+import { icon } from '/assets/app.js';
+document.getElementById('mk').innerHTML = icon('logo', 'ic" style="width:2rem;height:2rem');
+document.getElementById('f').onsubmit = async e => {
+  e.preventDefault();
+  const go = document.getElementById('go'), err = document.getElementById('err');
+  go.disabled = true; err.textContent = '';
+  try {
+    const r = await fetch('/api/login', { method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email: document.getElementById('email').value, password: document.getElementById('pw').value }) });
+    const d = await r.json().catch(() => ({}));
+    if (r.ok) location.href = '/'; else err.textContent = d.error || 'เข้าสู่ระบบไม่สำเร็จ';
+  } catch { err.textContent = 'เชื่อมต่อไม่ได้ ลองใหม่อีกครั้ง'; }
+  go.disabled = false;
+};
+</script>
+</body>
+</html>
