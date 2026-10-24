@@ -29,11 +29,6 @@
     <div class="facts" id="sumFacts"></div>
   </section>
 
-  <section class="card" style="margin-bottom:1rem" id="aiBox">
-    <h2 id="aiNewTitle"></h2>
-    <div id="aiNew" class="cols" style="grid-template-columns:repeat(auto-fill,minmax(17rem,1fr))"></div>
-  </section>
-
   <section class="cols">
     <div class="card col in"><div class="ch" id="hIn"></div><div class="list" id="lIn"></div></div>
     <div class="card col stay"><div class="ch" id="hStay"></div><div class="list" id="lStay"></div></div>
@@ -42,15 +37,14 @@
 </main>
 </div>
 <script type="module">
-import { rail, api, icon, parts, th, baht, esc, payChip, aiChip, toast, setBadge, bookingDrawer, time } from '/assets/app.js';
+import { rail, api, icon, parts, th, baht, esc, payChip, aiChip, setBadge, bookingDrawer, time } from '/assets/app.js';
 rail('/');
 document.getElementById('hi').innerHTML = icon('home');
 document.getElementById('aiTitle').innerHTML = icon('spark') + ' AI สรุปให้เจ้าของ';
 document.getElementById('sumBtn').innerHTML = icon('spark') + ' สรุปตอนนี้';
-document.getElementById('aiNewTitle').innerHTML = icon('spark') + ' การจองล่าสุดที่ AI รับผ่าน LINE';
 const hdr = (ic, t, n) => `${icon(ic)}<span>${t}</span><span class="n">${n}</span>`;
 
-let seen = null, byNo = {};
+let byNo = {};
 function card(b, extra = '') {
   byNo[b.booking_no] = b;
   return `<div class="g ${extra}" data-no="${esc(b.booking_no)}" role="button" tabindex="0">
@@ -73,21 +67,10 @@ async function load() {
     <div class="card kpi"><div class="lb"><i>${icon('chat')}</i>แชทรอพนักงาน</div><div class="v">${d.chats_need_staff}<small>เรื่อง</small></div><div class="s"><a href="/chats">ไปที่แชท LINE →</a></div></div>`;
   setBadge(d.chats_need_staff);
 
-  const nos = d.latest_ai.map(b => b.booking_no);
-  const fresh = seen ? nos.filter(n => !seen.has(n)) : [];
-  if (fresh.length) {
-    const b = d.latest_ai.find(x => x.booking_no === fresh[0]);
-    toast(`✨ การจองใหม่จาก LINE: ${b.guest_name} · ห้อง ${b.room_id} · ${th(b.check_in)}`, 6000);
-  }
-  seen = new Set([...(seen || []), ...nos]);
-  const isNew = b => fresh.includes(b.booking_no) ? 'new' : '';
-  document.getElementById('aiNew').innerHTML = d.latest_ai.length ? d.latest_ai.map(b => card(b, isNew(b))).join('')
-    : '<div class="empty">ยังไม่มีการจองจาก AI — ลองทักแชท LINE OA แล้วขอจองห้องดูได้เลย</div>';
-
   document.getElementById('hIn').innerHTML = hdr('in', 'เช็คอิน', d.arrivals.length);
   document.getElementById('hStay').innerHTML = hdr('moon', 'เข้าพัก', d.in_house.length);
   document.getElementById('hOut').innerHTML = hdr('bag', 'เช็คเอาท์', d.departures.length);
-  document.getElementById('lIn').innerHTML = list(d.arrivals, isNew);
+  document.getElementById('lIn').innerHTML = list(d.arrivals);
   document.getElementById('lStay').innerHTML = list(d.in_house);
   document.getElementById('lOut').innerHTML = list(d.departures);
   document.getElementById('upd').textContent = 'อัปเดตอัตโนมัติ · ล่าสุด ' + time(new Date().toISOString()).split(' ').pop();
