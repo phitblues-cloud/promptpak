@@ -1215,7 +1215,7 @@ begin
     v_undo := coalesce((select jsonb_build_object('prev', to_jsonb(rr)) from rooms rr where id = p->>'room'), '{"new": true}'::jsonb);
     insert into rooms (id, zone, room_type, bed, rate, max_guests, floor, closed)
     values (upper(trim(p->>'room')), p->>'zone', trim(p->>'type'),
-            (select bed from rooms where zone = p->>'zone' and room_type = trim(p->>'type') limit 1),
+            coalesce(nullif(trim(p->>'bed'), ''), (select bed from rooms where zone = p->>'zone' and room_type = trim(p->>'type') limit 1)),
             (p->>'rate')::int, coalesce((p->>'max')::int, 2),
             case when upper(p->>'room') like 'B%' then 2 else 1 end, not coalesce((p->>'open')::boolean, true))
     on conflict (id) do update set zone = excluded.zone, room_type = excluded.room_type, rate = excluded.rate,

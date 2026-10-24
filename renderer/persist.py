@@ -8,6 +8,7 @@
 HELPER = r"""<script>
 /* PROMPT PAK: บันทึกลงฐานข้อมูลจริง */
 window.__ppOps=[];
+function ppZkey(v){v=String(v||'').trim();return !v?'':(/บ้าน/.test(v)||/^c$/i.test(v))?'B':'A'}
 function ppZone(z){return z==='B'?'บ้านหลัง':'ตึกใหม่'}
 function ppDay(n){return new Date(n*864e5).toISOString().slice(0,10)}
 function ppIso(o){const d=new Date();d.setDate(d.getDate()+o);return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0')}
@@ -98,10 +99,21 @@ BOOK = [
      "if(a=t.closest('[data-troom]')){const r=roomOf(a.dataset.troom);r.open=!r.open;ppSave('room',{room:r.code,open:r.open});"),
     # โหลดใหม่จากฐานข้อมูลแล้ว: ล้างรายการจองใหม่ที่ค้างอยู่ในตัวกลาง (กันการ์ดซ้ำหน้าแรก)
     ("pubOcc();\n", "pubOcc();\ntry{pub('newbk',{list:[]})}catch(_){}\n"),
+    # ฟอร์มเพิ่มประเภทห้อง/แก้ห้อง: โซนเติมจากรหัสห้อง (A/B = ตึกใหม่, C = บ้านหลัง) พิมพ์เป็นภาษาไทย + ช่องรายละเอียดเตียง
+    ("const R=ed?{...ed}:{code:'',zone:'A',type:'ห้องเตียงใหญ่',rate:800,max:2,open:true};",
+     "const R=ed?{...ed}:{code:'',zone:'',type:'',bed:'',rate:700,max:2,open:true};"),
+    ('placeholder="เช่น A05"', 'placeholder="เช่น B09 หรือ C16"'),
+    ('<input id="rZone" type="text" list="zl" value="${esc(R.zone)}" placeholder="A = โซนตึกใหม่ / B = โซนบ้านหลัง"><datalist id="zl">${zs.map(z=>`<option value="${esc(z)}">`).join(\'\')}</datalist>',
+     '<input id="rZone" type="text" list="zl" value="${esc(R.zone?ZN(R.zone):\'\')}" placeholder="เติมให้จากรหัสห้อง: ตึกใหม่ / บ้านหลัง"><datalist id="zl"><option value="ตึกใหม่"><option value="บ้านหลัง"></datalist>'),
+    ('<datalist id="tl">${types.map(z=>`<option value="${esc(z)}">`).join(\'\')}</datalist></div>',
+     '<datalist id="tl">${types.map(z=>`<option value="${esc(z)}">`).join(\'\')}</datalist></div>\n    <div class="fld"><label for="rBed">รายละเอียดเตียง</label><input id="rBed" type="text" value="${esc(R.bed||\'\')}" placeholder="เช่น เตียงใหญ่ 1 เตียง / เตียงสองชั้น (บนเดี่ยว + ล่างเดี่ยว)"></div>'),
+    ("$('msheet').querySelectorAll('[data-close]').forEach(b=>b.onclick=closeModal);\n    $('msheet').querySelectorAll('[data-rs]')",
+     "$('msheet').querySelectorAll('[data-close]').forEach(b=>b.onclick=closeModal);\n    if(!ed)$('rCode').oninput=e=>{const v=e.target.value.trim().toUpperCase();if(v)$('rZone').value=v[0]==='C'?'บ้านหลัง':'ตึกใหม่'};\n    $('msheet').querySelectorAll('[data-rs]')"),
+    ("z=$('rZone').value.trim().toUpperCase(), t=$('rType').value.trim();", "z=ppZkey($('rZone').value), t=$('rType').value.trim();"),
     # แก้ห้องรายตัว / เพิ่มประเภทห้องใหม่ (ห้องแรก)
     ("if(ed){Object.assign(ed,{zone:z,type:t,rate:R.rate,max:R.max,open:R.open});",
      "ppSave('roomset',{room:c,zone:ppZone(z),type:t,rate:R.rate,max:R.max,open:R.open});"
-     "if(ed){Object.assign(ed,{zone:z,type:t,rate:R.rate,max:R.max,open:R.open});"),
+     "if(ed){Object.assign(ed,{zone:z,type:t,rate:R.rate,max:R.max,open:R.open,bed:$('rBed').value.trim()});"),
     # ตั้งค่าประเภทห้อง (ชื่อ / ราคา ทั้งกลุ่ม)
     ("g.rooms.forEach(r=>{r.type=t;r.rate=R.rate});",
      "ppSave('roomtype',{zone:ppZone(g.zone),type:g.type,new_type:t,rate:R.rate});g.rooms.forEach(r=>{r.type=t;r.rate=R.rate});"),
