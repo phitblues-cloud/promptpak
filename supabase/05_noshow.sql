@@ -2,15 +2,22 @@
 -- วิธีใช้: Supabase > SQL Editor > New query > วางทั้งไฟล์ > Run (รันซ้ำได้)
 begin;
 -- ---------- กฎวันจริง (25 ต.ค. 2569) ----------
--- 1) การจองจริงที่เลยวันเข้าพักแล้วไม่ได้เช็คอิน -> ยกเลิก (ไม่มาตามนัด) ห้องว่างให้ขายต่อ
--- 2) แขกที่เช็คอินแล้วแต่ยังไม่กดเช็คเอาท์ ถือว่ายังอยู่ในห้อง (AI/พนักงานจองห้องนั้นวันนี้ไม่ได้)
+-- 1) เลยวันเข้าพัก (ถึง 06:00 วันถัดไป) แล้วไม่ได้เช็คอิน -> ยกเลิก (ไม่มาตามนัด) ห้องว่างให้ขายต่อ
+-- 2) แขกที่เช็คอินแล้วแต่ยังไม่กดเช็คเอาท์ ถือว่ายังอยู่ในห้อง (AI จองห้องนั้นวันนี้ไม่ได้)
+-- ใช้กับการจองจริง และข้อมูลตัวอย่างที่เข้าพักตั้งแต่ 25 ต.ค. 2569 (วันเริ่มใช้งานจริง)
+create or replace function pp_checked_in(p_no text) returns boolean language sql stable as $$
+  select exists (select 1 from ops o where o.booking_no = p_no and o.kind = 'checkin' and not o.undone)
+      or exists (select 1 from bookings b where b.booking_no = p_no and b.created_by = 'seed' and b.check_in < date '2026-10-25')
+$$;
+
 create or replace function pp_noshow() returns int language plpgsql as $$
 declare n int;
 begin
   with x as (
     update bookings b set status = 'ยกเลิก'
-    where b.status <> 'ยกเลิก' and b.created_by <> 'seed' and b.check_in < pp_today()
-      and not exists (select 1 from ops o where o.booking_no = b.booking_no and o.kind = 'checkin' and not o.undone)
+    where b.status <> 'ยกเลิก' and (b.created_by <> 'seed' or b.check_in >= date '2026-10-25')
+      and b.check_in < ((now() at time zone 'Asia/Bangkok') - interval '6 hours')::date
+      and not pp_checked_in(b.booking_no)
     returning b.booking_no)
   insert into ops (role, kind, booking_no, data)
   select 'system', 'cancel', booking_no, '{"why": "ไม่มาตามนัด (ระบบยกเลิกอัตโนมัติเมื่อเลยวันเข้าพัก)", "noshow": true}'::jsonb from x;
@@ -27,8 +34,9 @@ returns jsonb language sql stable as $$
       where b.room_id = r.id and b.status <> 'ยกเลิก'
         and daterange(b.check_in, b.check_out, '[)') && daterange(p_check_in, p_check_out, '[)'))
       and not exists (   -- แขกที่เช็คอินแล้วแต่ยังไม่กดเช็คเอาท์ (เลยวันออก) ยังอยู่ในห้อง
-        select 1 from bookings b2 join ops oc on oc.booking_no = b2.booking_no and oc.kind = 'checkin' and not oc.undone
+        select 1 from bookings b2
         where b2.room_id = r.id and b2.status <> 'ยกเลิก' and b2.check_out <= pp_today() and p_check_in <= pp_today()
+          and b2.check_out >= date '2026-10-25' and pp_checked_in(b2.booking_no)
           and not exists (select 1 from ops ox where ox.booking_no = b2.booking_no and ox.kind = 'checkout' and not ox.undone))
   )
   select jsonb_build_object(
@@ -93,8 +101,9 @@ begin
           select 1 from bookings b where b.room_id = rm.id and b.status <> 'ยกเลิก'
             and daterange(b.check_in, b.check_out, '[)') && daterange(v_in, v_out, '[)'))
         and not exists (
-          select 1 from bookings b2 join ops oc on oc.booking_no = b2.booking_no and oc.kind = 'checkin' and not oc.undone
+          select 1 from bookings b2
           where b2.room_id = rm.id and b2.status <> 'ยกเลิก' and b2.check_out <= pp_today() and v_in <= pp_today()
+            and b2.check_out >= date '2026-10-25' and pp_checked_in(b2.booking_no)
             and not exists (select 1 from ops ox where ox.booking_no = b2.booking_no and ox.kind = 'checkout' and not ox.undone))
       order by rm.id limit v_cnt
       for update
@@ -125,7 +134,7 @@ end $$;
 
 do $$ declare f record; begin
   for f in select p.oid::regprocedure sig from pg_proc p join pg_namespace n on n.oid = p.pronamespace
-           where n.nspname = 'public' and p.proname in ('pp_noshow', 'pp_availability', 'pp_book') loop
+           where n.nspname = 'public' and p.proname in ('pp_noshow', 'pp_checked_in', 'pp_availability', 'pp_book') loop
     execute format('revoke all on function %s from public', f.sig);
     if exists (select 1 from pg_roles where rolname = 'anon') then
       execute format('revoke all on function %s from anon, authenticated', f.sig);

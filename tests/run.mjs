@@ -218,8 +218,8 @@ ok('AI สรุปกล่อง CRM: กันโค้ดแปลกปล�
   // ไม่มาตามนัด -> ยกเลิกอัตโนมัติ · ลืมเช็คเอาท์ -> ค้างกล่องเช็คเอาท์ และห้องยังไม่ว่าง
   const r2 = psql('-c', `select id from rooms r where r.zone='บ้านหลัง' and not exists (select 1 from bookings b where b.room_id = r.id and b.status <> 'ยกเลิก' and daterange(b.check_in, b.check_out) && daterange('${plus(-3)}'::date, '${plus(3)}'::date)) order by id limit 2`).split('\n');
   psql('-c', `insert into bookings (booking_no, guest_name, phone, room_id, check_in, check_out, rate, created_by) values
-    ('BKT001','ไม่มา','0800000001','${r2[0]}','${plus(-1)}','${plus(1)}',400,'staff'),
-    ('BKT002','ลืมออก','0800000002','${r2[1]}','${plus(-2)}','${plus(-1)}',400,'staff');
+    ('BKT001','ไม่มา','0800000001','${r2[0]}','${plus(-2)}','${plus(1)}',400,'staff'),
+    ('BKT002','ลืมออก','0800000002','${r2[1]}','${plus(-2)}','${plus(0)}',400,'staff');
     insert into ops (role, kind, booking_no, data) values ('staff','checkin','BKT002','{}');`);
   M = await mods();
   assert.equal(rpc(`pp_bookings('${plus(-3)}','${plus(3)}')`).bookings.find(b => b.booking_no === 'BKT001').status, 'ยกเลิก');

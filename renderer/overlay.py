@@ -67,25 +67,32 @@ def _pay_id(m):
     return 'PX%04d' % (len(m['payments']) + 1)
 
 
-def _normalize(b, today, m, credit_ids, by_no):
+GOLIVE = datetime.date(2026, 10, 25)   # วันเริ่มใช้งานจริง: ข้อมูลตัวอย่างที่เข้าพักตั้งแต่วันนี้ต้องให้พนักงานกดเหมือนของจริง
+
+
+def _normalize(b, today, m, credit_ids, by_no, cut=None):
     """ปรับสถานะการจองให้ตรงกับวันนี้ (ข้อมูลต้นแบบอ้างอิง 24 ต.ค. 10:00)"""
     if b['booking_status'] in ('ยกเลิก', 'ไม่มาตามนัด'):
         return
     ci, co = _d(b['checkin_date']), _d(b['checkout_date'])
-    if b.get('_real'):
+    cut = cut or today
+    inhouse_at_golive = not b.get('_real') and ci < GOLIVE <= co
+    if b.get('_real') or ci >= GOLIVE or inhouse_at_golive:
         # การจองจริง: สถานะเปลี่ยนเฉพาะเมื่อพนักงานกด (ไม่เช็คอิน/เช็คเอาท์/รับเงินให้เอง)
         if b['booking_status'] == 'เช็คเอาท์แล้ว':
             return
+        if inhouse_at_golive and not b.get('checkin_actual'):
+            b['checkin_actual'] = _iso(b['checkin_date'], '14:30')   # เข้าพักก่อนวันเริ่มใช้งานจริง
         if b.get('checkin_actual'):
             b['booking_status'] = 'กำลังพัก'
             b['due_out_today'] = co <= today          # เลยวันเช็คเอาท์แล้วยังไม่กด -> ค้างในกล่องเช็คเอาท์
-        elif ci < today:
-            b['booking_status'] = 'ยกเลิก'            # เลยวันเข้าพักแล้วไม่มาเช็คอิน -> ยกเลิก (ไม่มาตามนัด)
+        elif ci < cut:
+            b['booking_status'] = 'ยกเลิก'            # เลยวันเข้าพัก (ถึง 06:00 วันถัดไป) ไม่มาเช็คอิน -> ยกเลิก
             b['cancel_reason'] = 'ไม่มาตามนัด (ระบบยกเลิกอัตโนมัติเมื่อเลยวันเข้าพัก)'
             b['cancelled_at'] = b.get('cancelled_at') or _iso(b['checkin_date'], '23:59')
-        elif ci == today:
+        elif ci <= today:                                 # วันนี้ หรือมาดึกหลังเที่ยงคืน (ก่อน 06:00)
             b['booking_status'] = 'รอเช็คอิน'
-            paid = b['payment_status'] in ('ชำระแล้ว', 'รอชำระ')
+            paid = b['payment_status'] in ('ชำระแล้ว', 'รอชำระ') or b['payment_status'].startswith('เครดิต')
             b['checkin_split'] = 'รอเช็คอิน-ชำระแล้ว (ส่งคีย์การ์ดได้ทันที)' if paid else 'รอเช็คอิน-ยังไม่ชำระ (ชำระก่อนแล้วส่งคีย์การ์ด)'
             b['due_out_today'] = False
         else:
@@ -222,6 +229,7 @@ def build(base, export, now):
     """base = ชุดข้อมูลต้นแบบ, export = ผลจาก pp_export(), now = 'YYYY-MM-DDTHH:MM' (เวลาไทย)"""
     m = copy.deepcopy(base)
     today = _d(now)
+    cut = (datetime.datetime.fromisoformat(now) - datetime.timedelta(hours=6)).date()   # ไม่มาตามนัด: ตัดที่ 06:00 วันถัดไป
     m['meta'] = dict(m['meta'], reference_datetime=now + ':00' + TZ)
     m['hotel'] = dict(m['hotel'], reference_datetime=now + ':00' + TZ)
     rooms = {r['room_id']: r for r in m['rooms']}
@@ -313,7 +321,7 @@ def build(base, export, now):
     ops = export.get('ops', [])
     apply_ops(m, ops, by_no)
     for b in m['bookings']:
-        _normalize(b, today, m, credit_ids, by_no)
+        _normalize(b, today, m, credit_ids, by_no, cut)
     apply_ops(m, ops, by_no, status_only=True)   # สถานะที่พนักงานกดจริง ชนะสถานะที่คำนวณจากวันที่
     closed = set(export.get('closed_rooms', []))
     for r in m['rooms']:
