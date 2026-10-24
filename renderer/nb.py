@@ -34,7 +34,7 @@ ROOMS = []
 for r in m['rooms']:
     ROOMS.append({'code': r['room_id'], 'zone': 'B' if r['zone'] == 'บ้านหลัง' else 'A',   # A = โซนตึกใหม่, B = โซนบ้านหลัง (คีย์ภายในของต้นแบบ)
                    'type': r['room_type'], 'rate': r['rack_rate'],
-                  'max': r['max_guests'], 'open': True, 'ota': True, 'bed': r['bed'], 'floor': r['floor']})
+                  'max': r['max_guests'], 'open': not r.get('closed'), 'ota': not r.get('closed'), 'bed': r['bed'], 'floor': r['floor']})
 ROOMBY = {r['code']: r for r in ROOMS}
 
 # ---------------- พนักงาน ----------------

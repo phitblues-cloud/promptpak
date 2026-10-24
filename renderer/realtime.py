@@ -45,7 +45,10 @@ def rooms_2569(M):
              "<div class=\"gphotos\">${[1,2,3].map(i=>{const k=ROOM_PHOTO[g.zone+'|'+g.type];"
              "return k?`<div class=\"gphoto\" style=\"position:relative;min-width:0;overflow:hidden;border-style:solid\"><img src=\"/rooms/${k}-${i}.jpg\" alt=\"${esc(ZN(g.zone)+' '+g.type)} รูปที่ ${i}\" loading=\"lazy\" "
              "style=\"position:absolute;inset:0;width:100%;height:100%;object-fit:cover\"></div>`:`<div class=\"gphoto\">${ico('image')}</div>`}).join('')}</div>"),
-            ("let ROOMS=[", "const ROOM_PHOTO={'A|เตียงเดี่ยว':'tower-single','A|เตียงคู่':'tower-twin','A|ห้องครอบครัว':'tower-family',"
+            # รายละเอียดเตียงจริงในฟอร์มเพิ่มการจอง (เช่น เตียงสองชั้น)
+            ("<span>${two?'เตียงคู่':'เตียงเดี่ยว'}</span>",
+             "<span>${esc((ROOMS.find(r=>r.zone===x.z&&r.type===x.t)||{}).bed||(two?'เตียงคู่':'เตียงเดี่ยว'))}</span>"),
+            ("let ROOMS=[","const ROOM_PHOTO={'A|เตียงเดี่ยว':'tower-single','A|เตียงคู่':'tower-twin','A|ห้องครอบครัว':'tower-family',"
              "'B|เตียงเดี่ยว':'house-single','B|เตียงคู่':'house-twin'};\nlet ROOMS=["),
         ]:
             assert h.count(old) == 1, ('book-rooms', old[:40])
@@ -72,6 +75,9 @@ def apply(M, ref):
             ("if(!isCo&&!F.idfile)p.push('ภาพถ่ายบัตรประชาชน');", ""),
             ('<label for="fId">เลขประจำตัวประชาชน *</label>', '<label for="fId">เลขประจำตัวประชาชน (ถ้ามี)</label>'),
             ('<label for="fFile">ภาพถ่ายบัตรประชาชน *</label>', '<label for="fFile">ภาพถ่ายบัตรประชาชน (ถ้ามี)</label>'),
+            ("<br>บัตรประชาชน ${idn.slice(0,1)}-${idn.slice(1,5)}-${idn.slice(5,10)}-${idn.slice(10,12)}-${idn.slice(12)} · แนบรูปบัตรแล้ว`",
+             "<br>บัตรประชาชน ${idn?`${idn.slice(0,1)}-${idn.slice(1,5)}-${idn.slice(5,10)}-${idn.slice(10,12)}-${idn.slice(12)}`:'ไม่ได้กรอก'}"
+             "${F.idfile?' · แนบรูปบัตรแล้ว':''}`"),
         ]:
             assert h.count(old) == 1, ('book-id', old[:40])
             h = h.replace(old, new)

@@ -126,6 +126,76 @@ def _normalize(b, today, m, credit_ids, by_no):
         b['due_out_today'] = False
 
 
+STAFF_ID = {'owner': 'S01', 'staff': 'S03'}
+METHOD = {'cash': 'เงินสด', 'transfer': 'โอน PromptPay'}
+
+
+def _new_gid(m):
+    """รหัสลูกค้าใหม่ที่ไม่ซ้ำกับของเดิม"""
+    have = {g['guest_id'] for g in m['guests']}
+    n = 1
+    while 'N%03d' % n in have:
+        n += 1
+    return 'N%03d' % n
+
+
+def apply_ops(m, ops, by_no, status_only=False):
+    """การทำงานหน้าเคาน์เตอร์ที่บันทึกจริง (ตาราง ops) -> ข้อมูลการจอง/การเงินของหน้าจอ"""
+    for o in ops:
+        b = by_no.get(o.get('no') or '')
+        if not b:
+            continue
+        k, d, at = o['kind'], o.get('data') or {}, _bkk(o['at'])
+        if k == 'checkin':
+            b['booking_status'] = 'กำลังพัก'
+            b['checkin_actual'] = b.get('checkin_actual') or at
+            b['keycard_given'] = True
+            b['checkin_split'] = None
+            b['due_out_today'] = False
+        elif k == 'checkout':
+            b['booking_status'] = 'เช็คเอาท์แล้ว'
+            b['checkout_actual'] = at
+            b['due_out_today'] = False
+        elif k == 'cancel':
+            b['booking_status'] = 'ยกเลิก'
+            b['cancelled_at'] = at
+            b['cancel_reason'] = d.get('why') or 'ยกเลิกที่เคาน์เตอร์'
+        if status_only:
+            continue
+
+        def pay(typ, amt, method=None):
+            m['payments'].append({'payment_id': 'PO%05d-%d' % (o['id'], len(m['payments'])), 'booking_id': b['booking_id'],
+                                  'guest_id': b['guest_id'], 'paid_at': at, 'type': typ, 'amount': int(amt),
+                                  'method': METHOD.get(method or d.get('m'), 'เงินสด'),
+                                  'received_by': STAFF_ID.get(o.get('role'), 'S03'), 'note': 'บันทึกที่เคาน์เตอร์'})
+        if k == 'pay':
+            if d.get('room_amt'):
+                pay('ค่าห้อง', d['room_amt'])
+                b['payment_status'] = 'ชำระแล้ว'
+                if b['booking_status'] == 'รอเช็คอิน':
+                    b['checkin_split'] = 'รอเช็คอิน-ชำระแล้ว (ส่งคีย์การ์ดได้ทันที)'
+            if d.get('ext_amt'):
+                pay('ค่าห้อง (พักต่อ)', d['ext_amt'])
+            if d.get('dep'):
+                pay('มัดจำห้อง (รับ)', d['dep'])
+                b['deposit_status'] = 'ถือไว้'
+        elif k == 'dep_in':
+            pay('มัดจำห้อง (รับ)', d.get('amt') or b['deposit'])
+            b['deposit_status'] = 'ถือไว้'
+        elif k == 'dep_out':
+            back = int(d.get('amt', b['deposit']))
+            pay('มัดจำห้อง (คืน)', -back)
+            b['deposit_status'] = 'คืนแล้ว' + (f" (หัก {int(d['ded'])} บาท)" if d.get('ded') else '')
+        elif k == 'credit':
+            b['billing_type'] = 'เครดิตบริษัท (ตั้งที่เคาน์เตอร์)'
+            b['payment_status'] = 'รอชำระ'
+            if b['booking_status'] == 'รอเช็คอิน':
+                b['checkin_split'] = 'รอเช็คอิน-ชำระแล้ว (ส่งคีย์การ์ดได้ทันที)'
+        elif k == 'cancel' and d.get('refund'):
+            pay('คืนเงินยกเลิกการจอง', -int(d['refund']), 'transfer')
+            b['payment_status'] = 'คืนเงินแล้ว'
+
+
 def build(base, export, now):
     """base = ชุดข้อมูลต้นแบบ, export = ผลจาก pp_export(), now = 'YYYY-MM-DDTHH:MM' (เวลาไทย)"""
     m = copy.deepcopy(base)
@@ -142,14 +212,14 @@ def build(base, export, now):
     line_to_gid = {g['line_user_id']: g['guest_id'] for g in m['guests'] if g.get('line_user_id')}
 
     def guest_for(row):
-        key = row.get('guest_id') or ('phone:' + (row.get('phone') or row['guest_name']))
+        key = row.get('guest_id') or ('phone:%s|%s' % (row.get('phone') or '', row['guest_name']))
         if key in guest_ids:
             return guest_ids[key]
         gr = next((g for g in export.get('guests', []) if g['id'] == row.get('guest_id')), None)
         if gr and gr.get('line_user_id') in line_to_gid:
             guest_ids[key] = line_to_gid[gr['line_user_id']]
             return guest_ids[key]
-        gid = 'L%03d' % (len([g for g in m['guests'] if g['guest_id'].startswith('L')]) + 1)
+        gid = _new_gid(m)
         first, last = _split_name(row['guest_name'])
         g = _blank_like(tmpl_g)
         g.update({'guest_id': gid, 'prefix': '', 'first_name': first, 'last_name': last,
@@ -163,7 +233,8 @@ def build(base, export, now):
                   'vehicle': None, 'is_member': False, 'bookings_total': 1, 'stays_completed_or_inhouse': 0,
                   'nights_stayed_to_ref': 0, 'upcoming_bookings': 1,
                   'first_stay': row['check_in'], 'last_stay': row['check_in'],
-                  'customer_type_at_ref': 'ลูกค้าใหม่', 'tags': ['จองผ่าน AI'], 'preferences_note': ''})
+                  'customer_type_at_ref': 'ลูกค้าใหม่', 'tags': ['จองผ่าน AI'] if row.get('created_by') == 'ai' else [],
+                  'preferences_note': ''})
         m['guests'].append(g)
         guest_ids[key] = gid
         if g['line_user_id']:
@@ -180,6 +251,10 @@ def build(base, export, now):
                 b['booking_status'] = 'ยกเลิก'
                 b['cancelled_at'] = _bkk(row.get('created_at'))
                 b['cancel_reason'] = 'ยกเลิกในระบบ'
+            if row['check_out'] != b['checkout_date']:   # พักต่อ / เช็คเอาท์ก่อนกำหนด
+                b['checkout_date'] = row['check_out']
+                b['nights'] = (_d(row['check_out']) - _d(b['checkin_date'])).days
+                b['room_total'] = b['rate'] * b['nights']
             continue
         gid = guest_for(row)
         g = next(x for x in m['guests'] if x['guest_id'] == gid)
@@ -212,8 +287,14 @@ def build(base, export, now):
     if export.get('bookings'):
         m['bookings'] = [b for b in m['bookings'] if b['booking_id'] in seen]
 
+    ops = export.get('ops', [])
+    apply_ops(m, ops, by_no)
     for b in m['bookings']:
         _normalize(b, today, m, credit_ids, by_no)
+    apply_ops(m, ops, by_no, status_only=True)   # สถานะที่พนักงานกดจริง ชนะสถานะที่คำนวณจากวันที่
+    closed = set(export.get('closed_rooms', []))
+    for r in m['rooms']:
+        r['closed'] = r['room_id'] in closed
 
     # สถานะห้องสำหรับแม่บ้าน ณ วันนี้
     hk = []
@@ -256,7 +337,7 @@ def build(base, export, now):
         if not gid:
             first = (t.get('display_name') or 'ลูกค้า LINE')
             g = _blank_like(tmpl_g)
-            gid = 'L%03d' % (len([x for x in m['guests'] if x['guest_id'].startswith('L')]) + 1)
+            gid = _new_gid(m)
             g.update({'guest_id': gid, 'first_name': first, 'last_name': '', 'full_name': first, 'nickname': first,
                       'birth_date': '1990-01-01', 'line_display_name': first, 'line_user_id': t['line_user_id'],
                       'company_id': None, 'vehicle': None, 'is_member': False, 'tags': [], 'segment': 'ลูกค้าใหม่',

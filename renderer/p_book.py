@@ -30,7 +30,8 @@ def patch(h):
     j = h.index(tail) + len(tail)
     h = h[:i] + 'let ROOMS=' + J(ROOMS) + ';' + h[j:]
     # 2) ข้อมูลการจอง
-    h = R(h, 'let B=[], seq=100;', 'let B=[], seq=77;', 1, 'book-seq')
+    seq = max([int(x['no'][6:]) for x in BK + BC if x['no'].startswith('BK6910') and x['no'][6:].isdigit()] + [77])
+    h = R(h, 'let B=[], seq=100;', 'let B=[], seq=%d;' % seq, 1, 'book-seq')
     a = h.index('function mk(room'); b_ = h.index('const statusOf')
     data = ('/* ข้อมูลจากชุด POBRAK_MOCK (อ้างอิง 24 ต.ค. 2569) */\n'
             'const BC=' + J([book_item(x) for x in BC]) + ';\n'

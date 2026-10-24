@@ -4,7 +4,7 @@ import datetime, json, os
 import render, overlay, session
 from db import rpc, DbError
 
-REFRESH = ['home', 'book', 'linechat', 'hk', 'fin', 'cust']   # โมดูลที่โหลดใหม่เมื่อมีการจอง/แชทใหม่
+REFRESH = ['home', 'book', 'linechat', 'hk', 'fin', 'cust', 'rep']   # โมดูลที่โหลดใหม่เมื่อมีการจอง/แชทใหม่
 
 
 def now_bkk():
@@ -71,10 +71,25 @@ def app_script(role, stamp):
   try{const r=await fetch('/api/app?part=mods&since='+encodeURIComponent(ST),{cache:'no-store'});
    if(r.status===401){location.reload();return}
    const d=await r.json();
-   if(d.mods){ST=d.stamp;Object.entries(d.mods).forEach(([k,h])=>{MODS[k]=h;if(FR[k])FR[k].srcdoc=h});
-     if(FR.book)FR.book.classList.remove('ovl');if(FR.home)FR.home.classList.remove('ovl')}}
+   if(d.mods){ST=d.stamp;Object.assign(PEND,d.mods)}
+   apply()}
   catch(_){}busy=false}
- setInterval(poll,10000);document.addEventListener('visibilitychange',poll);
+ /* โมดูลที่กำลังเปิดหน้าต่าง/กรอกข้อมูลอยู่ ยังไม่โหลดใหม่ รอจนปิดหน้าต่างก่อน (กันงานที่ทำค้างหาย) */
+ const PEND={},LAST={};
+ function busyFrame(k){const f=FR[k];if(!f)return false;
+  try{const d=f.contentDocument;if(!d)return false;
+   if(d.querySelector('[id$="scrim"].open,dialog[open]'))return true;
+   const a=d.activeElement;if(a&&/^(INPUT|TEXTAREA|SELECT)$/.test(a.tagName))return true;
+   return Date.now()-(LAST[k]||0)<8000}catch(_){return false}}
+ function apply(){Object.keys(PEND).forEach(k=>{if(busyFrame(k))return;const h=PEND[k];delete PEND[k];MODS[k]=h;
+   if(FR[k]){FR[k].srcdoc=h;FR[k].classList.remove('ovl')}})}
+ Object.keys(FR).forEach(k=>{const f=FR[k];if(!f)return;const hook=()=>{try{const d=f.contentDocument;
+   ['pointerdown','keydown','input'].forEach(e=>d.addEventListener(e,()=>{LAST[k]=Date.now()},true))}catch(_){}};
+   f.addEventListener('load',hook);hook()});
+ window.addEventListener('message',e=>{const d=e.data||{};
+   if(d.pbr==='pp-saved')setTimeout(()=>{busy=false;poll()},400);
+   if(d.pbr==='pp-reload'){ST='x';setTimeout(()=>{busy=false;poll()},400)}});
+ setInterval(poll,10000);setInterval(apply,2000);document.addEventListener('visibilitychange',poll);
 })();
 """ % json.dumps({'role': role, 'name': session.NAMES[role], 'stamp': stamp}, ensure_ascii=False)
 
@@ -144,6 +159,14 @@ def handle(method, query, cookie_header, body, ip):
             return 200, J, json.dumps(out, ensure_ascii=False)
         if method == 'POST' and part == 'logout':
             return 200, dict(J, **{'Set-Cookie': session.cookie_header('', 0)}), '{"ok":true}'
+        if method == 'POST' and part == 'act':   # ปุ่มในหน้าจอ -> บันทึกลงฐานข้อมูล
+            if not role:
+                return 401, J, json.dumps({'error': 'ต้องเข้าสู่ระบบใหม่'}, ensure_ascii=False)
+            data = json.loads(body or '{}')
+            if not isinstance(data, dict) or not data.get('k'):
+                return 400, J, json.dumps({'error': 'ข้อมูลไม่ครบ'}, ensure_ascii=False)
+            out = rpc('pp_act', {'p': data, 'p_role': role})
+            return 200, J, json.dumps(out, ensure_ascii=False)
         if part == 'mods':
             if not role:
                 return 401, J, '{}'

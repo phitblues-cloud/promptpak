@@ -2,10 +2,15 @@
 from patch_all import R, J
 from nb import *
 
+def out_today(b):
+    """เช็คเอาท์จริงวันนี้ (ยังแสดงการ์ดไว้ให้คืนเงินประกัน)"""
+    return bool(b.get('coAt')) and b['coAt'] // 86400000 == D0
+
+
 def home_cards():
     cards = []
     for b in BK:
-        if not b['stage'] or b['stage'] == 'outdone' or b['start'] > D0:
+        if not b['stage'] or (b['stage'] == 'outdone' and not out_today(b)) or b['start'] > D0:
             continue
         co = company_obj(b)
         it = {'id': b['room'], 'guest': (co['name'] if co else b['guest']), 'bk': b['no'], 'nights': b['nights'],
@@ -33,7 +38,7 @@ def patch(h):
     byroom = {}
     ENR, XT, CONAME = {}, {}, {}
     for b in BK:
-        if not b['stage'] or b['stage'] == 'outdone' or b['start'] > D0:
+        if not b['stage'] or (b['stage'] == 'outdone' and not out_today(b)) or b['start'] > D0:
             continue
         r = b['room']
         ENR[r] = {'line': b['line'], 'on': True, 'mem': b['mem'], 'grp': b['grp'], 'v': b['visits'], 'dep': {'held': 'held', 'unpaid': 'unpaid', 'refunded': 'refunded'}.get(b['dep'], 'unpaid')}

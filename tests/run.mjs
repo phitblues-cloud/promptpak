@@ -90,7 +90,7 @@ ok('AI สร้างการจองจริงในฐานข้อม�
 // 5) หน้าจอ v196 ได้ข้อมูลใหม่ (โมดูลการจอง / หน้าแรก / แชท)
 const mods = (await call('/api/app?part=mods&since=' + encodeURIComponent(stamp0))).body;
 assert.notEqual(mods.stamp, stamp0);
-assert.deepEqual(Object.keys(mods.mods).sort(), ['book', 'cust', 'fin', 'hk', 'home', 'linechat']);
+assert.deepEqual(Object.keys(mods.mods).sort(), ['book', 'cust', 'fin', 'hk', 'home', 'linechat', 'rep']);
 assert.ok(mods.mods.book.includes(bk[0].booking_no), 'การจองต้องอยู่ในโมดูลการจอง');
 assert.ok(mods.mods.linechat.includes('จองสำเร็จค่ะ'), 'แชทจริงต้องอยู่ในโมดูลแชท');
 const same = (await call('/api/app?part=mods&since=' + encodeURIComponent(mods.stamp))).body;
@@ -165,6 +165,59 @@ assert.equal(s.items[1].tn, 'info'); assert.deepEqual(s.items[1].st, ['ติด
 s = (await call('/api/summary', { method: 'POST' })).body;   // ครั้งที่สอง: ไม่เรียก AI ซ้ำ (script ว่าง)
 assert.equal(s.items.length, 2);
 ok('AI สรุปกล่อง CRM: กันโค้ดแปลกปลอม + ไม่เรียก AI ซ้ำเมื่อข้อมูลไม่เปลี่ยน');
+
+// 11b) ปุ่มหน้าเคาน์เตอร์บันทึกลงฐานข้อมูลจริง (รีเฟรชแล้วไม่หาย · การเงินเห็นยอด)
+{
+  const act = d => call('/api/app?part=act', { method: 'POST', body: JSON.stringify(d) });
+  assert.equal((await fetch(base + '/api/app?part=act', { method: 'POST', body: '{"k":"checkin","no":"x"}' })).status, 401);
+  const today = d0.date, out2 = plus(2);
+  const room = psql('-c', `select id from rooms r where not exists (select 1 from bookings b where b.room_id = r.id and b.status <> 'ยกเลิก' and daterange(b.check_in, b.check_out) && daterange('${today}'::date, '${plus(4)}'::date)) order by id limit 1`);
+  let a = (await act({ k: 'book', guest: 'แขก หน้าเคาน์เตอร์', phone: '0812345678', check_in: today, check_out: out2, rooms: [{ room }], channel: 'Walk-in' })).body;
+  assert.equal(a.ok, true); const no = a.nos[0];
+  const rate = rpc(`pp_bookings('${today}','${out2}')`).bookings.find(b => b.booking_no === no).rate;
+  assert.equal((await act({ k: 'pay', no, m: 'cash', room_amt: rate * 2, dep: 300 })).body.ok, true);
+  assert.equal((await act({ k: 'checkin', no })).body.ok, true);
+  const mods = async () => (await call('/api/app?part=mods&since=x')).body.mods;
+  let M = await mods();
+  const bill = h => { const i = h.indexOf('let BILLS='); const arr = JSON.parse(h.slice(i + 10, h.indexOf(';\n', i))); return arr.find(x => x.no === no); };
+  let fb = bill(M.fin);
+  assert.equal(fb.paid, rate * 2); assert.equal(fb.dep, 'held');
+  const card = h => { const i = h.indexOf('let B = '); return JSON.parse(h.slice(i + 8, h.indexOf(';\n', i))).find(x => x.bk === no); };
+  assert.equal(card(M.home).stage, 'stay');
+  ok('พนักงานจอง + รับเงิน + เช็คอิน → รีเฟรชแล้วยังอยู่ · การเงินเห็นยอดและเงินประกัน');
+
+  // พักต่อห้องเดิม 1 คืน + จ่าย แล้วย้อนกลับได้
+  a = (await act({ k: 'extend', no, segs: [{ room, from: out2, n: 1, rate }] })).body;
+  assert.equal(rpc(`pp_bookings('${today}','${plus(4)}')`).bookings.find(b => b.booking_no === no).check_out, plus(3));
+  await act({ k: 'undo', id: a.id });
+  assert.equal(rpc(`pp_bookings('${today}','${plus(4)}')`).bookings.find(b => b.booking_no === no).check_out, out2);
+  ok('พักต่อบันทึกจริง และกดย้อนกลับได้');
+
+  // เช็คเอาท์ + คืนเงินประกัน (หัก 100)
+  await act({ k: 'checkout', no }); await act({ k: 'dep_out', no, amt: 200, ded: 100, m: 'cash' });
+  M = await mods(); fb = bill(M.fin);
+  assert.equal(fb.dep, 'back');
+  const c = card(M.home); assert.equal(c.stage, 'outdone');
+  ok('เช็คเอาท์ + คืนเงินประกัน บันทึกจริง (การ์ดยังอยู่หน้าแรกวันนี้)');
+
+  // ปิดห้อง → AI/ห้องว่างไม่นับ · เปิดคืน
+  const before = rpc(`pp_availability('${plus(30)}','${plus(31)}')`).types.reduce((s, t) => s + t.free_rooms, 0);
+  await act({ k: 'room', room, open: false });
+  assert.equal(rpc(`pp_availability('${plus(30)}','${plus(31)}')`).types.reduce((s, t) => s + t.free_rooms, 0), before - 1);
+  M = await mods(); assert.ok(M.book.includes(`"code":"${room}","zone":`) && /"open":false/.test(M.book));
+  await act({ k: 'room', room, open: true });
+  ok('ปิด/เปิดห้องบันทึกจริง (ห้องที่ปิด AI จองไม่ได้)');
+
+  // ยกเลิกการจอง + ข้อผิดพลาดแจ้งกลับ
+  a = (await act({ k: 'book', guest: 'ยกเลิก ทดสอบ', phone: '0811110000', check_in: plus(5), check_out: plus(6), rooms: [{ room }] })).body;
+  await act({ k: 'cancel', no: a.nos[0], refund: 0, why: 'ลูกค้าเปลี่ยนแผน' });
+  assert.equal(rpc(`pp_bookings('${plus(5)}','${plus(6)}')`).bookings.find(b => b.booking_no === a.nos[0]).status, 'ยกเลิก');
+  const bad = await act({ k: 'book', guest: 'ชน', phone: '0811110001', check_in: today, check_out: out2, rooms: [{ room: (psql('-c', `select room_id from bookings where status <> 'ยกเลิก' and check_in <= '${today}' and check_out > '${today}' limit 1`)) }] });
+  assert.equal(bad.status, 500); assert.match(bad.body.error, /no_double_booking|conflicting|ทับ/);
+  ok('ยกเลิกบันทึกจริง · จองทับห้องที่มีแขก → ฐานข้อมูลปฏิเสธและแจ้งกลับ');
+  const hm = (await call('/')).body;
+  assert.ok(hm.includes('ppSave(') && hm.includes('part=act'));
+}
 
 // 12) กันเดา PIN
 for (let i = 0; i < 8; i++) await call('/api/app?part=pin', { method: 'POST', body: JSON.stringify({ role: 'owner', pin: '000000' }) });
