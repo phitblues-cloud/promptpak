@@ -16,7 +16,7 @@ def home_cards():
         it = {'id': b['room'], 'guest': (co['name'] if co else b['guest']), 'bk': b['no'], 'nights': b['nights'],
               'rate': b['rate'], 'stage': b['stage'], 'viaLine': b['viaLine'], 'paid': b['paid'],
               'paidToday': False, 'phone': b['phone'], 'ch': b['ch'], 'pax': b['pax'], 'note': b['note'],
-              'adults': b['adults'], 'kids': 0, 'email': b['email'],
+              'adults': b['adults'], 'kids': b['kids'], 'email': b['email'],
               'taxTxt': ('ต้องการ · ' + b['tax']['name']) if b['tax'] else 'ไม่ต้องการ',
               'madeAtMs': b['madeAt'], 'leadD': b['lead']}
         if b['stage'] == 'stay':

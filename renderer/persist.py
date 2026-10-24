@@ -8,6 +8,7 @@
 HELPER = r"""<script>
 /* PROMPT PAK: บันทึกลงฐานข้อมูลจริง */
 window.__ppOps=[];
+function ppZone(z){return z==='B'?'บ้านหลัง':'ตึกใหม่'}
 function ppDay(n){return new Date(n*864e5).toISOString().slice(0,10)}
 function ppIso(o){const d=new Date();d.setDate(d.getDate()+o);return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0')}
 function ppSave(k,d){
@@ -84,8 +85,12 @@ BOOK = [
     # พนักงานเพิ่มการจองเอง
     ("      try{\n        const billEntries=B.filter(b=>b.no===no)",
      "      ppSave('book',{guest:F.mode==='co'?F.co.name.trim():F.name.trim(),phone:F.phone.trim(),company:F.mode==='co'?F.co.name.trim():'',"
-     "check_in:ppDay(F.start),check_out:ppDay(F.start+F.nights),rooms:B.filter(b=>b.no===no).map(b=>({room:b.room,rate:b.rate,guest:b.guest})),"
-     "channel:F.ch,note:F.note.trim(),paid:F.pay==='now',m:F.payM}).then(j=>{if(j&&j.nos){"
+     "check_in:ppDay(F.start),check_out:ppDay(F.start+F.nights),channel:F.ch,note:F.note.trim(),m:F.payM,"
+     "pay:F.mode==='co'?(F.payer==='self'?'later':F.pay):F.pay,cred_days:F.credDays,"
+     "details:{adults:F.adults,kids:F.kids,purpose:F.purpose,email:F.email.trim(),code:F.applied?F.applied.code:'',payer:F.mode==='co'?F.payer:null,po:(F.po||'').trim(),"
+     "co:F.mode==='co'?{name:F.co.name.trim(),tax:digits(F.taxId),addr:F.taxAddr.trim(),hq:F.hq==='สาขา'?'สาขา '+digits(F.branchNo):'สำนักงานใหญ่',contact:F.name.trim()}:null,"
+     "tax:F.tax?{type:F.taxType,name:F.taxName,id:digits(F.taxId||''),addr:F.taxAddr,hq:F.hq,branch:F.branchNo}:null},"
+     "rooms:B.filter(b=>b.no===no).map(b=>({room:b.room,rate:b.rate,guest:b.guest,bf:b.bf||0,disc:b.disc||0,pax:b.pax}))}).then(j=>{if(j&&j.nos){"
      "B.filter(b=>b.no===no).forEach((b,i)=>{if(j.nos[i])b.no=j.nos[i]});try{renderAll()}catch(_){}}});\n"
      "      try{\n        const billEntries=B.filter(b=>b.no===no)"),
     # เปิด/ปิดห้อง
@@ -93,8 +98,21 @@ BOOK = [
      "if(a=t.closest('[data-troom]')){const r=roomOf(a.dataset.troom);r.open=!r.open;ppSave('room',{room:r.code,open:r.open});"),
     # โหลดใหม่จากฐานข้อมูลแล้ว: ล้างรายการจองใหม่ที่ค้างอยู่ในตัวกลาง (กันการ์ดซ้ำหน้าแรก)
     ("pubOcc();\n", "pubOcc();\ntry{pub('newbk',{list:[]})}catch(_){}\n"),
+    # แก้ห้องรายตัว / เพิ่มประเภทห้องใหม่ (ห้องแรก)
     ("if(ed){Object.assign(ed,{zone:z,type:t,rate:R.rate,max:R.max,open:R.open});",
-     "if(ed){if(ed.open!==R.open)ppSave('room',{room:c,open:R.open});Object.assign(ed,{zone:z,type:t,rate:R.rate,max:R.max,open:R.open});"),
+     "ppSave('roomset',{room:c,zone:ppZone(z),type:t,rate:R.rate,max:R.max,open:R.open});"
+     "if(ed){Object.assign(ed,{zone:z,type:t,rate:R.rate,max:R.max,open:R.open});"),
+    # ตั้งค่าประเภทห้อง (ชื่อ / ราคา ทั้งกลุ่ม)
+    ("g.rooms.forEach(r=>{r.type=t;r.rate=R.rate});",
+     "ppSave('roomtype',{zone:ppZone(g.zone),type:g.type,new_type:t,rate:R.rate});g.rooms.forEach(r=>{r.type=t;r.rate=R.rate});"),
+    # เพิ่มห้องในกลุ่ม: รหัสตามแบบจริง (ตัวอักษร + เลข 2 หลัก ต่อจากห้องล่าสุด)
+    ("  const nums=g.rooms.map(r=>+r.code.slice(1)), next=Math.max(0,...nums)+1;\n  const code=g.zone+String(next).padStart(3,'0');\n"
+     "  ROOMS.push({code,zone:g.zone,type:g.type,rate:g.rooms[0].rate,max:g.rooms[0].max,open:true,ota:true});",
+     "  const last=g.rooms.map(r=>r.code).sort().pop(), L=last[0];\n"
+     "  let n=Math.max(0,...ROOMS.filter(r=>r.code[0]===L).map(r=>+r.code.slice(1)||0))+1, code=L+String(n).padStart(2,'0');\n"
+     "  while(roomOf(code)){n++;code=L+String(n).padStart(2,'0')}\n"
+     "  ppSave('roomset',{room:code,zone:ppZone(g.zone),type:g.type,rate:g.rooms[0].rate,max:g.rooms[0].max,open:true});\n"
+     "  ROOMS.push({code,zone:g.zone,type:g.type,rate:g.rooms[0].rate,max:g.rooms[0].max,open:true,ota:true});"),
 ]
 
 

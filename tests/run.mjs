@@ -228,6 +228,40 @@ ok('AI สรุปกล่อง CRM: กันโค้ดแปลกปล�
   const freeT = () => rpc(`pp_availability('${today}','${plus(1)}')`).types.find(t => t.zone === 'บ้านหลัง' && t.room_type === 'เตียงเดี่ยว').free_rooms;
   const f1 = freeT(); await act({ k: 'checkout', no: 'BKT002' }); assert.equal(freeT(), f1 + 1);
   ok('ไม่มาตามนัด → ยกเลิกเอง · ลืมเช็คเอาท์ → ค้างในกล่องเช็คเอาท์');
+  // รายละเอียดการจองครบ: อาหารเช้า/ส่วนลด → ยอดเงินตรง · มัดจำ 30% · เครดิตบริษัท · ไม่ขึ้น "ผูก LINE"
+  const r3 = psql('-c', `select id from rooms r where not exists (select 1 from bookings b where b.room_id = r.id and b.status <> 'ยกเลิก' and daterange(b.check_in, b.check_out) && daterange('${plus(60)}'::date, '${plus(63)}'::date)) order by id limit 3`).split('\n');
+  const rateOf = id => +psql('-c', `select rate from rooms where id = '${id}'`);
+  a = (await act({ k: 'book', guest: 'รายละเอียด ครบ', phone: '0822222222', check_in: plus(60), check_out: plus(62), pay: 'now', m: 'cash',
+    details: { adults: 2, kids: 1, purpose: 'ท่องเที่ยว', email: 'a@b.c' }, rooms: [{ room: r3[0], bf: 340, disc: 100, pax: 3 }] })).body;
+  const nNow = a.nos[0];
+  a = (await act({ k: 'book', guest: 'บจก. ทดสอบเครดิต', phone: '0833333333', company: 'บจก. ทดสอบเครดิต', check_in: plus(60), check_out: plus(61), pay: 'credit', cred_days: 45,
+    details: { co: { name: 'บจก. ทดสอบเครดิต', tax: '0105555555555', addr: 'ขอนแก่น', hq: 'สำนักงานใหญ่' } }, rooms: [{ room: r3[1] }] })).body;
+  const nCr = a.nos[0];
+  a = (await act({ k: 'book', guest: 'บจก. มัดจำ', phone: '0844444444', company: 'บจก. มัดจำ', check_in: plus(60), check_out: plus(61), pay: 'dep', m: 'transfer',
+    details: { co: { name: 'บจก. มัดจำ' } }, rooms: [{ room: r3[2] }] })).body;
+  const nDep = a.nos[0];
+  M = await mods();
+  const billOf = n => { const i = M.fin.indexOf('let BILLS='); return JSON.parse(M.fin.slice(i + 10, M.fin.indexOf(';\n', i))).find(y => y.no === n); };
+  const net = rateOf(r3[0]) * 2 + 340 - 100;
+  assert.equal(billOf(nNow).total, net); assert.equal(billOf(nNow).paid, net);
+  assert.ok(billOf(nCr).credit, 'ต้องเป็นเครดิตบริษัท'); assert.equal(billOf(nCr).paid, 0);
+  assert.equal(billOf(nDep).paid, Math.round(rateOf(r3[2]) * 0.3));
+  const bkItem = h => { const i = h.indexOf('B.push(...'); return JSON.parse(h.slice(i + 10, h.indexOf(');\n', i))); };
+  const bi = bkItem(M.book).find(y => y.no === nNow);
+  assert.equal(bi.adults, 2); assert.equal(bi.kids, 1); assert.equal(bi.purpose, 'ท่องเที่ยว'); assert.equal(bi.lineOn, false); assert.equal(bi.bf, 340);
+  ok('จองจากเว็บ: อาหารเช้า/ส่วนลด ยอดเงินตรง · มัดจำ 30% · เครดิตบริษัท · ไม่ขึ้นผูก LINE');
+
+  // ตั้งค่าห้อง: แก้ราคาทั้งประเภท → AI/ห้องว่างใช้ราคาใหม่ · เพิ่มห้อง · ย้อนกลับได้
+  a = (await act({ k: 'roomtype', zone: 'บ้านหลัง', type: 'เตียงคู่', new_type: 'เตียงคู่', rate: 550 })).body;
+  assert.equal(rpc(`pp_availability('${plus(90)}','${plus(91)}')`).types.find(t => t.zone === 'บ้านหลัง' && t.room_type === 'เตียงคู่').rate, 550);
+  M = await mods(); assert.ok(/"code":"C13","zone":"B","type":"เตียงคู่","rate":550/.test(M.book));
+  await act({ k: 'undo', id: a.id });
+  assert.equal(rpc(`pp_availability('${plus(90)}','${plus(91)}')`).types.find(t => t.zone === 'บ้านหลัง' && t.room_type === 'เตียงคู่').rate, 500);
+  a = (await act({ k: 'roomset', room: 'C16', zone: 'บ้านหลัง', type: 'เตียงเดี่ยว', rate: 400, max: 2, open: true })).body;
+  assert.equal(rpc('pp_dashboard()').rooms_total, 32);
+  M = await mods(); assert.ok(M.book.includes('"code":"C16"'));
+  await act({ k: 'undo', id: a.id }); assert.equal(rpc('pp_dashboard()').rooms_total, 31);
+  ok('ตั้งค่าราคา/ประเภทห้อง และเพิ่มห้อง บันทึกจริง (AI ใช้ราคาใหม่) และย้อนกลับได้');
   const hm = (await call('/')).body;
   assert.ok(hm.includes('ppSave(') && hm.includes('part=act'));
 }

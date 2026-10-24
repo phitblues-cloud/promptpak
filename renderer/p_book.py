@@ -5,9 +5,9 @@ from nb import *
 def book_item(b):
     o = {'id': 'b' + str(int(b['no'][4:])), 'no': b['no'], 'room': b['room'], 'start': b['start'], 'nights': b['nights'],
          'guest': b['guest'], 'phone': b['phone'], 'paid': b['paid'], 'payM': b['payM'], 'ch': b['ch'], 'pax': b['pax'],
-         'adults': b['adults'], 'kids': 0, 'madeAt': b['madeAt'], 'note': b['note'], 'rate': b['rate'], 'purpose': b['purpose'],
-         'bf': 0, 'disc': 0, 'code': '', 'email': b['email'], 'tax': b['tax'], 'cid': b['gid'], 'dep': b['dep'],
-         'grp': b['grp'], 'mem': b['mem'], 'visits': b['visits'], 'lineNm': b['line'], 'lineOn': True}
+         'adults': b['adults'], 'kids': b['kids'], 'madeAt': b['madeAt'], 'note': b['note'], 'rate': b['rate'], 'purpose': b['purpose'],
+         'bf': b.get('bf', 0), 'disc': b.get('disc', 0), 'code': b.get('promo', ''), 'email': b['email'], 'tax': b['tax'], 'cid': b['gid'], 'dep': b['dep'],
+         'grp': b['grp'], 'mem': b['mem'], 'visits': b['visits'], 'lineNm': b['line'], 'lineOn': b['lineOn']}
     co = company_obj(b)
     if co:
         o['co'] = {'name': co['name'], 'tax': co['tax'], 'addr': co['addr'], 'hq': co['hq']}

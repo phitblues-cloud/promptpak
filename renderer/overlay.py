@@ -166,6 +166,40 @@ def _new_gid(m):
     return 'N%03d' % n
 
 
+def _apply_details(b, g, row, m):
+    """รายละเอียดที่พนักงานกรอกตอนจอง (คน อาหารเช้า ส่วนลด บริษัท ใบกำกับภาษี เครดิต)"""
+    d = row.get('details') or {}
+    b['_staff'] = row.get('created_by') == 'staff'
+    if b['_staff'] and not g.get('line_user_id'):
+        g['line_display_name'] = ''
+    if not d:
+        return
+    b['adults'] = int(d.get('adults') or d.get('pax') or 1)
+    b['kids'] = int(d.get('kids') or 0)
+    if d.get('purpose'):
+        b['purpose'] = d['purpose']
+    if d.get('email') and not g.get('email'):
+        g['email'] = d['email']
+    b['bf'], b['disc'], b['promo_code'] = int(d.get('bf') or 0), int(d.get('disc') or 0), d.get('code') or ''
+    b['room_total'] = b['rate'] * b['nights'] + b['bf'] - b['disc']
+    co = d.get('co')
+    if co and co.get('name'):
+        cid = _match_company(co['name'], m['companies'])
+        if not cid:
+            c = _blank_like(m['companies'][0])
+            cid = 'CX%02d' % (len([x for x in m['companies'] if x['company_id'].startswith('CX')]) + 1)
+            c.update({'company_id': cid, 'name_th': co['name'], 'name_short': co['name'], 'tax_id': co.get('tax') or '',
+                      'billing_address': co.get('addr') or '', 'billing_branch': co.get('hq') or 'สำนักงานใหญ่',
+                      'credit_days': int(d.get('cred_days') or 30)})
+            m['companies'].append(c)
+        b['company_id'] = g['company_id'] = cid
+        pay = d.get('pay') or 'later'
+        b['billing_type'] = ('เครดิตบริษัท' if pay == 'credit' else 'บริษัทโอนล่วงหน้า' if pay in ('now', 'dep')
+                             else 'จ่ายเอง')
+    if d.get('tax') or co:
+        b['tax_invoice_requested'] = True
+
+
 def apply_ops(m, ops, by_no, status_only=False):
     """การทำงานหน้าเคาน์เตอร์ที่บันทึกจริง (ตาราง ops) -> ข้อมูลการจอง/การเงินของหน้าจอ"""
     for o in ops:
@@ -197,8 +231,9 @@ def apply_ops(m, ops, by_no, status_only=False):
                                   'received_by': STAFF_ID.get(o.get('role'), 'S03'), 'note': 'บันทึกที่เคาน์เตอร์'})
         if k == 'pay':
             if d.get('room_amt'):
-                pay('ค่าห้อง', d['room_amt'])
-                b['payment_status'] = 'ชำระแล้ว'
+                pay('ค่าห้อง (มัดจำ 30%)' if d.get('partial') else 'ค่าห้อง', d['room_amt'])
+                if not d.get('partial'):
+                    b['payment_status'] = 'ชำระแล้ว'
                 if b['booking_status'] == 'รอเช็คอิน':
                     b['checkin_split'] = 'รอเช็คอิน-ชำระแล้ว (ส่งคีย์การ์ดได้ทันที)'
             if d.get('ext_amt'):
@@ -232,6 +267,13 @@ def build(base, export, now):
     cut = (datetime.datetime.fromisoformat(now) - datetime.timedelta(hours=6)).date()   # ไม่มาตามนัด: ตัดที่ 06:00 วันถัดไป
     m['meta'] = dict(m['meta'], reference_datetime=now + ':00' + TZ)
     m['hotel'] = dict(m['hotel'], reference_datetime=now + ':00' + TZ)
+    if export.get('rooms'):   # ห้องจากฐานข้อมูล (ราคา/ประเภท/ห้องที่เพิ่มใหม่ ตามที่เจ้าของตั้ง)
+        amen = {r['zone']: r.get('amenities', []) for r in m['rooms']}
+        m['rooms'] = [{'room_id': x['id'], 'zone': x['zone'], 'building': x['zone'], 'floor': x.get('floor') or 1,
+                       'room_type': x['room_type'], 'bed': x.get('bed') or '', 'rack_rate': x['rate'],
+                       'max_guests': x['max_guests'], 'amenities': amen.get(x['zone'], [])}
+                      for x in sorted(export['rooms'], key=lambda x: (x['zone'] != 'ตึกใหม่', x['id']))]
+        m['hotel'] = dict(m['hotel'], rooms_total=len(m['rooms']))
     rooms = {r['room_id']: r for r in m['rooms']}
     rooms.update({old: rooms[new] for old, new in OLD2NEW.items() if new in rooms})   # ฐานข้อมูลยังไม่อัปเดตรหัสห้อง
     by_no = {b['booking_id']: b for b in m['bookings']}
@@ -311,6 +353,7 @@ def build(base, export, now):
                   'cancel_reason': 'ยกเลิกในระบบ' if row['status'] == 'ยกเลิก' else None,
                   'cancelled_at': booked if row['status'] == 'ยกเลิก' else None})
         b['_real'] = True   # การจองจริง (LINE / พนักงาน) ไม่ใช้กฎอัตโนมัติของข้อมูลตัวอย่าง
+        _apply_details(b, g, row, m)
         m['bookings'].append(b)
         by_no[no] = b
 
