@@ -53,7 +53,7 @@ HOME = [
      "segs:plan.map(s=>({room:s.room,from:ppIso(s.from),n:s.n,rate:s.rate}))});"),
     # เช็คเอาท์ (ก่อนกำหนด / ตามกำหนด)
     ("x.force=false; snap(b); if(mode==='early'){",
-     "x.force=false; snap(b); if(mode!=='post')ppSave('checkout',mode==='early'?{no:b.bk,nights:paidN}:{no:b.bk}); if(mode==='early'){"),
+     "x.force=false; snap(b); if(mode!=='post')ppSave('checkout',mode==='early'?{no:b.bk,nights:paidN,refund:b.paid?refRoom:0}:{no:b.bk}); if(mode==='early'){"),
     # คืนเงินประกัน
     ("A.dfull=()=>{c.depDone=true;",
      "A.dfull=()=>{ppSave('dep_out',{no:b.bk,amt:DEP,ded:0,m:x.rm||b.depM||'cash'});c.depDone=true;"),
@@ -71,6 +71,15 @@ HOME = [
      "co:b.stage==='outdone'?{key:true,room:'ok',reason:'',note:'',depDone:(e.dep||'held')!=='held',ded:0,dedWhy:''}:null"),
 ]
 
+HOME_FIX = [
+    # บั๊กเดิมของต้นแบบ: ตัวแปร sum ทับฟังก์ชัน sum ทำให้ปุ่มเช็คเอาท์ (ก่อนกำหนด/ปกติ) เปิดหน้าต่างไม่ได้
+    ("let sum='', refRoom=0, paidN=b.nights;", "let sumH='', refRoom=0, paidN=b.nights;"),
+    ("      sum=`<div class=\"sub\" style=\"margin:.6rem 0 .3rem\">", "      sumH=`<div class=\"sub\" style=\"margin:.6rem 0 .3rem\">"),
+    ("${head('out',title)}${sum}${dueBox}", "${head('out',title)}${sumH}${dueBox}"),
+    # การจองใหม่จากโมดูลการจองบันทึกในฐานข้อมูลแล้ว: ไม่เพิ่มการ์ดซ้ำ
+    ("if(nb.startOff!==0||NBK.has(nb.no))return;", "if(nb.startOff!==0||NBK.has(nb.no)||B.some(x=>x.bk===nb.no))return;"),
+]
+
 BOOK = [
     # พนักงานเพิ่มการจองเอง
     ("      try{\n        const billEntries=B.filter(b=>b.no===no)",
@@ -82,6 +91,8 @@ BOOK = [
     # เปิด/ปิดห้อง
     ("if(a=t.closest('[data-troom]')){const r=roomOf(a.dataset.troom);r.open=!r.open;",
      "if(a=t.closest('[data-troom]')){const r=roomOf(a.dataset.troom);r.open=!r.open;ppSave('room',{room:r.code,open:r.open});"),
+    # โหลดใหม่จากฐานข้อมูลแล้ว: ล้างรายการจองใหม่ที่ค้างอยู่ในตัวกลาง (กันการ์ดซ้ำหน้าแรก)
+    ("pubOcc();\n", "pubOcc();\ntry{pub('newbk',{list:[]})}catch(_){}\n"),
     ("if(ed){Object.assign(ed,{zone:z,type:t,rate:R.rate,max:R.max,open:R.open});",
      "if(ed){if(ed.open!==R.open)ppSave('room',{room:c,open:R.open});Object.assign(ed,{zone:z,type:t,rate:R.rate,max:R.max,open:R.open});"),
 ]
@@ -97,7 +108,7 @@ def _patch(h, pairs, name):
 
 def apply(M):
     if 'home' in M:
-        M['home'] = _patch(M['home'], HOME, 'home')
+        M['home'] = _patch(M['home'], HOME + HOME_FIX, 'home')
     if 'book' in M:
         M['book'] = _patch(M['book'], BOOK, 'book')
     return M

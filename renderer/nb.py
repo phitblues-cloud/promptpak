@@ -77,6 +77,8 @@ def stage_of(b):
     ci, co = dno(b['checkin_date']), dno(b['checkout_date'])
     if st in ('ยกเลิก', 'ไม่มาตามนัด'):
         return None
+    if st == 'กำลังพัก' and co <= D0:
+        return 'out'          # ถึง/เลยวันเช็คเอาท์ แต่ยังไม่กดเช็คเอาท์ -> ค้างในกล่องเช็คเอาท์
     if co < D0 or st == 'เช็คเอาท์แล้ว':
         return 'outdone'
     if st == 'กำลังพัก':

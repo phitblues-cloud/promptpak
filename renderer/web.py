@@ -111,7 +111,16 @@ def patch_crm_ai(h):
     return h[:i] + json.dumps(O, ensure_ascii=False).replace('</', '<\\/') + h[i + end:]
 
 
+def _daily():
+    """กฎวันจริง: การจองที่เลยวันเข้าพักแล้วไม่เช็คอิน -> ยกเลิก (ข้ามได้ถ้ายังไม่ได้รัน 05_noshow.sql)"""
+    try:
+        rpc('pp_noshow')
+    except Exception:
+        pass
+
+
 def _build(now):
+    _daily()
     export = rpc('pp_export')
     return overlay.build(render.base_mock(), export, now), export['stamp']
 
@@ -171,6 +180,7 @@ def handle(method, query, cookie_header, body, ip):
             if not role:
                 return 401, J, '{}'
             since = (query.get('since') or [''])[0]
+            _daily()
             stamp = rpc('pp_stamp')
             if stamp == since:
                 return 200, J, json.dumps({'stamp': stamp})

@@ -50,7 +50,7 @@ def _split_name(full):
     parts = full.split()
     if not parts:
         return 'ลูกค้า', 'LINE'
-    return parts[0], ' '.join(parts[1:]) or '-'
+    return parts[0], ' '.join(parts[1:])
 
 
 def _match_company(name, companies):
@@ -72,6 +72,26 @@ def _normalize(b, today, m, credit_ids, by_no):
     if b['booking_status'] in ('ยกเลิก', 'ไม่มาตามนัด'):
         return
     ci, co = _d(b['checkin_date']), _d(b['checkout_date'])
+    if b.get('_real'):
+        # การจองจริง: สถานะเปลี่ยนเฉพาะเมื่อพนักงานกด (ไม่เช็คอิน/เช็คเอาท์/รับเงินให้เอง)
+        if b['booking_status'] == 'เช็คเอาท์แล้ว':
+            return
+        if b.get('checkin_actual'):
+            b['booking_status'] = 'กำลังพัก'
+            b['due_out_today'] = co <= today          # เลยวันเช็คเอาท์แล้วยังไม่กด -> ค้างในกล่องเช็คเอาท์
+        elif ci < today:
+            b['booking_status'] = 'ยกเลิก'            # เลยวันเข้าพักแล้วไม่มาเช็คอิน -> ยกเลิก (ไม่มาตามนัด)
+            b['cancel_reason'] = 'ไม่มาตามนัด (ระบบยกเลิกอัตโนมัติเมื่อเลยวันเข้าพัก)'
+            b['cancelled_at'] = b.get('cancelled_at') or _iso(b['checkin_date'], '23:59')
+        elif ci == today:
+            b['booking_status'] = 'รอเช็คอิน'
+            paid = b['payment_status'] in ('ชำระแล้ว', 'รอชำระ')
+            b['checkin_split'] = 'รอเช็คอิน-ชำระแล้ว (ส่งคีย์การ์ดได้ทันที)' if paid else 'รอเช็คอิน-ยังไม่ชำระ (ชำระก่อนแล้วส่งคีย์การ์ด)'
+            b['due_out_today'] = False
+        else:
+            b['booking_status'] = 'จองแล้ว'
+            b['due_out_today'] = False
+        return
     child = by_no.get(b.get('continued_by') or '')
     if child and child['booking_status'] not in ('ยกเลิก', 'ไม่มาตามนัด') and co < today <= _d(child['checkout_date']):
         b['booking_status'] = 'กำลังพัก'   # พักต่อในการจองถัดไป มัดจำยังถือไว้
@@ -186,6 +206,8 @@ def apply_ops(m, ops, by_no, status_only=False):
             back = int(d.get('amt', b['deposit']))
             pay('มัดจำห้อง (คืน)', -back)
             b['deposit_status'] = 'คืนแล้ว' + (f" (หัก {int(d['ded'])} บาท)" if d.get('ded') else '')
+        elif k == 'checkout' and d.get('refund'):
+            pay('ค่าห้อง (คืนเงิน เช็คเอาท์ก่อนกำหนด)', -int(d['refund']), 'cash')
         elif k == 'credit':
             b['billing_type'] = 'เครดิตบริษัท (ตั้งที่เคาน์เตอร์)'
             b['payment_status'] = 'รอชำระ'
@@ -280,6 +302,7 @@ def build(base, export, now):
                   'deposit_status': 'ยังไม่เก็บ (เก็บตอนเช็คอิน)', 'due_out_today': False, 'checkin_split': None,
                   'cancel_reason': 'ยกเลิกในระบบ' if row['status'] == 'ยกเลิก' else None,
                   'cancelled_at': booked if row['status'] == 'ยกเลิก' else None})
+        b['_real'] = True   # การจองจริง (LINE / พนักงาน) ไม่ใช้กฎอัตโนมัติของข้อมูลตัวอย่าง
         m['bookings'].append(b)
         by_no[no] = b
 

@@ -215,6 +215,19 @@ ok('AI สรุปกล่อง CRM: กันโค้ดแปลกปล�
   const bad = await act({ k: 'book', guest: 'ชน', phone: '0811110001', check_in: today, check_out: out2, rooms: [{ room: (psql('-c', `select room_id from bookings where status <> 'ยกเลิก' and check_in <= '${today}' and check_out > '${today}' limit 1`)) }] });
   assert.equal(bad.status, 500); assert.match(bad.body.error, /no_double_booking|conflicting|ทับ/);
   ok('ยกเลิกบันทึกจริง · จองทับห้องที่มีแขก → ฐานข้อมูลปฏิเสธและแจ้งกลับ');
+  // ไม่มาตามนัด -> ยกเลิกอัตโนมัติ · ลืมเช็คเอาท์ -> ค้างกล่องเช็คเอาท์ และห้องยังไม่ว่าง
+  const r2 = psql('-c', `select id from rooms r where r.zone='บ้านหลัง' and not exists (select 1 from bookings b where b.room_id = r.id and b.status <> 'ยกเลิก' and daterange(b.check_in, b.check_out) && daterange('${plus(-3)}'::date, '${plus(3)}'::date)) order by id limit 2`).split('\n');
+  psql('-c', `insert into bookings (booking_no, guest_name, phone, room_id, check_in, check_out, rate, created_by) values
+    ('BKT001','ไม่มา','0800000001','${r2[0]}','${plus(-1)}','${plus(1)}',400,'staff'),
+    ('BKT002','ลืมออก','0800000002','${r2[1]}','${plus(-2)}','${plus(-1)}',400,'staff');
+    insert into ops (role, kind, booking_no, data) values ('staff','checkin','BKT002','{}');`);
+  M = await mods();
+  assert.equal(rpc(`pp_bookings('${plus(-3)}','${plus(3)}')`).bookings.find(b => b.booking_no === 'BKT001').status, 'ยกเลิก');
+  const cOut = (() => { const i = M.home.indexOf('let B = '); return JSON.parse(M.home.slice(i + 8, M.home.indexOf(';\n', i))).find(x => x.bk === 'BKT002'); })();
+  assert.equal(cOut.stage, 'out');
+  const freeT = () => rpc(`pp_availability('${today}','${plus(1)}')`).types.find(t => t.zone === 'บ้านหลัง' && t.room_type === 'เตียงเดี่ยว').free_rooms;
+  const f1 = freeT(); await act({ k: 'checkout', no: 'BKT002' }); assert.equal(freeT(), f1 + 1);
+  ok('ไม่มาตามนัด → ยกเลิกเอง · ลืมเช็คเอาท์ → ค้างในกล่องเช็คเอาท์');
   const hm = (await call('/')).body;
   assert.ok(hm.includes('ppSave(') && hm.includes('part=act'));
 }
