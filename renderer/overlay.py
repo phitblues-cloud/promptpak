@@ -442,6 +442,19 @@ def build(base, export, now):
                      sent=[dict(x, at=_bkk(x['at'])) for x in (v.get('sent') or [])])
     m['chat_state'] = cs
     m['cust_state'] = export.get('cust_state') or {}
+    # สมัครสมาชิกจากโมดูลลูกค้า → ทุกโมดูลเห็นว่าเป็นสมาชิก (ป้ายในการ์ดหน้าแรก/ป๊อปอัปการจอง/แชท)
+    gby = {g['guest_id']: g for g in m['guests']}
+    mem_ids = {x['guest_id'] for x in m['members']}
+    for gid, d in m['cust_state'].items():
+        g = gby.get(gid)
+        if g and d.get('memberNo'):
+            g['is_member'] = True
+            if gid not in mem_ids:
+                m['members'].append({'member_id': d['memberNo'], 'guest_id': gid, 'line_user_id': g.get('line_user_id'),
+                                     'line_display_name': g.get('line_display_name'), 'joined_at': (d.get('memberSince') or now[:10]) + 'T12:00:00' + TZ,
+                                     'join_channel': 'สมัครที่เคาน์เตอร์', 'member_level': 'สมาชิก', 'consent_marketing': False,
+                                     'birthday_greeting': False, 'rich_menu': 'เมนูสมาชิก'})
+                mem_ids.add(gid)
     # บริษัทที่พนักงานเพิ่มใหม่/แก้ไข (แท็บบริษัท)
     if export.get('comp_state') and m['companies']:
         tmpl = m['companies'][0]
