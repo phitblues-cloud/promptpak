@@ -808,18 +808,42 @@ def hk(h):
 # ---------- การจองทั้งหมด: กดรายการ → หน้ารายละเอียดเต็มจอ + ปุ่มกลับ (แบบหน้าลูกค้า) ----------
 BKPAGE_JS = r"""
 function bkPage(b,v,H,co){
-  const P=$('pList');let pg=$('bkpg');
+  const {kv,esc,fmt}=H,P=$('pList');let pg=$('bkpg');
   if(!pg){pg=document.createElement('div');pg.id='bkpg';pg.setAttribute('data-keep','');P.prepend(pg)}
   P.classList.add('pg');
+  const tmp=document.createElement('div');tmp.innerHTML=bkBody(v,H);const secs=[...tmp.querySelectorAll('.sec')];
+  const paySec=secs.find(x=>/การชำระเงิน/.test(x.querySelector('h3').textContent)),orgSec=secs.find(x=>/ในนามบริษัท/.test(x.querySelector('h3').textContent));
+  const n=v.visits||1,TY=n>=3?['มาบ่อย','often']:n===2?['มาซ้ำ','rep']:['ลูกค้าใหม่','new'];
+  const nm=v.org?(v.gname||'ยังไม่แจ้งชื่อ'):v.guest;
+  const notes=[[b.note,'หมายเหตุการจอง'],[b.bspec,'คำขอในการจองนี้'],[b.gpref,'ความต้องการประจำของลูกค้า']].filter(x=>x[0]&&String(x[0]).trim());
+  const tile=(lab,val,sub)=>`<div class="kt"><span>${lab}</span><b>${val}</b>${sub?`<small>${sub}</small>`:''}</div>`;
+  const row=(k,val)=>`<div class="kr"><span>${k}</span><div>${val}</div></div>`;
+  const pv=v.pay;
   pg.innerHTML=`<button type="button" class="back" data-bkback>${ico('left')}กลับรายการจอง</button>
-   <div class="sheet xl bkpgs"><div class="sh bkph"><div class="bkpt"><div class="bkno">${v.no}</div><div class="bkwho">${H.esc(v.title)} · ห้อง ${v.room}</div></div><div class="badges bkst">${v.badges}</div></div>
-    <div class="sb"><div class="sb2">${bkBody(v,H)}</div></div>
-    <div class="sf"><button class="btn ghost" id="dFin">ดูบิลในเมนูการเงิน</button>${co?'<button class="btn ghost" id="dQt">ใบเสนอราคา</button><button class="btn ghost" id="dIv">ใบแจ้งหนี้รวม</button>':''}<button class="btn pri" data-bkback>กลับรายการจอง</button></div></div>`;
+  <div class="bkpv">
+   <div class="bkhd"><div class="bkpt"><div class="bkno">${v.no}</div><div class="bkwho">${esc(v.title)} · ห้อง ${v.room}</div></div><div class="bkst">${v.badges}</div></div>
+   <div class="bkkpi">${tile('เช็คอิน',v.ci)}${tile('เช็คเอาท์',v.co)}${tile('เข้าพัก',v.nights+' คืน',v.pax+' ท่าน'+(v.adults!=null&&v.kids?` (เด็ก ${v.kids})`:''))}${tile('ยอดรวม',fmt(pv.total)+' บาท',pv.roomPill)}</div>
+   <div class="bkgrid">
+    <div class="bkcol">
+     <section class="bkc"><div class="gh2"><div class="gav" aria-hidden="true">${esc(String(nm).replace(/^คุณ\s*/,'').replace(/^[เแโใไ]/,'').slice(0,1))}</div><div class="gnm"><h3>${esc(nm)}</h3>
+       <div class="gchips"><span class="tyc ty-${TY[1]}">${TY[0]}</span><span class="tyc ${v.mem?'ty-mem':'ty-no'}">${v.mem?'สมาชิก':'ไม่เป็นสมาชิก'}</span><span class="tyc ty-no">เข้าพักมาแล้ว ${n} ครั้ง</span>${v.org||b.gco?'<span class="tyc ty-co">ลูกค้าบริษัท</span>':''}</div></div></div>
+      ${v.org&&v.org.contact?row('ผู้ติดต่อ',esc(v.org.contact)+(v.org.cphone?' · '+esc(v.org.cphone):'')):''}
+      ${row('เบอร์โทร',esc(v.phone||'-'))}${row('LINE',v.lineOn&&v.line?esc(v.line)+' <span class="badge b3">ผูกแล้ว</span>':'<span class="badge b6">ยังไม่ผูก</span>')}
+      ${v.email?row('อีเมล',esc(v.email)):''}${row('ที่อยู่',b.gaddr?esc(b.gaddr):'<span class="muted">ยังไม่มีข้อมูล</span>')}
+      ${row('บริษัท',b.gco?esc(b.gco):'<span class="muted">ไม่มี</span>')}</section>
+     <section class="bkc bknote${notes.length?'':' empty'}"><h4>หมายเหตุ / ความต้องการพิเศษ</h4>${notes.length?notes.map(([t,l])=>`<div class="nt"><small>${l}</small><p>${esc(t)}</p></div>`).join(''):'<p class="muted">ไม่มี</p>'}</section>
+    </div>
+    <div class="bkcol">
+     ${paySec?`<section class="bkc bkpay">${paySec.innerHTML}</section>`:''}
+     <section class="bkc"><h3 class="ch">รายละเอียดการจอง</h3>
+      ${row('ห้อง',esc(v.roomHTML))}${row('ประเภทห้อง',esc(v.roomType))}${row('ช่องทางจอง',esc(v.ch))}${row('การเช็คอิน',v.ciTxt)}
+      ${v.madeAt?row('จองเมื่อ',v.madeAt)+row('จองล่วงหน้า',v.lead+' วัน'):''}${v.purpose?row('วัตถุประสงค์',esc(v.purpose)):''}${row('ใบกำกับภาษี',esc(v.tax))}</section>
+     ${orgSec?`<section class="bkc">${orgSec.innerHTML}</section>`:''}
+    </div>
+   </div>
+  </div>`;
   pg.querySelectorAll('[data-bkback]').forEach(x=>x.onclick=bkBack);
-  $('dFin').onclick=()=>{try{parent.postMessage({pbr:'openbk',no:b.no},'*')}catch(e){}};
-  if($('dQt')){$('dQt').onclick=()=>docModal('quote',B.filter(x=>x.no===b.no));$('dIv').onclick=()=>docModal('invoice',B.filter(x=>x.no===b.no))}
   try{scrollTo(0,0)}catch(_){}
-  pg.querySelector('.back').focus({preventScroll:true});
 }
 function bkBack(){const P=$('pList'),pg=$('bkpg');if(pg)pg.remove();if(P)P.classList.remove('pg')}
 function detail(id,ctx){"""
@@ -829,16 +853,43 @@ BKPAGE_CSS = """
 #bkpg{display:block}
 #bkpg .back{border:0;background:none;display:inline-flex;align-items:center;gap:.4rem;font:inherit;font-weight:600;color:var(--purple);padding:.3rem .2rem;min-height:2.6rem;margin-bottom:.4rem;cursor:pointer}
 #bkpg .back .ic,#bkpg .back svg{width:1.2rem;height:1.2rem}
-#bkpg .bkpgs{width:100%;max-width:none;max-height:none;animation:none;box-shadow:0 10px 30px -18px rgba(40,10,40,.35);border:1.5px solid var(--line)}
-#bkpg .bkpgs .sh{position:static}
-#bkpg .bkph{display:flex!important;align-items:center;justify-content:space-between;gap:1rem;flex-wrap:wrap;padding:.85rem 1.3rem!important;min-height:0}
-#bkpg .bkno{font-family:var(--serif);font-size:1.6rem;font-weight:700;line-height:1.25;letter-spacing:.01em}
-#bkpg .bkwho{font-size:1.02rem;font-weight:600;opacity:.95;margin-top:.1rem;line-height:1.5}
-#bkpg .bkst{margin:0!important;padding:0!important;background:none!important;border:0!important;box-shadow:none!important;justify-content:flex-end;gap:.5rem}
-#bkpg .bkst .badge{font-size:1rem;padding:.4rem 1rem;border-radius:99px;font-weight:700;box-shadow:0 2px 8px rgba(40,10,40,.18)}
-#bkpg .bkpgs .sb{overflow:visible}
-#bkpg .bkpgs .sf{position:static;flex-wrap:wrap}
-#bkpg .bkpgs .sf .btn{flex:1 1 12rem}
+.bkpv{display:grid;gap:.9rem}
+.bkhd{background:var(--grad);color:#fff;border-radius:24px;padding:.9rem 1.3rem;display:flex;align-items:center;justify-content:space-between;gap:1rem;flex-wrap:wrap}
+.bkno{font-family:var(--serif);font-size:1.6rem;font-weight:700;line-height:1.25}
+.bkwho{font-size:1.02rem;font-weight:600;opacity:.95;line-height:1.5}
+.bkst{display:flex;gap:.5rem;flex-wrap:wrap;justify-content:flex-end;background:none!important;border:0!important;padding:0!important;box-shadow:none!important}
+.bkst .badge{font-size:1rem;padding:.4rem 1rem;font-weight:700;box-shadow:0 2px 8px rgba(40,10,40,.18)}
+.bkkpi{display:grid;grid-template-columns:repeat(4,1fr);gap:.7rem}
+.kt{background:var(--card);border:1.5px solid var(--line);border-radius:18px;padding:.7rem 1rem;display:flex;flex-direction:column;gap:.1rem;min-width:0}
+.kt span{font-size:.82rem;color:var(--soft);font-weight:600}
+.kt b{font-size:1.25rem;line-height:1.35}
+.kt small{font-size:.82rem;color:var(--soft)}.kt small .badge{font-size:.75rem}
+.bkgrid{display:grid;grid-template-columns:1.1fr 1fr;gap:.9rem;align-items:start}
+.bkcol{display:grid;gap:.9rem;min-width:0}
+.bkc{background:var(--card);border:1.5px solid var(--line);border-radius:20px;padding:1rem 1.15rem}
+.bkc h3{display:flex;align-items:center;gap:.4rem;font-size:1.05rem;margin:0 0 .5rem;color:var(--purple)}
+.bkc h3 .ic{width:1.1rem;height:1.1rem}
+.gh2{display:flex;gap:.85rem;align-items:center;padding-bottom:.75rem;margin-bottom:.35rem;border-bottom:1.5px dashed var(--line)}
+.gav{width:3.2rem;height:3.2rem;border-radius:50%;background:var(--grad);color:#fff;display:grid;place-items:center;font-size:1.35rem;font-weight:700;flex:none}
+.gnm{min-width:0}.gnm h3{color:var(--ink);font-size:1.3rem;margin:0 0 .3rem;line-height:1.45}
+.gchips{display:flex;flex-wrap:wrap;gap:.35rem}
+.tyc{font-size:.8rem;font-weight:700;padding:.2rem .7rem;border-radius:99px;background:#ECE6E1;color:#5A4E55}
+.ty-new{background:#E0F2E3;color:#1F6B2B}.ty-rep{background:#FFF0CF;color:#7A4A00}.ty-often{background:#F4E2F6;color:#7B2A8E}
+.ty-mem{background:#EAE0F8;color:#51308C}.ty-co{background:#E3EEFB;color:#1D4E89}
+.kr{display:grid;grid-template-columns:7rem 1fr;gap:.6rem;padding:.42rem 0;border-bottom:1px dotted var(--line);font-size:.95rem}
+.kr:last-child{border-bottom:0}.kr>span{color:var(--soft)}.kr>div{font-weight:600;min-width:0;overflow-wrap:anywhere}
+.muted{color:var(--soft);font-weight:500}
+.bknote{background:#FFF8E8;border-color:#F1DDAE}
+.bknote.empty{background:var(--card);border-color:var(--line)}
+.bknote{text-align:left}.bknote h4{margin:0 0 .45rem;font-size:1rem;color:#8A6200}.bknote.empty h4{color:var(--soft)}
+.bknote .nt{padding:.35rem 0}.bknote .nt+.nt{border-top:1px dashed #EBD5A3}
+.bknote .nt small{display:block;font-size:.78rem;color:#8A6200;font-weight:700}
+.bknote .nt p{margin:.1rem 0 0;font-weight:600;line-height:1.55}
+.bknote p{margin:0}
+.bkpay .prow{display:flex;align-items:center;gap:.5rem;padding:.42rem 0;border-bottom:1px dotted var(--line)}
+.bkpay .prow>span:first-child{flex:1}.bkpay .prow .badge{flex:none}.bkpay .prow.t{border-bottom:0;border-top:1.5px solid var(--line);margin-top:.2rem;font-weight:700}
+.bkc .kv{display:grid;grid-template-columns:7rem 1fr;gap:.6rem;padding:.42rem 0;border-bottom:1px dotted var(--line)}
+@media (max-width:900px){.bkkpi{grid-template-columns:1fr 1fr}.bkgrid{grid-template-columns:1fr}}
 """
 
 

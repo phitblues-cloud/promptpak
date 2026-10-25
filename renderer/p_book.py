@@ -8,6 +8,18 @@ def book_item(b):
          'adults': b['adults'], 'kids': b['kids'], 'madeAt': b['madeAt'], 'note': b['note'], 'rate': b['rate'], 'purpose': b['purpose'],
          'bf': b.get('bf', 0), 'disc': b.get('disc', 0), 'code': b.get('promo', ''), 'email': b['email'], 'tax': b['tax'], 'cid': b['gid'], 'dep': b['dep'],
          'grp': b['grp'], 'mem': b['mem'], 'visits': b['visits'], 'lineNm': b['line'], 'lineOn': b['lineOn']}
+    # ข้อมูลลูกค้าสำหรับหน้ารายละเอียด: ที่อยู่ / บริษัทที่สังกัด / ความต้องการพิเศษ (ข้อมูลที่แก้ในโมดูลลูกค้ามาก่อน)
+    g = G.get(b['gid']) or {}
+    cs = (m.get('cust_state') or {}).get(b['gid']) or {}
+    addr = cs.get('addr') or g.get('address') or ''
+    if cs.get('prov') and cs['prov'] not in addr:
+        addr = (addr + ' จ.' + cs['prov']).strip()
+    o['gaddr'] = addr
+    gc = cs.get('company') if cs.get('company') is not None else g.get('company_id')
+    o['gco'] = b.get('cname') or (CO[gc]['name_th'] if gc in CO else '')
+    o['gpref'] = cs.get('special') if cs.get('special') is not None else (g.get('preferences_note') or '')
+    sp = b.get('special')
+    o['bspec'] = (sp if isinstance(sp, str) else ', '.join(map(str, sp)) if isinstance(sp, list) else '') if sp else ''
     co = company_obj(b)
     if co:
         o['co'] = {'name': co['name'], 'tax': co['tax'], 'addr': co['addr'], 'hq': co['hq']}
