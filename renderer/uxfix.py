@@ -94,7 +94,10 @@ LC_CSS = """
 .th2{display:block!important}
 .th2 .nmrow{display:flex;align-items:flex-start;justify-content:space-between;gap:.6rem}
 .th2 .nmc{flex:1;min-width:0}
-.th2 .tags{padding-top:.35rem}
+.th2 .nmrow{flex-direction:column-reverse;align-items:stretch;gap:.1rem}
+.th2 .tags{justify-content:flex-end;padding-top:0}
+.th2 .nmb{max-width:100%;min-width:0;display:inline-flex;align-items:center}
+.th2 .nmb h2{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0}
 .th2 .coline{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .aisum2 .aih{justify-content:space-between}
 .srl{display:flex;flex-direction:column;gap:.3rem;min-width:0}
