@@ -260,6 +260,10 @@ def _build(now, role='owner'):
         export['cust_state'] = rpc('pp_cust_state') or {}
     except Exception:
         export['cust_state'] = {}
+    try:   # แม่บ้าน/งานทำความสะอาด (ข้ามได้ถ้ายังไม่ได้รัน 12_hk.sql)
+        export['hk_state'] = rpc('pp_hk_state')
+    except Exception:
+        export['hk_state'] = None
     try:   # บริษัทที่เพิ่มใหม่ (ข้ามได้ถ้ายังไม่ได้รัน 10_company.sql)
         export['comp_state'] = rpc('pp_comp_state') or {}
     except Exception:
@@ -344,7 +348,21 @@ def handle(method, query, cookie_header, body, ip):
             if not isinstance(data, dict) or not data.get('k'):
                 return 400, J, json.dumps({'error': 'ข้อมูลไม่ครบ'}, ensure_ascii=False)
             out = rpc('pp_act', {'p': data, 'p_role': role})
+            if data['k'] in ('checkout', 'checkout2'):   # เช็คเอาท์ → งานทำความสะอาด (มอบหมายแม่บ้านอัตโนมัติ)
+                for no in [data.get('no')] + list((out or {}).get('nos') or []):
+                    if no:
+                        try:
+                            rpc('pp_hk', {'p': {'k': 'task_from_booking', 'no': no}, 'p_role': role})
+                        except Exception:
+                            pass
             return 200, J, json.dumps(out, ensure_ascii=False)
+        if method == 'POST' and part == 'hk':   # แม่บ้าน/งานทำความสะอาด
+            if not role:
+                return 401, J, json.dumps({'error': 'ต้องเข้าสู่ระบบใหม่'}, ensure_ascii=False)
+            data = json.loads(body or '{}')
+            if not isinstance(data, dict) or not data.get('k'):
+                return 400, J, json.dumps({'error': 'ข้อมูลไม่ครบ'}, ensure_ascii=False)
+            return 200, J, json.dumps(rpc('pp_hk', {'p': data, 'p_role': role}), ensure_ascii=False)
         if method == 'POST' and part == 'chat':   # ปุ่มในหน้าแชท LINE -> บันทึกจริง (และส่งเข้า LINE ถ้าเป็นแชทจริง)
             if not role:
                 return 401, J, json.dumps({'error': 'ต้องเข้าสู่ระบบใหม่'}, ensure_ascii=False)

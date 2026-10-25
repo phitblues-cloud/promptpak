@@ -192,6 +192,8 @@ def apply(M):
         M['cust'] = custprof(cust(M['cust']))
     if 'linechat' in M:
         M['linechat'] = chatsave(linechat(M['linechat']))
+    if 'hk' in M:
+        M['hk'] = hk(M['hk'])
     return M
 
 
@@ -646,3 +648,141 @@ def custprof(h):
         ("function closeModal(){$('mscrim').classList.remove('open');",
                 "function closeModal(){$('mscrim').classList.remove('open');$('msheet').classList.remove('wide');")], 'cust-close')
     return _css(h, PROF_CSS)
+
+
+# ---------- แม่บ้าน: รายชื่อ/โซน/ห้อง/LINE + งานทำความสะอาดบันทึกจริง + มอบหมายอัตโนมัติ (ต้องรัน 12_hk.sql) ----------
+HK_JS = r"""
+/* ---- บันทึกลงฐานข้อมูล ---- */
+function ppHk(k,d){return fetch(top.location.origin+'/api/app?part=hk',{method:'POST',credentials:'same-origin',headers:{'Content-Type':'application/json'},body:JSON.stringify(Object.assign({k},d||{}))})
+  .then(r=>r.json().catch(()=>({})).then(j=>{if(!r.ok)throw new Error(j.error||('รหัส '+r.status));try{parent.postMessage({pbr:'pp-saved'},'*')}catch(_){}return j}))}
+function hkFail(e){toast('⚠️ บันทึกไม่สำเร็จ: '+e.message)}
+const ZN2=['ตึกใหม่','บ้านหลัง'];
+const coversRoom=(x,room)=>{const z=(RMZ.find(r=>r.c===room)||{}).z;return x.rooms&&x.rooms.length?x.rooms.includes(room):(x.zones||[]).includes(z)};
+function pickWho(room){const c=HKS.filter(x=>x.on&&coversRoom(x,room));if(!c.length)return '';
+  const load=n=>TASKS.filter(t=>t.who===n&&t.st<3).length;return c.sort((a,b)=>load(a.n)-load(b.n)||(a.sort||0)-(b.sort||0))[0].n}
+const staffBody=x=>({id:x.id,name:x.n,on:x.on,zones:x.zones||[],rooms:x.rooms&&x.rooms.length?x.rooms:null,line_key:x.line||'',sort:x.sort||0});
+let _hkSeeded=null;
+function saveStaff(x,extra){if(_hkSeeded===null)_hkSeeded=HAS_STAFF;const go=()=>ppHk('staff_save',Object.assign(staffBody(x),extra||{}));
+  if(_hkSeeded)return go();_hkSeeded=true;   // ครั้งแรก: บันทึกรายชื่อเริ่มต้นทั้งหมด
+  return HKS.reduce((p,y)=>p.then(()=>ppHk('staff_save',Object.assign(staffBody(y),y===x?(extra||{}):{}))),Promise.resolve())}
+/* ---- งานทำความสะอาด: สร้าง/อัปเดตในฐานข้อมูล ---- */
+function taskSync(t,upd){
+  const doUpd=()=>upd?ppHk('task_upd',Object.assign({id:t.dbid},upd)):Promise.resolve();
+  if(t.dbid)return doUpd();
+  return ppHk('task_new',{room:t.room,kind:t.kind,who:t.who||'',note:t.note||''}).then(j=>{t.dbid=j.id;if(!t.who&&j.who)t.who=j.who;return doUpd()})}
+function lineName(k){const c=LCH.find(x=>x.k===k);return c?c.n:''}
+/* ---- ป๊อปอัปรายชื่อแม่บ้าน ---- */
+function hkModal(){
+  let open=null,addErr='';
+  const roomsOf=x=>RMZ.filter(r=>(x.zones||[]).includes(r.z));
+  const card=(x,i)=>{const n=TASKS.filter(t=>t.who===x.n&&t.st<5).length,isO=open===x.id,sel=x.rooms&&x.rooms.length?x.rooms:null;
+    const scope=!(x.zones||[]).length?'<span class="hkw">ยังไม่กำหนดโซน · ไม่รับงานอัตโนมัติ</span>':sel?`${sel.length} ห้อง: ${sel.join(', ')}`:`ทุกห้องใน${x.zones.join(' และ ')}`;
+    return `<div class="hkc${isO?' open':''}"><div class="hkh"><button type="button" class="hkname" data-hko="${x.id}" aria-expanded="${isO}"><b>${esc(x.n)}</b>${n?` <small>(มีงาน ${n} ห้อง)</small>`:''}<span class="hks">${scope}${x.line?` · LINE: ${esc(lineName(x.line)||'ผูกแล้ว')}`:''}</span></button>
+      <label class="sw" title="${x.on?'ทำงานวันนี้':'หยุดวันนี้'}"><input type="checkbox" data-hkon="${i}" ${x.on?'checked':''}><i></i><span class="swl">${x.on?'ทำงาน':'หยุด'}</span></label>
+      <button type="button" class="hkchev" data-hko="${x.id}" aria-label="ตั้งค่า ${esc(x.n)}">${isO?'▴':'▾'}</button></div>
+     ${isO?`<div class="hkb">
+       <div class="hkf"><span class="lb">โซนที่รับผิดชอบ</span><div class="regchips">${ZN2.map(z=>`<button type="button" data-hkz="${z}" aria-pressed="${(x.zones||[]).includes(z)}">${z}</button>`).join('')}</div></div>
+       ${(x.zones||[]).length?`<div class="hkf"><span class="lb">ห้องที่รับผิดชอบ <small class="hint">${sel?'เลือกเฉพาะห้อง':'ตอนนี้: ทุกห้องในโซน · แตะเพื่อเลือกเฉพาะห้อง'}</small></span>
+         <div class="hkrooms">${roomsOf(x).map(r=>`<button type="button" data-hkr="${r.c}" aria-pressed="${!sel||sel.includes(r.c)}" class="${sel?'':'all'}">${r.c}</button>`).join('')}</div>
+         ${sel?'<button type="button" class="linkbtn" data-hkall>ใช้ทุกห้องในโซน</button>':''}</div>`:''}
+       <div class="hkf"><label class="lb" for="hkl_${x.id}">LINE ของแม่บ้าน</label><select id="hkl_${x.id}" data-hkline><option value="">— ยังไม่ผูก —</option>${LCH.map(c=>`<option value="${c.k}" ${x.line===c.k?'selected':''}>${esc(c.n||c.k)}</option>`).join('')}</select>
+         <small class="hint">ให้แม่บ้านเพิ่มเพื่อน LINE โรงแรมแล้วส่งข้อความมา 1 ครั้ง ชื่อจะขึ้นในรายการนี้</small></div>
+       <div class="hkf hkrow2"><label class="lb" for="hkn_${x.id}">ชื่อ</label><input id="hkn_${x.id}" data-hkname value="${esc(x.n)}"><button type="button" class="btn ghost sm danger" data-hkdel="${x.id}">ลบรายชื่อ</button></div>
+     </div>`:''}</div>`};
+  const draw=()=>openModal(`<div class="sh"><button class="x" data-close aria-label="ปิด">${ico('x')}</button><div class="rn">รายชื่อแม่บ้าน</div><div class="bkn">เปิด = ทำงานวันนี้ · แตะชื่อเพื่อตั้งค่าโซน ห้อง และ LINE · เช็คเอาท์แล้วระบบมอบหมายงานให้ตามโซนอัตโนมัติ</div></div>
+   <div class="sb"><div id="hkl">${HKS.map(card).join('')}</div>
+    <div class="hkadd"><input id="hkNew" type="text" placeholder="พิมพ์ชื่อแม่บ้านใหม่" aria-label="ชื่อแม่บ้านใหม่"><button type="button" class="btn" id="hkAdd">เพิ่มรายชื่อ</button></div>${addErr?`<div class="err" role="alert">${esc(addErr)}</div>`:''}
+    <div class="hkgrp"><label class="lb" for="hkGrp">กลุ่ม LINE แม่บ้าน (ส่งสรุปงาน)</label><input id="hkGrp" value="${esc(HK_GROUP)}" placeholder="เชิญบัญชี LINE โรงแรมเข้ากลุ่ม แล้วระบบจะใส่รหัสกลุ่มให้"><small class="hint">ใช้ในขั้นต่อไป: ส่งการ์ดงานให้แม่บ้านแต่ละคน และสรุปงานเข้ากลุ่ม</small></div></div>
+   <div class="sf"><button class="btn" data-close>เสร็จสิ้น</button></div>`,()=>{
+    $('msheet').classList.add('wide');
+    const ms=$('msheet'),cur=()=>HKS.find(y=>y.id===open);
+    const commit=(x,msg,extra)=>{syncHK();render();draw();saveStaff(x,extra).then(()=>msg&&toast(msg)).catch(hkFail)};
+    ms.querySelectorAll('[data-hko]').forEach(b=>b.onclick=()=>{open=open===b.dataset.hko?null:b.dataset.hko;draw()});
+    ms.querySelectorAll('[data-hkon]').forEach(c=>c.onchange=()=>{const x=HKS[+c.dataset.hkon];x.on=c.checked;commit(x,`${x.n}: ${x.on?'ทำงานวันนี้':'หยุดวันนี้'}`)});
+    ms.querySelectorAll('[data-hkz]').forEach(b=>b.onclick=()=>{const x=cur(),z=b.dataset.hkz;x.zones=(x.zones||[]).includes(z)?x.zones.filter(v=>v!==z):[...(x.zones||[]),z];
+      if(x.rooms)x.rooms=x.rooms.filter(r=>x.zones.includes((RMZ.find(q=>q.c===r)||{}).z));commit(x)});
+    ms.querySelectorAll('[data-hkr]').forEach(b=>b.onclick=()=>{const x=cur(),r=b.dataset.hkr;let s=x.rooms&&x.rooms.length?[...x.rooms]:roomsOf(x).map(q=>q.c);
+      s=s.includes(r)?s.filter(v=>v!==r):[...s,r];x.rooms=s.length===roomsOf(x).length?null:s;commit(x)});
+    const all=ms.querySelector('[data-hkall]');if(all)all.onclick=()=>{const x=cur();x.rooms=null;commit(x)};
+    const ln=ms.querySelector('[data-hkline]');if(ln)ln.onchange=()=>{const x=cur();x.line=ln.value;commit(x,ln.value?`ผูก LINE ของ ${x.n} แล้ว`:'ยกเลิกการผูก LINE แล้ว')};
+    const nm=ms.querySelector('[data-hkname]');if(nm)nm.onchange=()=>{const x=cur(),v=nm.value.trim(),old=x.n;if(!v||v===old){nm.value=old;return}
+      if(HKS.some(y=>y!==x&&y.n===v)){toast('มีชื่อนี้แล้ว');nm.value=old;return}
+      x.n=v;TASKS.forEach(t=>{if(t.who===old)t.who=v});commit(x,`เปลี่ยนชื่อเป็น ${v} แล้ว`,{old_name:old})};
+    const del=ms.querySelector('[data-hkdel]');if(del)del.onclick=()=>{const x=cur(),pend=TASKS.filter(t=>t.who===x.n&&t.st<5);
+      const others=HKS.filter(y=>y!==x&&y.on);
+      openModal(`<div class="sh"><div class="rn">ลบรายชื่อ ${esc(x.n)}?</div><div class="bkn">เช่น แม่บ้านลาออก · ประวัติงานเดิมยังอยู่</div></div>
+       <div class="sb">${pend.length?`<div class="fld"><label for="hkTo">มีงานค้าง ${pend.length} ห้อง (${pend.map(t=>t.room).join(', ')}) · โอนให้</label><select id="hkTo"><option value="">— ยังไม่มอบหมาย —</option>${others.map(y=>`<option>${esc(y.n)}</option>`).join('')}</select></div>`:'<p>ไม่มีงานค้าง</p>'}</div>
+       <div class="sf"><button class="btn ghost" id="hkDelNo">ยกเลิก</button><button class="btn danger" id="hkDelOk">ลบรายชื่อ</button></div>`,()=>{
+        $('hkDelNo').onclick=draw;
+        $('hkDelOk').onclick=()=>{const to=$('hkTo')?$('hkTo').value:'';const go=()=>ppHk('staff_del',{id:x.id,to});
+          ((_hkSeeded===null?HAS_STAFF:_hkSeeded)?go():saveStaff(x).then(go)).then(()=>{HKS.splice(HKS.indexOf(x),1);pend.forEach(t=>t.who=to);open=null;syncHK();render();draw();toast(`ลบ ${x.n} แล้ว`)}).catch(hkFail)}})};
+    const add=()=>{const v=$('hkNew').value.trim();if(!v){addErr='กรุณาพิมพ์ชื่อ';return draw()}if(HKS.some(x=>x.n===v)){addErr='มีชื่อนี้แล้ว';return draw()}
+      const x={id:'H'+Date.now().toString(36).toUpperCase(),n:v,on:true,zones:[],rooms:null,line:'',sort:HKS.length+1};HKS.push(x);addErr='';open=x.id;commit(x,`เพิ่ม ${v} แล้ว · เลือกโซนที่รับผิดชอบได้เลย`)};
+    $('hkAdd').onclick=add;$('hkNew').onkeydown=e=>{if(e.key==='Enter')add()};
+    $('hkGrp').onchange=e=>{HK_GROUP=e.target.value.trim();ppHk('group_set',{value:HK_GROUP}).then(()=>toast('บันทึกกลุ่ม LINE แล้ว')).catch(hkFail)};
+  });
+  draw();
+}
+"""
+
+HK_PATCH = [
+    # รายชื่อในรายการมอบหมาย = แม่บ้านที่ทำงานวันนี้ + ชื่อที่ถูกมอบหมายอยู่แล้ว
+    ("const HK=[];function syncHK(){HK.length=0;HKS.filter(x=>x.on).forEach(x=>HK.push(x.n))}syncHK();",
+     "const HK=[];function syncHK(){HK.length=0;HKS.filter(x=>x.on).forEach(x=>HK.push(x.n))}syncHK();"),
+    # เริ่มทำ/ทำเสร็จ/ย้อนสถานะ
+    ("  t.st++; if(t.st===2)t.t2=Date.now(); if(t.st===3)t.t3=Date.now();",
+     "  t.st++; if(t.st===2)t.t2=Date.now(); if(t.st===3)t.t3=Date.now(); taskSync(t,{st:t.st}).catch(e=>{t.st--;renderClean();hkFail(e)});"),
+    ("function back(id){const t=TASKS.find(x=>x.id==id); t.st--; if(t.st<3)t.t3=null; if(t.st<2)t.t2=null;",
+     "function back(id){const t=TASKS.find(x=>x.id==id); t.st--; if(t.st<3)t.t3=null; if(t.st<2)t.t2=null; taskSync(t,{st:t.st}).catch(hkFail);"),
+    # เปลี่ยนผู้รับผิดชอบ / หมายเหตุ
+    ("const t=TASKS.find(x=>x.id==w.dataset.who);t.who=w.value;renderClean();return}",
+     "const t=TASKS.find(x=>x.id==w.dataset.who);t.who=w.value;t.auto=false;renderClean();taskSync(t,{who:t.who}).catch(hkFail);return}\n  const nn=e.target.closest('[data-note]');if(nn){const t=TASKS.find(x=>x.id==nn.dataset.note);taskSync(t,{note:t.note}).catch(hkFail)}"),
+    # ดึงงานจากเช็คเอาท์วันนี้ → มอบหมายตามโซน
+    ("  add.forEach(r=>TASKS.push({id:++tid,room:r,kind:'out',who:'',st:1,t2:null,t3:null,note:''}));\n  renderClean(); toast(add.length?`สร้างงานใหม่ ${add.length} งานจากเช็คเอาท์วันนี้ (${add.join(', ')}) · กรุณามอบหมายแม่บ้าน`:'ไม่มีห้องเช็คเอาท์ใหม่ที่ยังไม่มีงาน')}",
+     "  add.forEach(r=>{const t={id:++tid,room:r,kind:'out',who:pickWho(r),st:1,t2:null,t3:null,note:'',auto:true};TASKS.push(t);taskSync(t).then(renderClean).catch(hkFail)});\n  renderClean(); toast(add.length?`สร้างงานใหม่ ${add.length} งานจากเช็คเอาท์วันนี้ (${add.join(', ')}) · มอบหมายตามโซนให้แล้ว`:'ไม่มีห้องเช็คเอาท์ใหม่ที่ยังไม่มีงาน')}"),
+    # เพิ่มงานเอง
+    ("      TASKS.push({id:++tid,room,kind,who:$('aWho').value,st:1,t2:null,t3:null,note:$('aNote').value.trim()});closeModal();renderClean();toast(`เพิ่มงานห้อง ${room} แล้ว`)}})",
+     "      const t={id:++tid,room,kind,who:$('aWho').value||pickWho(room),st:1,t2:null,t3:null,note:$('aNote').value.trim()};TASKS.push(t);closeModal();renderClean();taskSync(t).then(()=>{renderClean();toast(`เพิ่มงานห้อง ${room} แล้ว${t.who?' · '+t.who:''}`)}).catch(hkFail)}})"),
+    # เช็คเอาท์จากหน้าแรก → งานเด้งพร้อมแม่บ้านที่รับผิดชอบ
+    ("    const t={id:++tid,room:d.room,kind:'out',who:'',st:1,t2:null,t3:null,note:'สร้างอัตโนมัติจากเช็คเอาท์'+(d.guest?' · '+d.guest:''),fresh:true};\n    TASKS.push(t);",
+     "    const t={id:++tid,room:d.room,kind:'out',who:pickWho(d.room),st:1,t2:null,t3:null,note:'สร้างอัตโนมัติจากเช็คเอาท์'+(d.guest?' · '+d.guest:''),fresh:true,auto:true};\n    TASKS.push(t);taskSync(t).then(()=>{if(S.tab==='clean')renderClean()}).catch(hkFail);"),
+    # ยกเลิกการเช็คเอาท์ → ลบงานหลังเช็คเอาท์ที่ยังไม่เริ่ม (แม้ระบบมอบหมายแม่บ้านไปแล้ว)
+    ("    const i=TASKS.findIndex(t=>t.room===d.room&&t.kind==='out'&&t.st===1&&!t.who);\n    if(i>=0){TASKS.splice(i,1);if(S.tab==='clean')renderClean()}",
+     "    const i=TASKS.findIndex(t=>t.room===d.room&&t.kind==='out'&&t.st===1);\n    if(i>=0){TASKS.splice(i,1);if(S.tab==='clean')renderClean()}\n    ppHk('task_cancel_out',{room:d.room}).catch(()=>{});"),
+    # แสดงว่าใครถูกมอบหมายอัตโนมัติ
+    ("<div class=\"c-who\"><select data-who=\"${t.id}\"", "<div class=\"c-who\">${t.auto&&t.who?'<small class=\"autot\">ระบบมอบหมายตามโซน</small>':''}<select data-who=\"${t.id}\""),
+]
+
+HK_CSS = """
+.hkc{border:1.5px solid var(--line);border-radius:16px;background:#fff;margin-bottom:.6rem;overflow:hidden}
+.hkc.open{border-color:#D7C4EA;box-shadow:0 6px 18px rgba(46,31,43,.08)}
+.hkh{display:flex;align-items:center;gap:.6rem;padding:.6rem .8rem}
+.hkname{flex:1;min-width:0;border:0;background:none;text-align:left;font:inherit;cursor:pointer;display:flex;flex-wrap:wrap;align-items:baseline;gap:.2rem .5rem}
+.hkname b{font-size:1.05rem}.hkname small{color:var(--soft)}
+.hks{flex-basis:100%;font-size:.8rem;color:var(--soft)}.hkw{color:#A3152D}
+.swl{font-size:.85rem;min-width:2.6rem}
+.hkchev{border:1.5px solid var(--line);background:#fff;border-radius:10px;width:2.2rem;height:2.2rem;cursor:pointer;color:var(--soft)}
+.hkb{border-top:1.5px dashed var(--line);padding:.8rem .9rem;display:grid;gap:.8rem;background:#FCFAF7}
+.hkf{display:grid;gap:.35rem}.hkf .lb{font-weight:700}
+.hkf select,.hkf input,.hkgrp input{border:2px solid var(--line);border-radius:12px;padding:.5rem .7rem;min-height:2.7rem;font:inherit;background:#fff}
+.hkc .regchips{display:flex;flex-wrap:wrap;gap:.45rem}
+.hkc .regchips button{border:2px solid var(--line);background:#fff;border-radius:99px;padding:.4rem 1.1rem;font:inherit;font-weight:600;min-height:2.6rem;cursor:pointer}
+.hkc .regchips button[aria-pressed="true"]{background:var(--ink);border-color:var(--ink);color:#fff}
+.hkc .linkbtn{border:0;background:none;color:var(--purple);text-decoration:underline;font:inherit;font-weight:600;cursor:pointer;justify-self:start;padding:0}
+.hkrooms{display:flex;flex-wrap:wrap;gap:.35rem}
+.hkrooms button{border:1.5px solid var(--line);background:#fff;border-radius:10px;padding:.3rem .55rem;font:inherit;font-weight:600;min-width:3.2rem;cursor:pointer}
+.hkrooms button[aria-pressed="true"]{background:var(--ink);color:#fff;border-color:var(--ink)}
+.hkrooms button.all[aria-pressed="true"]{background:#EDE4F6;color:var(--purple);border-color:#D7C4EA}
+.hkrow2{grid-template-columns:auto 1fr auto;align-items:center}
+.hkgrp{margin-top:1rem;padding-top:.9rem;border-top:1.5px dashed var(--line);display:grid;gap:.35rem}
+.autot{display:block;font-size:.72rem;color:#2E7D5B;margin-bottom:.15rem}
+.sheet.wide{width:min(48rem,100%)!important}
+"""
+
+
+def hk(h):
+    i = h.index('function hkModal(){')
+    j = h.index("document.addEventListener('click',e=>{if(e.target.closest('[data-hkset]'))hkModal()});")
+    h = h[:i] + HK_JS + h[j:]
+    h = _r(h, HK_PATCH, 'hk')
+    return _css(h, HK_CSS)

@@ -499,4 +499,5 @@ def build(base, export, now):
                 c['billing_mode'] = {'self': 'ผู้เข้าพักจ่ายเอง', 'prepay': 'บริษัทโอนค่าห้องล่วงหน้า',
                                      'credit': 'วางบิลเครดิต %d วัน' % c['credit_days']}[d['pay']]
     m['cust_ids'] = export.get('cust_ids') or {}
+    m['hk_state'] = export.get('hk_state')
     return m

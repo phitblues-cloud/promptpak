@@ -370,6 +370,28 @@ ok('AI สรุปกล่อง CRM: กันโค้ดแปลกปล�
   ok('ไม่มีแชทบอท + รับ/ส่ง สติกเกอร์ รูป ไฟล์ ในแชท LINE');
 }
 
+// 11i) แม่บ้าน: โซน/ห้อง → เช็คเอาท์แล้วมอบหมายอัตโนมัติ · งานบันทึกจริง · ลบรายชื่อโอนงาน
+{
+  const hk = d => call('/api/app?part=hk', { method: 'POST', body: JSON.stringify(d) });
+  await hk({ k: 'staff_save', id: 'H1', name: 'ป้าใจ', on: true, zones: [], sort: 1 });
+  await hk({ k: 'staff_save', id: 'H2', name: 'ดวน', on: true, zones: ['ตึกใหม่'], sort: 2 });
+  await hk({ k: 'staff_save', id: 'H3', name: 'ใบ', on: true, zones: ['บ้านหลัง'], rooms: ['C01', 'C02'], sort: 3 });
+  await hk({ k: 'staff_save', id: 'H4', name: 'แก้ว', on: true, zones: ['บ้านหลัง'], sort: 4 });
+  let r = (await hk({ k: 'task_new', room: 'A03', kind: 'out' })).body; assert.equal(r.who, 'ดวน'); assert.equal(r.auto, true);
+  r = (await hk({ k: 'task_new', room: 'C01', kind: 'out' })).body; assert.equal(r.who, 'ใบ');          // ห้องเฉพาะ
+  r = (await hk({ k: 'task_new', room: 'C09', kind: 'out' })).body; assert.equal(r.who, 'แก้ว');        // ใบรับแค่ C01-C02
+  await hk({ k: 'staff_save', id: 'H2', name: 'ดวน', on: false, zones: ['ตึกใหม่'], sort: 2 });
+  r = (await hk({ k: 'task_new', room: 'A06', kind: 'out' })).body; assert.equal(r.who, '');            // ดวนหยุด ไม่มีใครในโซน
+  assert.equal((await hk({ k: 'task_new', room: 'A03', kind: 'out' })).body.existed, true);            // กันซ้ำ
+  const a03 = psql('-c', "select id from hk_task where room='A03' and not deleted");
+  await hk({ k: 'task_upd', id: a03, st: 2 }); assert.equal(psql('-c', `select t2 is not null from hk_task where id=${a03}`), 't');
+  await hk({ k: 'staff_del', id: 'H3', to: 'แก้ว' });
+  assert.equal(psql('-c', "select who from hk_task where room='C01' and not deleted"), 'แก้ว');
+  const M = (await call('/api/app?part=mods&since=x')).body.mods.hk;
+  assert.ok(M.includes('"n":"แก้ว"') && !M.includes('"n":"ใบ"') && M.includes('dbid:') && M.includes('pickWho'));
+  ok('แม่บ้าน: มอบหมายตามโซน/ห้อง/คนหยุด · งานทำความสะอาดบันทึกจริง · ลบรายชื่อโอนงาน');
+}
+
 // 12) กันเดา PIN
 for (let i = 0; i < 8; i++) await call('/api/app?part=pin', { method: 'POST', body: JSON.stringify({ role: 'owner', pin: '000000' }) });
 assert.equal((await call('/api/app?part=pin', { method: 'POST', body: JSON.stringify({ role: 'owner', pin: '246810' }) })).status, 429);
