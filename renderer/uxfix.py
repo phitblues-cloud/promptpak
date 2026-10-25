@@ -39,6 +39,14 @@ CUST_CSS = """
 .iconbtn{border:0;background:none;color:var(--purple);display:grid;place-items:center;width:2.4rem;height:2.4rem}
 .go2{display:inline-flex;align-items:center;gap:.3rem;color:var(--soft);font-weight:600;font-size:.85rem;white-space:nowrap}
 .tr:hover .go2{color:var(--purple)}
+.fbar2{flex-wrap:nowrap;gap:.45rem;padding:.5rem .7rem;align-items:center}
+.fbar2 .sortchips{display:flex;gap:.25rem;flex:none}
+.fbar2 .sortchips button{min-height:2.3rem!important;padding:0 .85rem!important;font-size:.88rem!important;white-space:nowrap}
+.fbar2 select{min-height:2.3rem!important;font-size:.88rem!important;padding:0 1.7rem 0 .8rem!important;min-width:0;max-width:12rem}
+.fbar2 .iconbtn{flex:none;width:2.1rem;height:2.1rem}
+.fbar2 .sortsel{font-size:.88rem;white-space:nowrap;flex:none}
+.fbar2 #resetF{white-space:nowrap;font-size:.84rem;flex:none}
+@media (max-width:1000px){.fbar2{flex-wrap:wrap}}
 """
 
 
@@ -230,8 +238,7 @@ CUST_DETAIL = r"""function custDetail(c){
   h+=`<div class="dbox dbox2"><h4>ข้อมูลลูกค้า ${ed?`<span><button class="btn ghost sm" data-cancel>ยกเลิก</button> <button class="btn sm" data-save>บันทึก</button></span>`:`<button class="btn ghost sm" data-edit>${ico('pen')}แก้ไขข้อมูล</button>`}</h4>`;
   if(S.err) h+=`<div class="err" role="alert">${esc(S.err)}</div>`;
   const GEN=['ชาย','หญิง','เพศหลากหลาย','ไม่ระบุ'];
-  const coH=k?`<button class="linkbtn" data-open="k:${k.id}">${esc(k.name)}</button> <button class="btn ghost sm" data-copick>เปลี่ยน</button> <button class="btn ghost sm" data-counlink>ลบการผูก</button>`
-              :`<b>-</b> <button class="btn ghost sm" data-copick>${ico('plus')}ผูกบริษัท</button>`;
+  const coH=(k?`<button class="linkbtn" data-open="k:${k.id}">${esc(k.name)}</button>`:'<b>-</b>')+` <button class="btn ghost sm" data-copick style="margin-left:.5rem">ตั้งค่า</button>`;
   if(ed){
     h+=row('ชื่อ-สกุล *',`<input id="eName" value="${esc(c.name)}">`)+row('เพศ',`<select id="eGen"><option value="">— เลือก —</option>${GEN.map(x=>`<option ${x===c.gender?'selected':''}>${x}</option>`).join('')}</select>`)
       +row('เบอร์โทร *',`<input id="ePhone" type="tel" value="${esc(c.phone)}">`)+row('Line ID',`<input id="eLine" value="${esc(c.line)}">`)
@@ -257,16 +264,17 @@ function ppCust(k,d){
 function ppCustFail(e){toast('⚠️ บันทึกไม่สำเร็จ: '+e.message)}
 /* ผูกบริษัท: เลือกจากรายชื่อบริษัทในระบบ (ลูกค้า 1 คน ผูกได้ 1 บริษัท) */
 function coPick(c){
-  let q='';
-  const list=()=>CO.filter(x=>!q||strip(x.name).toLowerCase().includes(q)).map(x=>`<button class="copick${x.id===c.company?' on':''}" data-pk="${x.id}"><b>${esc(x.name)}</b><small>${esc(x.hq||'')} · ผูกแล้ว ${CU.filter(u=>u.company===x.id).length} คน</small></button>`).join('')||'<div class="empty">ไม่พบบริษัท</div>';
-  openModal(`<div class="sh"><button class="x" data-close aria-label="ปิด">${ico('x')}</button><div class="rn">ผูกบริษัท</div><div class="bkn">${esc(c.name)} · เลือกได้ 1 บริษัท</div></div>
+  let q='',sel=c.company||'';
+  const list=()=>CO.filter(x=>!q||strip(x.name).toLowerCase().includes(q)).map(x=>`<button class="copick${x.id===sel?' on':''}" data-pk="${x.id}" aria-pressed="${x.id===sel}"><b>${esc(x.name)}</b><small>${esc(x.hq||'')} · ผูกแล้ว ${CU.filter(u=>u.company===x.id).length} คน</small></button>`).join('')||'<div class="empty">ไม่พบบริษัท</div>';
+  const save=(id,msg)=>{const old=c.company;if(id===old){closeModal();return}c.company=id;closeModal();render();
+    ppCust('company',{gid:c.id,company:id}).then(()=>toast(msg)).catch(e=>{c.company=old;render();ppCustFail(e)})};
+  openModal(`<div class="sh"><button class="x" data-close aria-label="ปิด">${ico('x')}</button><div class="rn">ตั้งค่าบริษัท</div><div class="bkn">${esc(c.name)} · ผูกได้ 1 บริษัท</div></div>
    <div class="sb"><input id="coq" type="search" placeholder="ค้นหาชื่อบริษัท" style="width:100%;margin-bottom:.6rem"><div id="colist" class="colist">${list()}</div></div>
-   <div class="sf"><button class="btn ghost" data-close>ยกเลิก</button></div>`,()=>{
+   <div class="sf">${c.company?'<button class="btn ghost danger" id="coUn" style="margin-right:auto">ลบการผูก</button>':''}<button class="btn ghost" data-close>ยกเลิก</button><button class="btn" id="coOk">ยืนยัน</button></div>`,()=>{
     $('coq').oninput=e=>{q=strip(e.target.value).toLowerCase();$('colist').innerHTML=list()};
-    $('colist').onclick=e=>{const b=e.target.closest('[data-pk]');if(!b)return;const id=b.dataset.pk,old=c.company;
-      if(id===old){closeModal();return}
-      c.company=id;closeModal();render();
-      ppCust('company',{gid:c.id,company:id}).then(()=>toast(`ผูก ${c.name} กับ ${coOf(id).name} แล้ว`)).catch(e=>{c.company=old;render();ppCustFail(e)})};
+    $('colist').onclick=e=>{const b=e.target.closest('[data-pk]');if(!b)return;sel=b.dataset.pk;$('colist').innerHTML=list()};
+    $('coOk').onclick=()=>{if(!sel){closeModal();return}save(sel,`ผูก ${c.name} กับ ${coOf(sel).name} แล้ว`)};
+    if($('coUn'))$('coUn').onclick=()=>{const nm=(coOf(c.company)||{}).name||'';save('',`ลบการผูกกับ ${nm} แล้ว`)};
   });
 }
 """
@@ -278,7 +286,6 @@ CUST_SAVE = [
      "    Object.assign(c,d,{nid:($('eNid').value||'').replace(/\\D/g,'')});\n"
      "    S.edit=false;S.err='';render();ppCust('edit',{gid:c.id,data:d}).then(()=>toast('บันทึกข้อมูลลูกค้าแล้ว')).catch(e=>{Object.assign(c,old);render();ppCustFail(e)});return}\n"
      "  if(a=t.closest('[data-copick]')){coPick(cuOf(S.detail.id));return}\n"
-     "  if(a=t.closest('[data-counlink]')){const c=cuOf(S.detail.id),old=c.company,nm=(coOf(old)||{}).name||'';c.company='';render();ppCust('company',{gid:c.id,company:''}).then(()=>toast(`ลบการผูกกับ ${nm} แล้ว`)).catch(e=>{c.company=old;render();ppCustFail(e)});return}\n"
      "  if(a=t.closest('[data-bkno]')){try{parent.postMessage({pbr:'bkdetail',no:a.dataset.bkno},'*')}catch(_){}return}"),
     # เลขการจองในประวัติ กดดูรายละเอียด (ป๊อปอัปเดียวกับหน้าแรก/การจอง)
     ("else h+=`<div class=\"lrow\"><div><span class=\"num\">${s.no}</span>",
@@ -298,7 +305,7 @@ CUST_SAVE = [
      "      }).catch(e=>{window.__ppReg=0;if(isNew){const i=CU.indexOf(c);if(i>=0)CU.splice(i,1)}$('rok').disabled=false;$('rok').textContent='ยืนยันสมัครสมาชิก';$('rerr').innerHTML=`<div class=\"err\" role=\"alert\">บันทึกไม่สำเร็จ: ${esc(e.message)}</div>`});\n    };"),
 ]
 
-CUST_CSS = """
+PROF_CSS = """
 .dhead .lvl2 small{font-size:.95rem!important}
 .dhead .lvl2 .badge{font-size:1.35rem!important;padding:.35rem 1.3rem!important;margin-top:.3rem!important;font-weight:800}
 .stats4{grid-template-columns:repeat(4,1fr)!important;margin-top:.9rem!important}
@@ -313,6 +320,8 @@ CUST_CSS = """
 .copick{display:flex;flex-direction:column;align-items:flex-start;text-align:left;border:1.5px solid var(--line);background:#fff;border-radius:14px;padding:.6rem .9rem;cursor:pointer;font:inherit}
 .copick small{color:var(--soft)}
 .copick.on{border-color:var(--purple);background:#F6F0FB}
+#coq{border:1.5px solid var(--line);border-radius:12px;padding:.55rem .85rem;font:inherit;background:#fff;box-sizing:border-box}
+#coUn{color:#B3263E!important;border-color:#E9B8C0!important}
 """
 
 
@@ -321,4 +330,4 @@ def custprof(h):
     j = h.index('function compDetail(k){')
     h = h[:i] + CUST_DETAIL + h[j:]
     h = _r(h, CUST_SAVE, 'cust-save')
-    return _css(h, CUST_CSS)
+    return _css(h, PROF_CSS)
