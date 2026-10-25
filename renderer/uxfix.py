@@ -157,8 +157,12 @@ LC_CSS = """
 .fzone{flex-wrap:nowrap!important;flex-direction:column!important;align-items:stretch!important;justify-content:center;gap:.4rem!important}
 .fz1{display:flex;align-items:center;gap:.3rem;min-width:0}
 .fzone .srch{min-height:2.2rem;padding:.25rem .75rem;font-size:.88rem;box-sizing:border-box}
-@media (min-width:901px){.listcol,.thrcol,.pancol{height:calc(100vh - 6.4rem)!important}
-#app{padding-bottom:.6rem!important}.listcol,.thrcol,.pancol{min-height:26rem!important}}
+@media (min-width:901px){.listcol,.thrcol,.pancol{height:calc((100vh - 6.4rem) * 1.5)!important}
+#app{padding-bottom:1.2rem!important}.listcol,.thrcol,.pancol{min-height:39rem!important}}
+.th2 .nmb h2{line-height:1.55!important;padding:.05rem 0 .2rem!important;margin:0!important}
+.th2 .nmc .nmb+small{margin-top:.35rem}
+.th2 .nmc small{line-height:1.5}
+.th2{padding-bottom:1.9rem!important}
 .fzone .flt{flex:0 1 auto;min-width:0;overflow-x:auto;scrollbar-width:none;flex-wrap:nowrap!important}
 .fzone .flt button{white-space:nowrap;flex:none}
 .fzone .tpsel{flex:0 0 auto;width:6.6rem;font-size:.72rem;margin-left:auto;padding:0 1.3rem 0 .55rem;text-overflow:ellipsis}
@@ -180,7 +184,7 @@ def linechat(h):
          """<div class="fzone"><div class="fz1"><div class="flt" role="tablist" aria-label="สถานะ">${fl}</div><select class="tpsel" aria-label="ประเภทเรื่อง" onchange="S.tp=this.value;render()">${[['all','ทุกเรื่อง',all.length],...(nu?[['urg','ด่วน',nu]]:[]),...TOPICS.filter(t=>tc[t[0]]).map(t=>[t[0],t[1],tc[t[0]]])].map(([k,t,v])=>`<option value="${k}" ${S.tp===k?'selected':''}>${k==='all'?'ทุกเรื่อง':t+' ('+v+')'}</option>`).join('')}</select></div><input class="srch" id="q" type="search" placeholder="ค้นหาชื่อ ชื่อ LINE ห้อง หรือเรื่อง" value="${esc(S.q)}" aria-label="ค้นหาแชท"></div>"""),
         ('<input class="srch" id="q" type="search" placeholder="ค้นหาชื่อ ชื่อ LINE ห้อง หรือเรื่อง" value="${esc(S.q)}" aria-label="ค้นหาแชท">\n', ''),
         ('ดูเพิ่มเติม ›</button></div><div class="sr3">${noteH}</div></div>`;', 'ดูเพิ่มเติม ›</button></div></div>`;'),
-        ('const floor=7.9*parseFloat(', 'const floor=7.7*parseFloat('),
+        ('const floor=7.9*parseFloat(', 'const floor=10.2*parseFloat('),
         # ความสูงหัวกล่องคงที่ทุกแชท ไม่ยืดหดตามเนื้อหา
         ('const H=Math.ceil(Math.max(rh(th),rh(sb),gH+rh(fz),floor));', 'const H=Math.ceil(Math.max(gH+rh(fz),floor));'),
     ], 'linechat')
