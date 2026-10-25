@@ -25,7 +25,28 @@ def build_cu():
                    'special': g.get('preferences_note') or '',
                    'memberNo': mb['member_id'] if mb else '', 'memberSince': dno(mb['joined_at']) if mb else None,
                    'added': first_made.get(gid, D0), 'bias': bias_of(g),
-                   'bday': g['birth_date'], 'nid': re.sub(r'\D', '', g['id_card_no'] or ''), 'email': g['email']})
+                   'bday': g['birth_date'], 'nid': re.sub(r'\D', '', g['id_card_no'] or ''), 'email': g['email'],
+                   'gender': ''})
+    # ข้อมูลที่พนักงานแก้/สมัครในโมดูลลูกค้า (ตาราง cust_state)
+    cs = m.get('cust_state') or {}
+    byid = {c['id']: c for c in cu}
+    for gid, d in cs.items():
+        c = byid.get(gid)
+        if not c:
+            if not d.get('is_new'):
+                continue
+            c = {'id': gid, 'name': '', 'phone': '', 'line': '', 'addr': '', 'prov': '', 'company': '', 'special': '',
+                 'memberNo': '', 'memberSince': None, 'added': dno(d['added']) if d.get('added') else D0, 'bias': '',
+                 'bday': '', 'nid': '', 'email': '', 'gender': ''}
+            cu.append(c); byid[gid] = c
+        for k in ('name', 'phone', 'line', 'addr', 'prov', 'bday', 'special', 'gender', 'purpose'):
+            if k in d:
+                c[k] = d[k]
+        if 'company' in d:
+            c['company'] = d['company'] if d['company'] in CO else ''
+        if d.get('memberNo'):
+            c['memberNo'] = d['memberNo']
+            c['memberSince'] = dno(d['memberSince']) if d.get('memberSince') else D0
     return cu
 
 def build_co():

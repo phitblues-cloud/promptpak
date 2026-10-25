@@ -152,6 +152,10 @@ def _build(now):
         export['chat_state'] = rpc('pp_chat_state') or {}
     except Exception:
         export['chat_state'] = {}
+    try:   # ข้อมูลลูกค้าที่แก้ในโมดูลลูกค้า (ข้ามได้ถ้ายังไม่ได้รัน 08_cust.sql)
+        export['cust_state'] = rpc('pp_cust_state') or {}
+    except Exception:
+        export['cust_state'] = {}
     return overlay.build(render.base_mock(), export, now), export['stamp']
 
 
@@ -229,6 +233,14 @@ def handle(method, query, cookie_header, body, ip):
                 data['line'] = line
             rpc('pp_chat', {'p': data, 'p_role': role})
             return 200, J, json.dumps({'ok': True, 'line': line})
+        if method == 'POST' and part == 'cust':   # ปุ่มในโมดูลลูกค้าและสมาชิก -> บันทึกจริง
+            if not role:
+                return 401, J, json.dumps({'error': 'ต้องเข้าสู่ระบบใหม่'}, ensure_ascii=False)
+            data = json.loads(body or '{}')
+            if not isinstance(data, dict) or not data.get('k') or not data.get('gid'):
+                return 400, J, json.dumps({'error': 'ข้อมูลไม่ครบ'}, ensure_ascii=False)
+            out = rpc('pp_cust', {'p': data, 'p_role': role})
+            return 200, J, json.dumps(out, ensure_ascii=False)
         if part == 'mods':
             if not role:
                 return 401, J, '{}'

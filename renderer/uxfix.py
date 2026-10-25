@@ -162,7 +162,7 @@ def linechat(h):
 
 def apply(M):
     if 'cust' in M:
-        M['cust'] = cust(M['cust'])
+        M['cust'] = custprof(cust(M['cust']))
     if 'linechat' in M:
         M['linechat'] = chatsave(linechat(M['linechat']))
     return M
@@ -214,3 +214,111 @@ def chatsave(h):
     h = _r(h, CHAT_SAVE, 'linechat-save')
     k = h.index('function render(){')
     return h[:k] + CHAT_HELPER + h[k:]
+
+
+# ---------- ลูกค้าและสมาชิก: หน้าโปรไฟล์ใหม่ + บันทึกจริง (ต้องรัน supabase/08_cust.sql) ----------
+CUST_DETAIL = r"""function custDetail(c){
+  const s=stat(c), t=S.detail.tab, ed=S.edit, k=c.company?coOf(c.company):null, rooms=staysOf(c.id,true).length;
+  const row=(lab,val,auto)=>`<div class="kvr"><span>${lab}${auto?'<i class="auto">คำนวณอัตโนมัติ</i>':''}</span><div>${val}</div></div>`;
+  let h=`<button class="back" data-back>${ico('left')}กลับรายการลูกค้า</button>
+  <div class="dhead"><div class="avatar" aria-hidden="true">${esc(initial(c.name))}</div>
+    <div><h3>${esc(c.name)}</h3><div class="sub">${c.memberNo?'รหัสสมาชิก '+pbm(c.memberNo):'ยังไม่เป็นสมาชิก'}</div></div>
+    <div class="lvl lvl2"><small>กลุ่มลูกค้า</small>${badge(s.st)}</div></div>`;
+  h+=`<div class="stats stats4"><div class="stat"><small>จำนวนครั้งที่พัก</small><b>${s.n} ครั้ง</b></div><div class="stat"><small>จำนวนห้องพักสะสม</small><b>${rooms} ห้อง</b></div><div class="stat"><small>ยอดใช้จ่ายรวม</small><b>${fmt(s.spend)} ฿</b></div><div class="stat"><small>พักล่าสุด</small><b style="font-size:1rem">${s.last?fD(s.last,{day:'numeric',month:'short',year:'2-digit'}):'-'}</b></div></div>`;
+  h+=`<div class="pbar">${c.memberNo?'':`<button class="btn sm" data-reg="${c.id}">${ico('plus')}สมัครสมาชิก</button>`}<div class="dtabs dtabs2" role="tablist"><button role="tab" data-tab="info" aria-selected="${t==='info'}">ข้อมูล</button><button role="tab" data-tab="hist" aria-selected="${t==='hist'}">ประวัติ</button></div></div>`;
+  if(t==='hist') return h+`<div class="dbox dbox2"><h4>ประวัติการพัก <span class="hint" style="font-family:inherit;font-size:.8rem;color:var(--soft)">กดเลขการจองเพื่อดูรายละเอียด</span></h4>${histTable(staysOf(c.id,true))}</div>`;
+  h+=`<div class="dbox dbox2"><h4>ข้อมูลลูกค้า ${ed?`<span><button class="btn ghost sm" data-cancel>ยกเลิก</button> <button class="btn sm" data-save>บันทึก</button></span>`:`<button class="btn ghost sm" data-edit>${ico('pen')}แก้ไขข้อมูล</button>`}</h4>`;
+  if(S.err) h+=`<div class="err" role="alert">${esc(S.err)}</div>`;
+  const GEN=['ชาย','หญิง','เพศหลากหลาย','ไม่ระบุ'];
+  const coH=k?`<button class="linkbtn" data-open="k:${k.id}">${esc(k.name)}</button> <button class="btn ghost sm" data-copick>เปลี่ยน</button> <button class="btn ghost sm" data-counlink>ลบการผูก</button>`
+              :`<b>-</b> <button class="btn ghost sm" data-copick>${ico('plus')}ผูกบริษัท</button>`;
+  if(ed){
+    h+=row('ชื่อ-สกุล *',`<input id="eName" value="${esc(c.name)}">`)+row('เพศ',`<select id="eGen"><option value="">— เลือก —</option>${GEN.map(x=>`<option ${x===c.gender?'selected':''}>${x}</option>`).join('')}</select>`)
+      +row('เบอร์โทร *',`<input id="ePhone" type="tel" value="${esc(c.phone)}">`)+row('Line ID',`<input id="eLine" value="${esc(c.line)}">`)
+      +row('วันเกิด',`<input id="eBd" type="date" value="${esc(c.bday||'')}">`)+row('เลขบัตรประชาชน',`<input id="eNid" inputmode="numeric" maxlength="17" value="${esc(nidFmt(c.nid))}" placeholder="X-XXXX-XXXXX-XX-X"><small class="hint">ยังไม่บันทึกลงระบบ (รอขั้นยินยอมตาม PDPA)</small>`)+row('ที่อยู่',`<input id="eAddr" value="${esc(c.addr)}">`)+row('จังหวัด',`<input id="eProv" value="${esc(c.prov)}">`)
+      +row('บริษัท (ถ้ามี)',k?`<b>${esc(k.name)}</b>`:'<b>-</b>');
+  } else {
+    h+=row('ชื่อ-สกุล',`<b>${esc(c.name)}</b>`)+row('เพศ',`<b>${esc(c.gender||'-')}</b>`)+row('เบอร์โทร',`<b>${esc(c.phone)}</b>`)+row('Line ID',`<b>${esc(c.line||'-')}</b>`)+row('ที่อยู่',`<b>${esc(c.addr||'-')}</b>`)+row('จังหวัด',`<b>${esc(c.prov||'-')}</b>`)+row('วันเกิด',`<b>${esc(bdFmt(c.bday))}</b>`)+row('เลขบัตรประชาชน',`<b>${esc(c.nid?nidFmt(c.nid):'-')}</b>`)+row('ภาพบัตรประชาชน',c.idImg?`<a href="${c.idImg}" target="_blank" rel="noopener"><img src="${c.idImg}" alt="ภาพบัตรประชาชน" style="max-height:90px;border-radius:8px;border:1.5px solid var(--line)"></a>`:'<b>-</b>')
+      +row('บริษัท (ถ้ามี)',coH);
+  }
+  h+=row('สถานะสมาชิก',c.memberNo?`<b>เป็นสมาชิก</b> · ${pbm(c.memberNo)} · ตั้งแต่ ${fD(c.memberSince)}`:`<b>ไม่เป็นสมาชิก</b>`)
+    +row('กลุ่มลูกค้า',badge(s.st)+(s.last?` <span class="hint">พักล่าสุด ${Math.max(0,TODAY-s.last)} วันที่แล้ว</span>`:''),true)
+    +row('วัตถุประสงค์การพัก',s.n?`<b>${s.purpose}</b> <span class="hint">(${s.purposeN} จาก ${s.n} ครั้ง)</span>`:(c.purpose?`<b>${esc(c.purpose)}</b> <span class="hint">(ระบุตอนสมัคร)</span>`:'<b>-</b>'),true)
+    +row('ประเภทห้องพัก',s.n?`<b>${s.roomT}</b> <span class="hint">(${s.roomN} จาก ${s.n} ครั้ง)</span>`:'<b>-</b>',true)
+    +row('ระยะเวลาการพัก',s.n?`<b>เฉลี่ย ${s.avgN.toFixed(1)} คืน / ครั้ง</b>`:'<b>-</b>',true)
+    +row('ความต้องการพิเศษ',ed?`<input id="eSpec" value="${esc(c.special)}" placeholder="เช่น ไม่ทานเนื้อหมู ขอห้องชั้นล่าง">`:`<b>${esc(c.special||'-')}</b>`);
+  return h+'</div>';
+}
+/* บันทึกลงฐานข้อมูลจริง */
+function ppCust(k,d){
+  return fetch(top.location.origin+'/api/app?part=cust',{method:'POST',credentials:'same-origin',headers:{'Content-Type':'application/json'},body:JSON.stringify(Object.assign({k},d||{}))})
+   .then(r=>r.json().catch(()=>({})).then(j=>{if(!r.ok)throw new Error(j.error||('รหัส '+r.status));try{parent.postMessage({pbr:'pp-saved'},'*')}catch(_){}return j}));
+}
+function ppCustFail(e){toast('⚠️ บันทึกไม่สำเร็จ: '+e.message)}
+/* ผูกบริษัท: เลือกจากรายชื่อบริษัทในระบบ (ลูกค้า 1 คน ผูกได้ 1 บริษัท) */
+function coPick(c){
+  let q='';
+  const list=()=>CO.filter(x=>!q||strip(x.name).toLowerCase().includes(q)).map(x=>`<button class="copick${x.id===c.company?' on':''}" data-pk="${x.id}"><b>${esc(x.name)}</b><small>${esc(x.hq||'')} · ผูกแล้ว ${CU.filter(u=>u.company===x.id).length} คน</small></button>`).join('')||'<div class="empty">ไม่พบบริษัท</div>';
+  openModal(`<div class="sh"><button class="x" data-close aria-label="ปิด">${ico('x')}</button><div class="rn">ผูกบริษัท</div><div class="bkn">${esc(c.name)} · เลือกได้ 1 บริษัท</div></div>
+   <div class="sb"><input id="coq" type="search" placeholder="ค้นหาชื่อบริษัท" style="width:100%;margin-bottom:.6rem"><div id="colist" class="colist">${list()}</div></div>
+   <div class="sf"><button class="btn ghost" data-close>ยกเลิก</button></div>`,()=>{
+    $('coq').oninput=e=>{q=strip(e.target.value).toLowerCase();$('colist').innerHTML=list()};
+    $('colist').onclick=e=>{const b=e.target.closest('[data-pk]');if(!b)return;const id=b.dataset.pk,old=c.company;
+      if(id===old){closeModal();return}
+      c.company=id;closeModal();render();
+      ppCust('company',{gid:c.id,company:id}).then(()=>toast(`ผูก ${c.name} กับ ${coOf(id).name} แล้ว`)).catch(e=>{c.company=old;render();ppCustFail(e)})};
+  });
+}
+"""
+
+CUST_SAVE = [
+    # บันทึกแก้ไขข้อมูล (+ เพศ) ลงฐานข้อมูล · บริษัทแก้ผ่านปุ่มผูกบริษัท
+    ("Object.assign(c,{name:n,phone:p,line:$('eLine').value.trim(),addr:$('eAddr').value.trim(),nid:($('eNid').value||'').replace(/\\D/g,''),bday:$('eBd').value||'',prov:$('eProv').value.trim(),company:$('eCo').value,special:$('eSpec').value.trim()});\n    S.edit=false;S.err='';render();toast('บันทึกข้อมูลลูกค้าแล้ว');return}",
+     "const old=Object.assign({},c),d={name:n,phone:p,line:$('eLine').value.trim(),addr:$('eAddr').value.trim(),bday:$('eBd').value||'',prov:$('eProv').value.trim(),special:$('eSpec').value.trim(),gender:$('eGen').value};\n"
+     "    Object.assign(c,d,{nid:($('eNid').value||'').replace(/\\D/g,'')});\n"
+     "    S.edit=false;S.err='';render();ppCust('edit',{gid:c.id,data:d}).then(()=>toast('บันทึกข้อมูลลูกค้าแล้ว')).catch(e=>{Object.assign(c,old);render();ppCustFail(e)});return}\n"
+     "  if(a=t.closest('[data-copick]')){coPick(cuOf(S.detail.id));return}\n"
+     "  if(a=t.closest('[data-counlink]')){const c=cuOf(S.detail.id),old=c.company,nm=(coOf(old)||{}).name||'';c.company='';render();ppCust('company',{gid:c.id,company:''}).then(()=>toast(`ลบการผูกกับ ${nm} แล้ว`)).catch(e=>{c.company=old;render();ppCustFail(e)});return}\n"
+     "  if(a=t.closest('[data-bkno]')){try{parent.postMessage({pbr:'bkdetail',no:a.dataset.bkno},'*')}catch(_){}return}"),
+    # เลขการจองในประวัติ กดดูรายละเอียด (ป๊อปอัปเดียวกับหน้าแรก/การจอง)
+    ("else h+=`<div class=\"lrow\"><div><span class=\"num\">${s.no}</span>",
+     "else h+=`<div class=\"lrow\"><div><button class=\"bkno num\" data-bkno=\"${s.no}\">${s.no}</button>"),
+    ("if(withName){const c=cuOf(s.cust);h+=`<div class=\"lrow\"><div class=\"num\">${s.no}</div>",
+     "if(withName){const c=cuOf(s.cust);h+=`<div class=\"lrow\"><div><button class=\"bkno num\" data-bkno=\"${s.no}\">${s.no}</button></div>"),
+    # สมัครสมาชิก: ออกรหัสสมาชิกจากฐานข้อมูล
+    ("      let c=dup;\n      if(!c){c={id:'C'+String(++custSeq).padStart(4,'0'),",
+     "      if(window.__ppReg)return;\n      let c=dup;const isNew=!c;\n      if(!c){c={id:'N'+Date.now().toString(36).toUpperCase(),"),
+    ("      c.memberNo='M'+String(++memSeq).padStart(3,'0'); c.memberSince=TODAY;\n      closeModal();",
+     "      window.__ppReg=1;$('rok').disabled=true;$('rok').textContent='กำลังบันทึก…';\n"
+     "      ppCust('member',{gid:c.id,is_new:isNew,base:memSeq,company:R.company||'',data:{name:c.name,phone:c.phone,line:c.line,addr:c.addr,prov:c.prov,bday:c.bday,purpose:c.purpose||''}}).then(j=>{window.__ppReg=0;\n"
+     "      c.memberNo=j.memberNo; c.memberSince=TODAY; memSeq=Math.max(memSeq,+String(j.memberNo).replace(/\\D/g,''));\n"
+     "      if(isNew&&R.company)ppCust('company',{gid:c.id,company:R.company}).catch(()=>{});\n      closeModal();"),
+    ("      try{parent.postMessage({pbr:'memreg',name:c.name,phone:c.phone,no:c.memberNo},'*')}catch(_){}\n    };",
+     "      try{parent.postMessage({pbr:'memreg',name:c.name,phone:c.phone,no:c.memberNo},'*')}catch(_){}\n"
+     "      }).catch(e=>{window.__ppReg=0;if(isNew){const i=CU.indexOf(c);if(i>=0)CU.splice(i,1)}$('rok').disabled=false;$('rok').textContent='ยืนยันสมัครสมาชิก';$('rerr').innerHTML=`<div class=\"err\" role=\"alert\">บันทึกไม่สำเร็จ: ${esc(e.message)}</div>`});\n    };"),
+]
+
+CUST_CSS = """
+.dhead .lvl2 small{font-size:.95rem!important}
+.dhead .lvl2 .badge{font-size:1.35rem!important;padding:.35rem 1.3rem!important;margin-top:.3rem!important;font-weight:800}
+.stats4{grid-template-columns:repeat(4,1fr)!important;margin-top:.9rem!important}
+@media (max-width:700px){.stats4{grid-template-columns:1fr 1fr!important}}
+.pbar{display:flex;align-items:flex-end;justify-content:space-between;gap:.6rem;margin-top:.2rem}
+.pbar .dtabs2{margin:0 0 0 auto!important}
+.dtabs2 button{border-bottom-left-radius:0!important;border-bottom-right-radius:0!important;border-bottom:0!important;min-height:2.6rem!important}
+.pbar>.btn{margin-bottom:.45rem}
+.dbox2{border-top-right-radius:0!important}
+.bkno{border:0;background:none;padding:0;color:var(--purple);font-weight:700;text-decoration:underline;cursor:pointer;font:inherit;font-weight:700}
+.colist{display:flex;flex-direction:column;gap:.45rem;max-height:52vh;overflow:auto}
+.copick{display:flex;flex-direction:column;align-items:flex-start;text-align:left;border:1.5px solid var(--line);background:#fff;border-radius:14px;padding:.6rem .9rem;cursor:pointer;font:inherit}
+.copick small{color:var(--soft)}
+.copick.on{border-color:var(--purple);background:#F6F0FB}
+"""
+
+
+def custprof(h):
+    i = h.index('function custDetail(c){')
+    j = h.index('function compDetail(k){')
+    h = h[:i] + CUST_DETAIL + h[j:]
+    h = _r(h, CUST_SAVE, 'cust-save')
+    return _css(h, CUST_CSS)

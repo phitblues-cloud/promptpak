@@ -284,6 +284,23 @@ ok('AI สรุปกล่อง CRM: กันโค้ดแปลกปล�
   ok('หน้าแชท LINE: ส่งข้อความ (แชทจริงเข้า LINE) / ชื่อแชท / หมายเหตุ / ปิดเคส บันทึกจริง');
 }
 
+// 11d) ลูกค้าและสมาชิก: แก้ข้อมูล/เพศ/ผูกบริษัท/สมัครสมาชิก บันทึกจริง
+{
+  const cust = d => call('/api/app?part=cust', { method: 'POST', body: JSON.stringify(d) });
+  assert.equal((await cust({ k: 'edit', gid: 'G02', data: { gender: 'หญิง', special: 'ขอห้องเงียบ', nid: '1234567890123' } })).body.ok, true);
+  assert.equal((await cust({ k: 'edit', gid: 'G02', data: { gender: 'x' } })).status, 500);
+  assert.equal((await cust({ k: 'company', gid: 'G02', company: 'C001' })).body.ok, true);
+  const a = (await cust({ k: 'member', gid: 'G02', base: 24 })).body;
+  assert.equal(a.memberNo, 'M025');
+  assert.equal((await cust({ k: 'member', gid: 'G02', base: 24 })).status, 500);
+  const n = (await cust({ k: 'member', gid: 'NTEST1', is_new: true, base: 24, data: { name: 'คุณใหม่ ทดสอบ', phone: '0899999999' } })).body;
+  assert.equal(n.memberNo, 'M026');
+  assert.ok(!psql('-c', "select data::text from cust_state where gid='G02'").includes('1234567890123'));
+  const C = (await call('/api/app?part=mods&since=x')).body.mods.cust;
+  assert.ok(C.includes('"gender":"หญิง"') && C.includes('"memberNo":"M025"') && C.includes('คุณใหม่ ทดสอบ') && C.includes('part=cust'));
+  ok('ลูกค้าและสมาชิก: แก้ข้อมูล/เพศ/ผูกบริษัท/สมัครสมาชิก บันทึกจริง (ไม่เก็บเลขบัตร)');
+}
+
 // 12) กันเดา PIN
 for (let i = 0; i < 8; i++) await call('/api/app?part=pin', { method: 'POST', body: JSON.stringify({ role: 'owner', pin: '000000' }) });
 assert.equal((await call('/api/app?part=pin', { method: 'POST', body: JSON.stringify({ role: 'owner', pin: '246810' }) })).status, 429);

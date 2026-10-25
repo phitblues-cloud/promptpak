@@ -441,4 +441,5 @@ def build(base, export, now):
         cs[k] = dict(v, closed_at=_bkk(v.get('closed_at')), read_at=_bkk(v.get('read_at')),
                      sent=[dict(x, at=_bkk(x['at'])) for x in (v.get('sent') or [])])
     m['chat_state'] = cs
+    m['cust_state'] = export.get('cust_state') or {}
     return m
