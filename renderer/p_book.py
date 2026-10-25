@@ -15,6 +15,7 @@ def book_item(b):
     if cs.get('prov') and cs['prov'] not in addr:
         addr = (addr + ' จ.' + cs['prov']).strip()
     o['gaddr'] = addr
+    o['worksite'] = b.get('worksite') or ''
     gc = cs.get('company') if cs.get('company') is not None else g.get('company_id')
     o['gco'] = b.get('cname') or (CO[gc]['name_th'] if gc in CO else '')
     o['gpref'] = cs.get('special') if cs.get('special') is not None else (g.get('preferences_note') or '')
