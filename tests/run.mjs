@@ -4,7 +4,7 @@ import { createHmac } from 'node:crypto';
 import { execFileSync } from 'node:child_process';
 import assert from 'node:assert/strict';
 
-Object.assign(process.env, { LOCAL_DEV: '1', LINE_CHANNEL_SECRET: 'test-secret', APP_SECRET: 'test-app', OWNER_PIN: '246810', STAFF_PIN: '135790' });
+Object.assign(process.env, { AI_AUTOREPLY: '1', LOCAL_DEV: '1', LINE_CHANNEL_SECRET: 'test-secret', APP_SECRET: 'test-app', OWNER_PIN: '246810', STAFF_PIN: '135790' });
 const PG = process.env.LOCAL_PG;
 if (!PG) { console.error('ต้องตั้ง LOCAL_PG'); process.exit(1); }
 const psql = (...a) => execFileSync('psql', [PG, '-q', '-t', '-A', '-v', 'ON_ERROR_STOP=1', ...a], { encoding: 'utf8' }).trim();
@@ -342,6 +342,32 @@ ok('AI สรุปกล่อง CRM: กันโค้ดแปลกปล�
   assert.ok((await call('/api/app?part=idocr', { method: 'POST', body: JSON.stringify({ img: 'nope' }) })).body.error);
   delete process.env.PP_FAKE_OCR;
   ok('อ่านข้อมูลจากภาพบัตร: แยกเลขบัตร/เพศจากคำนำหน้า/ตรวจเลข');
+}
+
+// 11h) ไม่มีแชทบอท: ลูกค้าทักมา → เก็บไว้ให้พนักงานตอบ · รับสติกเกอร์/รูป · พนักงานส่งรูป/สติกเกอร์/ไฟล์
+{
+  delete process.env.AI_AUTOREPLY;
+  const before = replies().length;
+  const u = 'U_media_test';
+  assert.equal(await webhook([lineEvent(u, 'สอบถามห้องว่างค่ะ')]), 200);
+  await webhook([{ type: 'message', webhookEventId: 'evs1', replyToken: 'rts1', source: { type: 'user', userId: u }, message: { type: 'sticker', id: 'ms1', packageId: '446', stickerId: '1988' } }]);
+  await webhook([{ type: 'message', webhookEventId: 'evi1', replyToken: 'rti1', source: { type: 'user', userId: u }, message: { type: 'image', id: 'mi1' } }]);
+  assert.equal(replies().length, before, 'AI ต้องไม่ตอบอัตโนมัติ');
+  const tid = psql('-c', `select id from chat_threads where line_user_id='${u}'`);
+  assert.equal(psql('-c', `select needs_staff from chat_threads where id=${tid}`), 't');
+  assert.equal(psql('-c', `select meta->>'sid' from chat_messages where thread_id=${tid} and meta->>'type'='sticker'`), '1988');
+  assert.ok(psql('-c', `select meta->>'url' from chat_messages where thread_id=${tid} and meta->>'type'='image'`).startsWith('data:image/jpeg'));
+  const chat = d => call('/api/app?part=chat', { method: 'POST', body: JSON.stringify(d) });
+  const img = 'data:image/jpeg;base64,' + Buffer.from('jpeg-bytes').toString('base64');
+  assert.equal((await chat({ k: 'send', key: 'db:' + tid, body: '[สติกเกอร์]', media: { type: 'sticker', pkg: '446', sid: '1989' } })).body.line, 'sent');
+  assert.equal((await chat({ k: 'send', key: 'db:' + tid, body: '[รูปภาพ]', media: { type: 'image', data: img } })).body.line, 'sent');
+  assert.equal((await chat({ k: 'send', key: 'db:' + tid, body: '[ไฟล์] ใบเสนอราคา.pdf', media: { type: 'file', name: 'ใบเสนอราคา.pdf', data: 'data:application/pdf;base64,' + Buffer.from('%PDF').toString('base64') } })).body.line, 'sent');
+  assert.equal((await chat({ k: 'send', key: 'db:' + tid, body: 'x', media: { type: 'sticker', pkg: 'a', sid: 'b' } })).status, 400);
+  assert.equal(psql('-c', `select count(*) from chat_messages where thread_id=${tid} and sender='พนักงาน' and meta ? 'type'`), '3');
+  const L = (await call('/api/app?part=mods&since=x')).body.mods.linechat;
+  assert.ok(L.includes('sticker/1988/') && L.includes('"t":"img"') && L.includes('ใบเสนอราคา.pdf') && L.includes('stkPanel'));
+  process.env.AI_AUTOREPLY = '1';
+  ok('ไม่มีแชทบอท + รับ/ส่ง สติกเกอร์ รูป ไฟล์ ในแชท LINE');
 }
 
 // 12) กันเดา PIN

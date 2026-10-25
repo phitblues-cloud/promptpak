@@ -111,16 +111,72 @@ def patch_crm_ai(h):
     return h[:i] + json.dumps(O, ensure_ascii=False).replace('</', '<\\/') + h[i + end:]
 
 
+def upload_media(raw, ctype, ext):
+    """เก็บรูป/ไฟล์ไว้ที่ Supabase Storage (ถัง chat · สาธารณะ เพราะ LINE ต้องดึงจากลิงก์) คืนลิงก์"""
+    url = (os.environ.get('SUPABASE_URL') or '').strip().rstrip('/')
+    key = (os.environ.get('SUPABASE_SERVICE_ROLE_KEY') or '').strip()
+    if os.environ.get('LOCAL_PG') or not url or not key:   # เครื่องทดสอบ
+        import base64
+        return 'data:%s;base64,%s' % (ctype, base64.b64encode(raw).decode()) if len(raw) < 400000 else None
+    import secrets
+    path = '%s/%s.%s' % (datetime.date.today().isoformat(), secrets.token_hex(12), ext)
+    headers = {'apikey': key, 'Content-Type': ctype, 'x-upsert': 'true'}
+    if not key.startswith('sb_'):
+        headers['Authorization'] = 'Bearer ' + key
+    req = urllib.request.Request(url + '/storage/v1/object/chat/' + path, data=raw, headers=headers, method='POST')
+    try:
+        urllib.request.urlopen(req, timeout=20).read()
+    except urllib.error.HTTPError as e:
+        raise ValueError('อัปโหลดไฟล์ไม่สำเร็จ (%s) · รัน supabase/11_media.sql แล้วหรือยัง' % e.code)
+    return url + '/storage/v1/object/public/chat/' + path
+
+
+def media_msgs(media, text):
+    """แปลงสื่อจากหน้าจอ → ข้อความ LINE + ข้อมูลแนบที่เก็บในแชท"""
+    import base64
+    t = media.get('type')
+    if t == 'sticker':
+        pkg, sid = str(media.get('pkg') or ''), str(media.get('sid') or '')
+        if not (pkg.isdigit() and sid.isdigit()):
+            raise ValueError('สติกเกอร์ไม่ถูกต้อง')
+        return [{'type': 'sticker', 'packageId': pkg, 'stickerId': sid}], {'type': 'sticker', 'pkg': pkg, 'sid': sid}
+    d = str(media.get('data') or '')
+    m = re.match(r'^data:([\w/+.-]+);base64,(.+)$', d, re.S)
+    if not m:
+        raise ValueError('ไฟล์ไม่ถูกต้อง')
+    ctype, raw = m.group(1), base64.b64decode(m.group(2))
+    if len(raw) > 3 * 1048576:
+        raise ValueError('ไฟล์ใหญ่เกิน 3 MB')
+    if t == 'image':
+        if ctype not in ('image/jpeg', 'image/png'):
+            raise ValueError('รูปต้องเป็น JPG หรือ PNG')
+        u = upload_media(raw, ctype, 'jpg' if ctype == 'image/jpeg' else 'png')
+        if not u:
+            raise ValueError('เก็บรูปไม่สำเร็จ')
+        return [{'type': 'image', 'originalContentUrl': u, 'previewImageUrl': u}], {'type': 'image', 'url': u}
+    if t == 'file':
+        name = re.sub(r'[^\w.\- ก-๙]', '_', str(media.get('name') or 'file'))[:80]
+        ext = (name.rsplit('.', 1)[-1] if '.' in name else 'bin')[:8]
+        u = upload_media(raw, ctype or 'application/octet-stream', ext)
+        if not u:
+            raise ValueError('เก็บไฟล์ไม่สำเร็จ')
+        # LINE ไม่ให้บัญชีทางการส่งไฟล์โดยตรง → ส่งเป็นลิงก์ให้ลูกค้ากดเปิด
+        return [{'type': 'text', 'text': '📎 %s\n%s' % (name, u)}], {'type': 'file', 'url': u, 'name': name, 'size': len(raw)}
+    raise ValueError('ไม่รู้จักชนิดไฟล์')
+
+
 def line_push(to, text):
-    """ส่งข้อความหาลูกค้าทาง LINE (push · นับโควตาข้อความรายเดือนของ LINE OA) คืนข้อความผิดพลาด หรือ None ถ้าสำเร็จ"""
+    """ส่งข้อความหาลูกค้าทาง LINE (push · นับโควตาข้อความรายเดือนของ LINE OA) คืนข้อความผิดพลาด หรือ None ถ้าสำเร็จ
+    text = ข้อความ หรือรายการข้อความ LINE (รูป/สติกเกอร์)"""
+    msgs = text if isinstance(text, list) else [{'type': 'text', 'text': text}]
     if os.environ.get('LOCAL_DEV'):   # เครื่องทดสอบ: ไม่ส่งจริง
-        LINE_OUTBOX.append({'to': to, 'text': text})
+        LINE_OUTBOX.append({'to': to, 'messages': msgs})
         return None
     token = (os.environ.get('LINE_CHANNEL_ACCESS_TOKEN') or '').strip()
     if not token:
         return 'ยังไม่ได้ตั้งค่า LINE_CHANNEL_ACCESS_TOKEN'
     req = urllib.request.Request('https://api.line.me/v2/bot/message/push', method='POST',
-                                 data=json.dumps({'to': to, 'messages': [{'type': 'text', 'text': text}]}).encode(),
+                                 data=json.dumps({'to': to, 'messages': msgs}).encode(),
                                  headers={'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json'})
     try:
         urllib.request.urlopen(req, timeout=10).read()
@@ -301,9 +357,16 @@ def handle(method, query, cookie_header, body, ip):
                 if not text:
                     return 400, J, json.dumps({'error': 'ข้อความว่าง'}, ensure_ascii=False)
                 data['body'] = text
+                media = data.pop('media', None)
+                msgs = [{'type': 'text', 'text': text}]
+                if isinstance(media, dict):   # รูป / สติกเกอร์ / ไฟล์
+                    try:
+                        msgs, data['meta'] = media_msgs(media, text)
+                    except ValueError as e:
+                        return 400, J, json.dumps({'error': str(e)}, ensure_ascii=False)
                 to = rpc('pp_chat_target', {'p_key': str(data['key'])})
                 if to:
-                    err = line_push(to, text)
+                    err = line_push(to, msgs)
                     if err:
                         return 502, J, json.dumps({'error': 'ส่งเข้า LINE ไม่สำเร็จ: ' + err}, ensure_ascii=False)
                     line = 'sent'

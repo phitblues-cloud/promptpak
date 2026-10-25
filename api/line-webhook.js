@@ -1,9 +1,30 @@
-// รับข้อความจาก LINE OA → บันทึก → ให้ AI ตอบ/รับจอง → ตอบกลับลูกค้า
-import { verifySignature, reply, showLoading, getProfile } from '../lib/line.js';
+// รับข้อความจาก LINE OA → บันทึก (ข้อความ/สติกเกอร์/รูป/ไฟล์) → แจ้งพนักงานตอบเอง
+// AI ไม่ตอบลูกค้าอัตโนมัติ (เจ้าของไม่ต้องการแชทบอท) · เปิดได้ด้วย AI_AUTOREPLY=1
+import { verifySignature, reply, showLoading, getProfile, getContent } from '../lib/line.js';
+import { uploadMedia } from '../lib/storage.js';
 import { rpc } from '../lib/db.js';
 import { bookingAgent } from '../lib/ai.js';
 
-const WELCOME = 'สวัสดีค่ะ ยินดีต้อนรับสู่ พบรักรีสอร์ท 🙏\nจองห้องได้ทางแชทนี้เลยค่ะ พิมพ์วันเข้าพัก วันออก และจำนวนห้องที่ต้องการ เช่น "ขอห้องตึก 2 ห้อง 27-29 ต.ค."';
+const AI_ON = () => process.env.AI_AUTOREPLY === '1';
+const WELCOME_AI = 'สวัสดีค่ะ ยินดีต้อนรับสู่ พบรักรีสอร์ท 🙏\nจองห้องได้ทางแชทนี้เลยค่ะ พิมพ์วันเข้าพัก วันออก และจำนวนห้องที่ต้องการ เช่น "ขอห้องตึก 2 ห้อง 27-29 ต.ค."';
+const WELCOME = 'สวัสดีค่ะ ขอบคุณที่เพิ่มเพื่อน พบรักรีสอร์ท 🙏 สอบถามหรือจองห้องพิมพ์มาได้เลยค่ะ พนักงานจะตอบกลับโดยเร็วค่ะ';
+
+// ป้ายข้อความ + ข้อมูลแนบ ของข้อความที่ไม่ใช่ตัวอักษร
+async function mediaOf(m) {
+  if (m.type === 'sticker') return { body: '[สติกเกอร์]', meta: { type: 'sticker', pkg: m.packageId, sid: m.stickerId } };
+  if (m.type === 'location') return { body: `[ตำแหน่ง] ${m.title || ''} ${m.address || ''}`.trim(), meta: { type: 'location', lat: m.latitude, lng: m.longitude } };
+  if (['image', 'video', 'audio', 'file'].includes(m.type)) {
+    const label = { image: '[รูปภาพ]', video: '[วิดีโอ]', audio: '[ข้อความเสียง]', file: `[ไฟล์] ${m.fileName || ''}`.trim() }[m.type];
+    let url = null, err = null;
+    try {
+      const c = await getContent(m.id);
+      const ext = m.type === 'file' ? (String(m.fileName || '').split('.').pop() || 'bin').slice(0, 8) : null;
+      url = await uploadMedia(c.buf, c.type, ext);
+    } catch (e) { err = String(e.message).slice(0, 120); }
+    return { body: label, meta: { type: m.type, url, name: m.fileName || null, size: m.fileSize || null, err } };
+  }
+  return { body: `[${m.type || 'ข้อความ'}]`, meta: { type: m.type || 'unknown' } };
+}
 
 async function handleEvent(ev) {
   const userId = ev.source?.userId;
@@ -14,21 +35,24 @@ async function handleEvent(ev) {
 
   if (ev.type === 'follow') {
     await rpc('pp_chat_log', { p_line_user_id: userId, p_display_name: name, p_sender: 'ระบบ', p_body: '(เพิ่มเพื่อน LINE OA)' });
-    await rpc('pp_chat_log', { p_line_user_id: userId, p_display_name: name, p_sender: 'AI', p_body: WELCOME });
-    if (ev.replyToken) await reply(ev.replyToken, WELCOME);
+    const w = AI_ON() ? WELCOME_AI : WELCOME;
+    await rpc('pp_chat_log', { p_line_user_id: userId, p_display_name: name, p_sender: 'ระบบ', p_body: w });
+    if (ev.replyToken) await reply(ev.replyToken, w);
     return;
   }
   if (ev.type !== 'message') return;
 
   if (ev.message?.type !== 'text') {
-    const t = 'ตอนนี้น้องพบรักอ่านได้เฉพาะข้อความตัวอักษรนะคะ รบกวนพิมพ์มาได้เลยค่ะ 🙏';
-    await rpc('pp_chat_log', { p_line_user_id: userId, p_display_name: name, p_sender: 'ลูกค้า', p_body: `[${ev.message?.type || 'ไฟล์'}]` });
-    await rpc('pp_chat_log', { p_line_user_id: userId, p_display_name: name, p_sender: 'AI', p_body: t });
-    await reply(ev.replyToken, t);
+    const { body, meta } = await mediaOf(ev.message || {});
+    await rpc('pp_chat_log', { p_line_user_id: userId, p_display_name: name, p_sender: 'ลูกค้า', p_body: body, p_meta: meta });
+    await rpc('pp_handoff', { p_line_user_id: userId, p_reason: 'ลูกค้าส่ง' + body });
     return;
   }
 
   await rpc('pp_chat_log', { p_line_user_id: userId, p_display_name: name, p_sender: 'ลูกค้า', p_body: ev.message.text });
+
+  // ไม่มีแชทบอท: ทุกข้อความรอพนักงานตอบจากหน้า "แชทลูกค้า LINE"
+  if (!AI_ON()) { await rpc('pp_handoff', { p_line_user_id: userId, p_reason: 'ลูกค้าทักมา' }); return; }
 
   // ถ้าเรื่องนี้ส่งต่อพนักงานแล้ว AI จะเงียบ ให้พนักงานตอบเองใน LINE OA (AI กลับมาตอบเองหลัง 6 ชั่วโมง)
   if (await rpc('pp_staff_active', { p_line_user_id: userId })) return;

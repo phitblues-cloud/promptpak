@@ -83,6 +83,25 @@ def cust(h):
 
 
 LC_CSS = """
+.rep{display:flex!important;align-items:flex-end;gap:.4rem;width:100%!important;box-sizing:border-box;max-width:none!important}
+.rep textarea{flex:1 1 auto;min-width:0;width:auto!important}
+.rep>.btn{flex:none}
+.rep{flex-wrap:wrap;row-gap:.2rem}
+.rep .lnbar{flex:0 0 100%;margin-bottom:-.1rem}
+.rep .lnb{width:2.3rem;height:2.1rem}
+.lnbar{display:flex;gap:.15rem;align-items:center;flex:none}
+.lnb{border:0;background:none;color:var(--soft);width:2.6rem;height:2.6rem;border-radius:12px;display:grid;place-items:center;cursor:pointer}
+.lnb:hover,.lnb.on{background:#F3EEF9;color:var(--purple)}
+.stkpan{border-top:1.5px solid var(--line);background:#fff;flex:none}
+.stktabs{display:flex;gap:.3rem;padding:.35rem .6rem;border-bottom:1px solid var(--line);overflow-x:auto}
+.stktabs button{border:0;background:none;border-radius:10px;padding:.15rem;width:2.6rem;height:2.6rem;flex:none;cursor:pointer}
+.stktabs button.on{background:#F3EEF9}.stktabs img{width:100%;height:100%;object-fit:contain}
+.stkgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(4.6rem,1fr));gap:.3rem;padding:.5rem .6rem;max-height:13rem;overflow-y:auto}
+.stkgrid button{border:0;background:none;border-radius:12px;padding:.25rem;cursor:pointer;aspect-ratio:1}
+.stkgrid button:hover{background:#F6F0FB}.stkgrid img{width:100%;height:100%;object-fit:contain}
+.b .stk{display:block;width:7.5rem;height:auto;margin:.1rem 0}
+.b .attimg{max-width:14rem;max-height:14rem;border-radius:12px;display:block;margin:.2rem 0}
+.b a.attfile{display:inline-flex;gap:.3rem;align-items:center;color:var(--purple);text-decoration:underline}
 .th-h h2{font-size:1.75rem!important;line-height:1.2}
 .th-h .coline{margin-top:.15rem;color:#2E7D5B;font-weight:700}
 .aisum2{display:block;width:calc(100% - 2.2rem);margin:.6rem 1.1rem 0;text-align:left;border:1.5px solid transparent;border-radius:14px;cursor:pointer;
@@ -183,6 +202,21 @@ function ppChat(k,d){
   return fetch(top.location.origin+'/api/app?part=chat',{method:'POST',credentials:'same-origin',headers:{'Content-Type':'application/json'},body})
    .then(r=>r.json().catch(()=>({})).then(j=>{if(!r.ok)throw new Error(j.error||('รหัส '+r.status));try{parent.postMessage({pbr:'pp-saved'},'*')}catch(_){}return j}));
 }
+/* ---------- สื่อในแชท: รูป / สติกเกอร์ (ชุดฟรีที่ LINE ให้บัญชีทางการใช้) / ไฟล์ ---------- */
+const LNI={img:'<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="3"/><circle cx="9" cy="10" r="2"/><path d="M21 16l-5-5-8 9"/></svg>',
+ stk:'<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M8.5 14.5c1.8 2 5.2 2 7 0"/><circle cx="9" cy="10" r="1" fill="currentColor"/><circle cx="15" cy="10" r="1" fill="currentColor"/></svg>',
+ file:'<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 11.5l-8 8a5 5 0 01-7-7l8.5-8.5a3.5 3.5 0 015 5L10 17.5a2 2 0 01-3-3l7.5-7.5"/></svg>'};
+const STKP=[{p:11537,a:52002734,n:40},{p:11538,a:51626494,n:40},{p:11539,a:52114110,n:40},{p:446,a:1988,n:40},{p:789,a:10855,n:40}];
+const stkUrl=id=>`https://stickershop.line-scdn.net/stickershop/v1/sticker/${id}/android/sticker.png`;
+function stkPanel(){const P=STKP[S.stkP||0];
+  return `<div class="stkpan"><div class="stktabs">${STKP.map((x,i)=>`<button type="button" data-act="stkp" data-i="${i}" class="${i===(S.stkP||0)?'on':''}"><img src="${stkUrl(x.a)}" alt="ชุด ${i+1}" loading="lazy"></button>`).join('')}</div>
+   <div class="stkgrid">${Array.from({length:P.n},(_,i)=>P.a+i).map(id=>`<button type="button" data-act="stks" data-p="${P.p}" data-s="${id}"><img src="${stkUrl(id)}" alt="สติกเกอร์" loading="lazy"></button>`).join('')}</div></div>`}
+function sendSticker(p,sid){const c=CV.find(x=>x.id===S.sel);if(!c||window.__ppSending)return;window.__ppSending=1;
+  ppChat('send',{key:c.key,body:'[สติกเกอร์]',media:{type:'sticker',pkg:String(p),sid:String(sid)}}).then(()=>{c.m.push(['s','',nowTm(),[{t:'stk',src:stkUrl(sid),name:'สติกเกอร์'}]]);S.stk=false;c.st='wait';c.read=true;render();
+    toast(String(c.key).startsWith('db:')?'ส่งสติกเกอร์แล้ว':'บันทึกแล้ว · แชทตัวอย่าง')}).catch(ppChatFail).finally(()=>{window.__ppSending=0})}
+function ppImgData(file){return new Promise((ok,no)=>{const u=URL.createObjectURL(file),im=new Image();im.onload=()=>{const k=Math.min(1,1600/Math.max(im.width,im.height)),cv=document.createElement('canvas');
+  cv.width=Math.round(im.width*k);cv.height=Math.round(im.height*k);cv.getContext('2d').drawImage(im,0,0,cv.width,cv.height);URL.revokeObjectURL(u);ok(cv.toDataURL('image/jpeg',.8))};im.onerror=()=>no(new Error('อ่านรูปไม่ได้'));im.src=u})}
+function ppFileData(file){return new Promise((ok,no)=>{const r=new FileReader();r.onload=()=>ok(r.result);r.onerror=()=>no(new Error('อ่านไฟล์ไม่ได้'));r.readAsDataURL(file)})}
 function ppChatFail(e){const msg='⚠️ บันทึกไม่สำเร็จ: '+e.message;try{toast(msg)}catch(_){console.error(msg)}}
 try{const k=sessionStorage.getItem('pp_lc_sel'),c=CV.find(x=>x.key===k);if(c)S.sel=c.id}catch(_){}
 """
@@ -195,12 +229,27 @@ CHAT_SAVE = [
      "function setNotes(c,arr){const old=c.sn||[];c.sn=arr;ppChat('notes',{key:c.key,notes:arr}).catch(e=>{c.sn=old;render();ppChatFail(e)})}"),
     # ส่งข้อความ: แชทจริงส่งเข้า LINE แล้วจึงแสดง · แชทตัวอย่างบันทึกอย่างเดียว
     ("""  c.m.push(['s',txt,nowTm(),PEND.slice()]); PEND=[]; $('#rt').value=''; c.st='wait'; c.ago=0; render(); toast('ส่งแล้ว · สถานะเป็น "รอตอบ" (ต้นแบบ: ยังไม่ได้ส่งเข้า LINE จริง)');""",
-     """  if(!txt){toast('ส่งรูป/ไฟล์เข้า LINE ยังไม่รองรับ · พิมพ์ข้อความแทนได้');return}
-  if(window.__ppSending)return;window.__ppSending=1;const sb=document.querySelector('[data-act="send"]');if(sb){sb.disabled=true;sb.textContent='กำลังส่ง…'}
-  const hadFile=PEND.length;
-  ppChat('send',{key:c.key,body:txt}).then(j=>{c.m.push(['s',txt,nowTm()]); PEND=[]; if($('#rt'))$('#rt').value=''; c.st='wait'; c.ago=0; c.read=true; render();
-    toast((j.line==='sent'?'ส่งเข้า LINE แล้ว':'บันทึกแล้ว · แชทตัวอย่าง ไม่ได้ส่งเข้า LINE')+(hadFile?' · รูป/ไฟล์ยังไม่ได้ส่ง':''))})
-   .catch(ppChatFail).finally(()=>{window.__ppSending=0;const b2=document.querySelector('[data-act="send"]');if(b2){b2.disabled=false;b2.textContent='ส่ง'}});"""),
+     """  if(window.__ppSending)return;window.__ppSending=1;const sb=document.querySelector('[data-act="send"]');if(sb){sb.disabled=true;sb.textContent='กำลังส่ง…'}
+  const items=PEND.slice();let n=0;
+  const one=(body,media,att)=>ppChat('send',{key:c.key,body,media}).then(j=>{c.m.push(['s',att?'':body,nowTm()].concat(att?[att]:[]));n++;return j});
+  items.reduce((pr,a)=>pr.then(()=>a.t==='img'?ppImgData(a.f).then(d=>one('[รูปภาพ]',{type:'image',data:d},[{t:'img',src:d,name:a.name}]))
+      :ppFileData(a.f).then(d=>one('[ไฟล์] '+a.name,{type:'file',name:a.name,data:d},[{t:'file',name:a.name,size:a.size}]))),Promise.resolve())
+   .then(()=>txt?one(txt):null).then(j=>{PEND=[]; if($('#rt'))$('#rt').value=''; c.st='wait'; c.ago=0; c.read=true; render();
+    toast(c.key&&String(c.key).startsWith('db:')?`ส่งเข้า LINE แล้ว (${n} ข้อความ)`:'บันทึกแล้ว · แชทตัวอย่าง ไม่ได้ส่งเข้า LINE')})
+   .catch(e=>{if(n){PEND=PEND.slice(n);render()}ppChatFail(e)}).finally(()=>{window.__ppSending=0;const b2=document.querySelector('[data-act="send"]');if(b2){b2.disabled=false;b2.textContent='ส่ง'}});"""),
+    # เก็บไฟล์จริงไว้ส่ง
+    ("PEND.push(kind==='img'?{t:'img',name:f.name,size:fsz(f.size),src:URL.createObjectURL(f)}:{t:'file',name:f.name,size:fsz(f.size)})",
+     "if(kind!=='img'&&f.size>2.5*1048576){toast('ไฟล์ '+f.name+' ใหญ่เกิน 2.5 MB');return}PEND.push(kind==='img'?{t:'img',name:f.name,size:fsz(f.size),src:URL.createObjectURL(f),f}:{t:'file',name:f.name,size:fsz(f.size),f})"),
+    # แสดงรูป/สติกเกอร์/ไฟล์ในบับเบิล
+    ("function attH(at){return (at||[]).map(a=>a.t==='img'?`<img class=\"attimg\" src=\"${a.src}\" alt=\"${esc2(a.name)}\">`:`<span class=\"attfile\"><b>${esc2(a.name)}</b> <small>${esc2(a.size)}</small></span>`).join('')}",
+     "function attH(at){return (at||[]).map(a=>a.t==='stk'?`<img class=\"stk\" src=\"${a.src}\" alt=\"สติกเกอร์\">`:a.t==='img'?`<a href=\"${a.src}\" target=\"_blank\" rel=\"noopener\"><img class=\"attimg\" src=\"${a.src}\" alt=\"${esc2(a.name)}\"></a>`:"
+     "(a.u?`<a class=\"attfile\" href=\"${a.u}\" target=\"_blank\" rel=\"noopener\">📎 <b>${esc2(a.name)}</b> <small>${esc2(a.size||'')}</small></a>`:`<span class=\"attfile\">📎 <b>${esc2(a.name)}</b> <small>${esc2(a.size||'')}</small></span>`)).join('')}"),
+    # ช่องพิมพ์แบบแอป LINE: ปุ่มรูป / สติกเกอร์ / ไฟล์
+    ("<div class=\"plw\"><button type=\"button\" class=\"plus\" data-act=\"plus\" aria-label=\"เพิ่มภาพหรือไฟล์เอกสาร\" aria-expanded=\"false\">+</button><div class=\"plm\" id=\"plm\" hidden><button type=\"button\" data-act=\"pickimg\">ภาพ</button><button type=\"button\" data-act=\"pickfile\">ไฟล์เอกสาร</button></div></div>",
+     "<div class=\"lnbar\"><button type=\"button\" class=\"lnb\" data-act=\"pickimg\" title=\"ส่งรูป\" aria-label=\"ส่งรูป\">${LNI.img}</button><button type=\"button\" class=\"lnb${S.stk?' on':''}\" data-act=\"stk\" title=\"สติกเกอร์\" aria-label=\"สติกเกอร์\">${LNI.stk}</button><button type=\"button\" class=\"lnb\" data-act=\"pickfile\" title=\"ส่งไฟล์\" aria-label=\"ส่งไฟล์\">${LNI.file}</button></div>"),
+    ("<div class=\"attrow\" id=\"att\">${chipsH()}</div>", "<div class=\"attrow\" id=\"att\">${chipsH()}</div>${S.stk?stkPanel():''}"),
+    ("else if(a==='pickimg'){$('#plm').hidden=true;$('#fiImg').click()}", "else if(a==='pickimg'){$('#fiImg').click()}\n    else if(a==='stk'){S.stk=!S.stk;render()}\n    else if(a==='stkp'){S.stkP=+b.dataset.i;render()}\n    else if(a==='stks'){sendSticker(b.dataset.p,b.dataset.s)}"),
+    ("else if(a==='pickfile'){$('#plm').hidden=true;$('#fiDoc').click()}", "else if(a==='pickfile'){$('#fiDoc').click()}"),
     # ปิดเคส
     ("else if(a==='close'){const c=CV.find(x=>x.id===S.sel);c.st='done';render();toast('ปิดเคสแล้ว · งานด่วนในหน้าแรกจะหายไปด้วย')}",
      "else if(a==='close'){const c=CV.find(x=>x.id===S.sel),o=c.st;c.st='done';c.read=true;render();ppChat('close',{key:c.key}).then(()=>toast('ปิดเคสแล้ว · งานด่วนในหน้าแรกจะหายไปด้วย')).catch(e=>{c.st=o;render();ppChatFail(e)})}"),

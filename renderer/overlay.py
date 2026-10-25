@@ -428,7 +428,7 @@ def build(base, export, now):
             body = x['body']
             if x['sender'] == 'AI':
                 body = '✨ ' + body
-            msgs.append({'seq': i, 'from': who, 'at': _bkk(x['at']), 'text': body, 'type': 'text'})
+            msgs.append({'seq': i, 'from': who, 'at': _bkk(x['at']), 'text': body, 'type': 'text', 'meta': x.get('meta') or None})
         m['line_chats'].append({'thread_id': 'T9%03d' % n, 'db_key': 'db:%s' % t['id'], 'guest_id': gid, 'line_display_name': t.get('display_name') or '',
                                 'line_user_id': t['line_user_id'],
                                 'topic_tags': ['ส่งต่อพนักงาน'] if t.get('needs_staff') else ['AI ตอบ'],

@@ -40,6 +40,22 @@ def stay_txt(b):
 def seg_of(n):
     return 'none' if n == 0 else ('often' if n >= 3 else ('rep' if n == 2 else 'new'))
 
+def media_att(meta):
+    """รูป/สติกเกอร์/ไฟล์ ที่แนบมากับข้อความ → รูปแบบไฟล์แนบของหน้าแชท"""
+    if not isinstance(meta, dict) or not meta.get('type'):
+        return None
+    t = meta['type']
+    if t == 'sticker' and meta.get('sid'):
+        return [{'t': 'stk', 'src': 'https://stickershop.line-scdn.net/stickershop/v1/sticker/%s/android/sticker.png' % meta['sid'], 'name': 'สติกเกอร์'}]
+    if t == 'image':
+        return [{'t': 'img', 'src': meta['url'], 'name': 'รูปภาพ'}] if meta.get('url') else [{'t': 'file', 'name': 'รูปภาพ (โหลดไม่ได้)', 'size': ''}]
+    if t in ('file', 'video', 'audio'):
+        nm = meta.get('name') or {'video': 'วิดีโอ', 'audio': 'ข้อความเสียง', 'file': 'ไฟล์'}[t]
+        sz = meta.get('size')
+        return [{'t': 'file', 'name': nm, 'size': ('%.1f MB' % (sz / 1048576) if sz and sz > 1048576 else ('%d KB' % (sz // 1024) if sz else '')), 'u': meta.get('url') or ''}]
+    return None
+
+
 def build():
     CV, BKN, BD, PF, LCX = [], {}, {}, {}, {}
     for i, t in enumerate(sorted(m['line_chats'], key=lambda x: x['thread_id']), 1):
@@ -54,11 +70,15 @@ def build():
             if x['type'] == 'image': tx = '🖼 ' + tx
             elif x['type'] == 'file': tx = '📎 ' + tx
             elif x['type'] == 'flex': tx = '🧾 ' + tx
-            msgs.append([who, tx, tlabel(x['at'])])
+            att = media_att(x.get('meta'))
+            if att:
+                tx = ''
+            msgs.append([who, tx, tlabel(x['at'])] + ([att] if att else []))
         key = t.get('db_key') or t['thread_id']
         cs = (m.get('chat_state') or {}).get(key) or {}
         for x in cs.get('sent') or []:   # ข้อความที่พนักงานพิมพ์ในแชทตัวอย่าง
-            msgs.append(['s', x['body'], tlabel(x['at'])])
+            att = media_att(x.get('meta'))
+            msgs.append(['s', '' if att else x['body'], tlabel(x['at'])] + ([att] if att else []))
             last = max(last, x['at'])
         ago = max(0, (REFMS - msl(last)) // 60000)
         cust_at = max([x['at'] for x in t['messages'] if x['from'] == 'ลูกค้า'] or [''])
