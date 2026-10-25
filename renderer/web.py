@@ -270,12 +270,13 @@ def handle(method, query, cookie_header, body, ip):
             data = json.loads(body or '{}')
             if not isinstance(data, dict) or not data.get('k') or not data.get('gid'):
                 return 400, J, json.dumps({'error': 'ข้อมูลไม่ครบ'}, ensure_ascii=False)
-            if data['k'] == 'comp':   # เพิ่มบริษัทใหม่ (gid = รหัสบริษัท)
+            if data['k'] == 'comp':   # เพิ่ม/แก้ไขข้อมูลบริษัท (gid = รหัสบริษัท)
                 d = data.get('data') or {}
-                tax = ''.join(ch for ch in str(d.get('tax', '')) if ch.isdigit())
-                if tax and not thai_id_ok(tax):
-                    return 400, J, json.dumps({'error': 'เลขผู้เสียภาษีไม่ถูกต้อง (ตรวจหลักสุดท้ายไม่ผ่าน)'}, ensure_ascii=False)
-                d['tax'] = tax
+                if 'tax' in d:
+                    tax = ''.join(ch for ch in str(d.get('tax', '')) if ch.isdigit())
+                    if tax and not thai_id_ok(tax):
+                        return 400, J, json.dumps({'error': 'เลขผู้เสียภาษีไม่ถูกต้อง (ตรวจหลักสุดท้ายไม่ผ่าน)'}, ensure_ascii=False)
+                    d['tax'] = tax
                 return 200, J, json.dumps(rpc('pp_comp', {'p': {'cid': data['gid'], 'data': d}, 'p_role': role}), ensure_ascii=False)
             if data['k'] == 'idcard':   # เลขบัตร/หนังสือเดินทาง + ภาพบัตร (เมื่อยินยอม)
                 if data.get('doc_type', 'id') == 'id' and not thai_id_ok(''.join(ch for ch in str(data.get('doc_no', '')) if ch.isdigit())):

@@ -442,20 +442,32 @@ def build(base, export, now):
                      sent=[dict(x, at=_bkk(x['at'])) for x in (v.get('sent') or [])])
     m['chat_state'] = cs
     m['cust_state'] = export.get('cust_state') or {}
-    # บริษัทที่พนักงานเพิ่มใหม่ (จากหน้าสมัครสมาชิก/ตั้งค่าบริษัท)
+    # บริษัทที่พนักงานเพิ่มใหม่/แก้ไข (แท็บบริษัท)
     if export.get('comp_state') and m['companies']:
         tmpl = m['companies'][0]
-        have = {c['company_id'] for c in m['companies']}
+        byc = {c['company_id']: c for c in m['companies']}
         for cid, d in sorted(export['comp_state'].items()):
-            if cid in have or not d.get('name'):
-                continue
-            c = {k: _blank_like(v) for k, v in tmpl.items()}
-            nm = d['name']
-            short = re.sub(r'^(บริษัท|บจก\.|หจก\.|บมจ\.)\s*', '', nm)
-            short = re.sub(r'\s*(จำกัด|\(มหาชน\))\s*', ' ', short).strip() or nm
-            c.update({'company_id': cid, 'name_th': nm, 'name_short': short, 'tax_id': d.get('tax', ''),
-                      'billing_branch': d.get('branch') or 'สำนักงานใหญ่', 'billing_address': d.get('addr', ''),
-                      'account_stage': 'ลูกค้าใหม่', 'credit_days': 0, 'phone': d.get('phone', ''), 'email': d.get('email', '')})
-            m['companies'].append(c)
+            c = byc.get(cid)
+            if not c:
+                if not d.get('name'):
+                    continue
+                c = {k: _blank_like(v) for k, v in tmpl.items()}
+                c.update({'company_id': cid, 'account_stage': 'ลูกค้าใหม่', 'credit_days': 0, 'billing_branch': 'สำนักงานใหญ่'})
+                m['companies'].append(c)
+                byc[cid] = c
+            if d.get('name'):
+                c['name_th'] = d['name']
+                short = re.sub(r'^(บริษัท|บจก\.|หจก\.|บมจ\.)\s*', '', d['name'])
+                c['name_short'] = re.sub(r'\s*(จำกัด|\(มหาชน\))\s*', ' ', short).strip() or d['name']
+            for k, f in (('short', 'name_short'), ('type', 'company_type'), ('site', 'work_site'), ('tax', 'tax_id'),
+                         ('branch', 'billing_branch'), ('addr', 'billing_address'), ('pay', 'pay_mode'),
+                         ('cname', 'contact_name'), ('crole', 'contact_role'), ('cphone', 'contact_phone'),
+                         ('cemail', 'contact_email'), ('cline', 'contact_line'), ('cdecide', 'contact_decide')):
+                if d.get(k) not in (None, ''):
+                    c[f] = d[k]
+            if d.get('pay'):
+                c['credit_days'] = int(d.get('credit') or 0) if d['pay'] == 'credit' else 0
+                c['billing_mode'] = {'self': 'ผู้เข้าพักจ่ายเอง', 'prepay': 'บริษัทโอนค่าห้องล่วงหน้า',
+                                     'credit': 'วางบิลเครดิต %d วัน' % c['credit_days']}[d['pay']]
     m['cust_ids'] = export.get('cust_ids') or {}
     return m

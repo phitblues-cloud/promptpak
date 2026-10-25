@@ -190,9 +190,9 @@ def build_cl():
             ai.append(f"จองล่วงหน้าไว้แล้ว {s['fut']} ห้อง · เข้าพักครั้งถัดไป {th_from_dno(s['nxt'])}")
         ai.append('การชำระเงิน: ' + c['billing_mode'])
         o = {'id': 'c' + cid[1:] if cid.startswith('C') else 'c' + cid, 'name': c['name_th'], 'tax': c['tax_id'],
-             'st': 'new' if cid == 'C004' else 'talk', 'seen': cid != 'C004', 'contact': gname(ct['guest_id']) if ct else '',
-             'biz': c['industry'], 'phone': ct['phone'] if ct else '', 'email': ct['email'] if ct else '',
-             'line': ct['line_display_name'] if ct else '', 'addr': clean_addr(c['billing_address']),
+             'st': 'new' if cid == 'C004' else 'talk', 'seen': cid != 'C004', 'contact': c.get('contact_name') or (gname(ct['guest_id']) if ct else ''),
+             'biz': c.get('company_type') or c['industry'], 'phone': c.get('contact_phone') or (ct['phone'] if ct else ''), 'email': c.get('contact_email') or (ct['email'] if ct else ''),
+             'line': c.get('contact_line') or (ct['line_display_name'] if ct else ''), 'addr': clean_addr(c['billing_address']),
              'people': s['people'], 'times': s['times'], 'spend': s['spend'], 'special': [],
              'ai': ' · '.join(ai), 'msgs': {'line': msgs_for(cid), 'email': []},
              'tl': [{'mo': mo_lbl(a['date']), 'd': ago(a['date']), 'w': 'sys' if a['type'] == 'ระบบแจ้งเตือน' else 'me', 'ch': ('ระบบ' if a['type'] == 'ระบบแจ้งเตือน' else a['type']), 't': a['summary'], 's': ''} for a in acts]}

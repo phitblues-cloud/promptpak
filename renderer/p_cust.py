@@ -68,13 +68,40 @@ def mask_doc(t, no):
         return f'{no[0]}-xxxx-xxxxx-xx-{no[12]}'
     return (no[:2] + 'x' * max(0, len(no) - 4) + no[-2:]) if len(no) > 4 else 'xxxx'
 
+def co_type(c):
+    if c.get('company_type'):
+        return c['company_type']
+    n = c['name_th']
+    if re.search(r'^กรม|ราชการ|องค์การบริหาร|เทศบาล|สำนักงาน|มหาวิทยาลัย', n):
+        return 'หน่วยงานราชการ'
+    if re.search(r'การไฟฟ้า|การประปา|การรถไฟ|ปตท|ทีโอที|ไปรษณีย์ไทย', n):
+        return 'รัฐวิสาหกิจ'
+    return 'เอกชน'
+
+
+def co_pay(c):
+    if c.get('pay_mode'):
+        return c['pay_mode']
+    if c.get('credit_days'):
+        return 'credit'
+    return 'prepay' if 'โอน' in (c.get('billing_mode') or '') and 'ล่วงหน้า' in (c.get('billing_mode') or '') else 'self'
+
+
 def build_co():
     co = []
     for c in m['companies']:
         ct = co_contact(c['company_id'])
+        cc = next((x for x in CONT.get(c['company_id'], []) if x.get('guest_id') == (ct['guest_id'] if ct else None)), None)
         co.append({'id': c['company_id'], 'name': c['name_th'], 'tax': c['tax_id'], 'hq': c['billing_branch'],
-                   'contact': ct['guest_id'] if ct else None, 'phone': ct['phone'] if ct else c.get('phone', ''), 'email': ct['email'] if ct else c.get('email', ''),
-                   'addr': clean_addr(c['billing_address']), 'promos': []})
+                   'contact': ct['guest_id'] if ct else None,
+                   'phone': c.get('contact_phone') or (ct['phone'] if ct else ''), 'email': c.get('contact_email') or (ct['email'] if ct else ''),
+                   'addr': clean_addr(c['billing_address']), 'promos': [],
+                   'short': c.get('name_short') or '', 'type': co_type(c), 'site': c.get('work_site') or '',
+                   'pay': co_pay(c), 'credit': c.get('credit_days') or 0, 'paytxt': c.get('billing_mode') or '',
+                   'cname': c.get('contact_name') or (cc['name'] if cc else (disp(ct) if ct else '')),
+                   'crole': c.get('contact_role') or (cc['role'] if cc else ''),
+                   'cline': c.get('contact_line') or (ct['line_display_name'] if ct else '') or '',
+                   'cdecide': (c.get('contact_decide') == '1') if c.get('contact_decide') else bool(cc and 'ผู้ตัดสินใจ' in (cc.get('decision') or ''))})
     return co
 
 def build_st():

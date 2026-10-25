@@ -1561,16 +1561,16 @@ do $$ declare f record; begin
   end loop;
 end $$;
 
--- ---------- 10 เพิ่มบริษัทใหม่ (25 ต.ค. 2569) ----------
+-- ---------- 10 เพิ่ม/แก้ไขข้อมูลบริษัท (25 ต.ค. 2569) ----------
 
 create table if not exists comp_state (
-  cid        text primary key,              -- รหัสบริษัทใหม่ (K...)
+  cid        text primary key,              -- รหัสบริษัทใหม่ (K...) หรือรหัสบริษัทเดิมที่แก้ไข
   data       jsonb not null default '{}'::jsonb,
   updated_at timestamptz not null default now()
 );
 alter table comp_state enable row level security;
 
--- p = {cid, data: {name, tax, branch, addr, phone, email}}
+-- p = {cid, data: {name, short, type, site, tax, branch, addr, pay, credit, cname, crole, cphone, cemail, cline, cdecide}}
 create or replace function pp_comp(p jsonb, p_role text) returns jsonb language plpgsql as $$
 declare
   v_cid text := nullif(btrim(coalesce(p->>'cid', '')), '');
@@ -1579,12 +1579,18 @@ declare
   f text;
 begin
   if v_cid is null then raise exception 'ไม่ระบุรหัสบริษัท'; end if;
-  foreach f in array array['name','tax','branch','addr','phone','email'] loop
-    v_d := v_d || jsonb_build_object(f, left(btrim(coalesce(v_in->>f, '')), 300));
+  foreach f in array array['name','short','type','site','tax','branch','addr','pay','credit','cname','crole','cphone','cemail','cline','cdecide'] loop
+    if v_in ? f then v_d := v_d || jsonb_build_object(f, left(btrim(coalesce(v_in->>f, '')), 300)); end if;
   end loop;
-  if v_d->>'name' = '' then raise exception 'กรุณากรอกชื่อบริษัท'; end if;
-  if v_d->>'tax' <> '' and v_d->>'tax' !~ '^[0-9]{13}$' then raise exception 'เลขผู้เสียภาษีต้องมี 13 หลัก'; end if;
-  if v_d->>'tax' <> '' and exists (select 1 from comp_state where cid <> v_cid and data->>'tax' = v_d->>'tax') then
+  if v_d ? 'name' and v_d->>'name' = '' then raise exception 'กรุณากรอกชื่อบริษัท'; end if;
+  if not exists (select 1 from comp_state where cid = v_cid) and v_cid like 'K%' and coalesce(v_d->>'name', '') = '' then
+    raise exception 'กรุณากรอกชื่อบริษัท';
+  end if;
+  if v_d ? 'type' and v_d->>'type' not in ('', 'เอกชน', 'หน่วยงานราชการ', 'รัฐวิสาหกิจ') then raise exception 'ประเภทธุรกิจไม่ถูกต้อง'; end if;
+  if v_d ? 'pay' and v_d->>'pay' not in ('', 'self', 'prepay', 'credit') then raise exception 'วิธีชำระไม่ถูกต้อง'; end if;
+  if v_d ? 'credit' and v_d->>'credit' !~ '^[0-9]{0,3}$' then raise exception 'จำนวนวันเครดิตไม่ถูกต้อง'; end if;
+  if coalesce(v_d->>'tax', '') <> '' and v_d->>'tax' !~ '^[0-9]{13}$' then raise exception 'เลขผู้เสียภาษีต้องมี 13 หลัก'; end if;
+  if coalesce(v_d->>'tax', '') <> '' and exists (select 1 from comp_state where cid <> v_cid and data->>'tax' = v_d->>'tax') then
     raise exception 'เลขผู้เสียภาษีนี้มีในระบบแล้ว';
   end if;
   insert into comp_state (cid, data) values (v_cid, v_d || jsonb_build_object('by', p_role))
