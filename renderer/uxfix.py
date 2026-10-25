@@ -198,6 +198,8 @@ def apply(M):
         M['linechat'] = chatsave(linechat(M['linechat']))
     if 'hk' in M:
         M['hk'] = hk(M['hk'])
+    if 'book' in M:
+        M['book'] = bkpage(M['book'])
     return M
 
 
@@ -801,3 +803,46 @@ def hk(h):
     h = h[:i] + HK_JS + h[j:]
     h = _r(h, HK_PATCH, 'hk')
     return _css(h, HK_CSS)
+
+
+# ---------- การจองทั้งหมด: กดรายการ → หน้ารายละเอียดเต็มจอ + ปุ่มกลับ (แบบหน้าลูกค้า) ----------
+BKPAGE_JS = r"""
+function bkPage(b,v,H,co){
+  const P=$('pList');let pg=$('bkpg');
+  if(!pg){pg=document.createElement('div');pg.id='bkpg';pg.setAttribute('data-keep','');P.prepend(pg)}
+  P.classList.add('pg');
+  pg.innerHTML=`<button type="button" class="back" data-bkback>${ico('left')}กลับรายการจอง</button>
+   <div class="sheet xl bkpgs"><div class="sh">${bkHead(v,H)}</div>
+    <div class="sb"><div class="sb2">${bkBody(v,H)}</div></div>
+    <div class="sf"><button class="btn ghost" id="dFin">ดูบิลในเมนูการเงิน</button>${co?'<button class="btn ghost" id="dQt">ใบเสนอราคา</button><button class="btn ghost" id="dIv">ใบแจ้งหนี้รวม</button>':''}<button class="btn pri" data-bkback>กลับรายการจอง</button></div></div>`;
+  pg.querySelectorAll('[data-bkback]').forEach(x=>x.onclick=bkBack);
+  $('dFin').onclick=()=>{try{parent.postMessage({pbr:'openbk',no:b.no},'*')}catch(e){}};
+  if($('dQt')){$('dQt').onclick=()=>docModal('quote',B.filter(x=>x.no===b.no));$('dIv').onclick=()=>docModal('invoice',B.filter(x=>x.no===b.no))}
+  try{scrollTo(0,0)}catch(_){}
+  pg.querySelector('.back').focus({preventScroll:true});
+}
+function bkBack(){const P=$('pList'),pg=$('bkpg');if(pg)pg.remove();if(P)P.classList.remove('pg')}
+function detail(id,ctx){"""
+
+BKPAGE_CSS = """
+#pList.pg>*:not(#bkpg){display:none!important}
+#bkpg{display:block}
+#bkpg .back{border:0;background:none;display:inline-flex;align-items:center;gap:.4rem;font:inherit;font-weight:600;color:var(--purple);padding:.3rem .2rem;min-height:2.6rem;margin-bottom:.4rem;cursor:pointer}
+#bkpg .back .ic,#bkpg .back svg{width:1.2rem;height:1.2rem}
+#bkpg .bkpgs{width:100%;max-width:none;max-height:none;animation:none;box-shadow:0 10px 30px -18px rgba(40,10,40,.35);border:1.5px solid var(--line)}
+#bkpg .bkpgs .sh{position:static}
+#bkpg .bkpgs .sb{overflow:visible}
+#bkpg .bkpgs .sf{position:static;flex-wrap:wrap}
+#bkpg .bkpgs .sf .btn{flex:1 1 12rem}
+"""
+
+
+def bkpage(h):
+    h = _r(h, [
+        ("function detail(id,ctx){", BKPAGE_JS),
+        ("  openModal(`<div class=\"sh\"><button class=\"x\" data-close aria-label=\"ปิด\">${ico('x')}</button>${bkHead(v,H)}</div>",
+         "  if(!ctx&&S.view==='list'){bkPage(b,v,H,co);return}\n  openModal(`<div class=\"sh\"><button class=\"x\" data-close aria-label=\"ปิด\">${ico('x')}</button>${bkHead(v,H)}</div>"),
+        ("if(a=t.closest('[data-view]')){S.view=a.dataset.view;renderAll();return}",
+         "if(a=t.closest('[data-view]')){bkBack();S.view=a.dataset.view;renderAll();return}"),
+    ], 'book')
+    return _css(h, BKPAGE_CSS)

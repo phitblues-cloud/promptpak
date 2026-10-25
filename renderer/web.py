@@ -78,7 +78,7 @@ def app_script(role, stamp):
  const PEND={},LAST={};
  function busyFrame(k){const f=FR[k];if(!f)return false;
   try{const d=f.contentDocument;if(!d)return false;
-   if(d.querySelector('[id$="scrim"].open,dialog[open]'))return true;
+   if(d.querySelector('[id$="scrim"].open,dialog[open],[data-keep]'))return true;
    const a=d.activeElement;if(a&&/^(INPUT|TEXTAREA|SELECT)$/.test(a.tagName))return true;
    return Date.now()-(LAST[k]||0)<8000}catch(_){return false}}
  function apply(){Object.keys(PEND).forEach(k=>{if(busyFrame(k))return;const h=PEND[k];delete PEND[k];MODS[k]=h;
