@@ -99,6 +99,8 @@ LC_CSS = """
 .th2 .nmb{max-width:100%;min-width:0;display:inline-flex;align-items:center;min-height:0!important;height:auto!important;padding:0!important;margin:0!important;vertical-align:top}
 .th2 .nmc{display:flex;flex-direction:column;align-items:flex-start;gap:0}
 .th2 .nmc small{max-width:100%;margin:0}
+.th2 .nmc .nmb+small{margin-top:.3rem}
+.th2 .coline{margin-top:.15rem!important}
 .th2 .nmrow{flex:none}
 .th2 .nmb h2{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0}
 .th2 .coline{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
@@ -123,7 +125,10 @@ LC_CSS = """
 .fzone{padding:.4rem .6rem!important;gap:.3rem!important}
 .fzone .flt{gap:.2rem!important}
 .fzone .flt button{padding:.05rem .45rem!important;font-size:.72rem!important;min-height:1.75rem!important}
-.fzone{flex-wrap:nowrap!important}
+.fzone{flex-wrap:nowrap!important;flex-direction:column!important;align-items:stretch!important;justify-content:center;gap:.4rem!important}
+.fz1{display:flex;align-items:center;gap:.3rem;min-width:0}
+.fzone .srch{min-height:2.2rem;padding:.25rem .75rem;font-size:.88rem;box-sizing:border-box}
+.listcol,.thrcol,.pancol{height:calc(100vh - 6.4rem)!important}
 .fzone .flt{flex:0 1 auto;min-width:0;overflow-x:auto;scrollbar-width:none;flex-wrap:nowrap!important}
 .fzone .flt button{white-space:nowrap;flex:none}
 .fzone .tpsel{flex:0 0 auto;width:6.6rem;font-size:.72rem;margin-left:auto;padding:0 1.3rem 0 .55rem;text-overflow:ellipsis}
@@ -142,7 +147,8 @@ def linechat(h):
          """<button type="button" data-sort="new" aria-pressed="${S.sort==='new'}">ล่าสุด</button><button type="button" data-sort="ai" aria-pressed="${S.sort==='ai'}">ด่วน</button>"""),
         ("const S={f:'all',tp:'all',q:'',sel:2,sort:'ai',", "const S={f:'all',tp:'all',q:'',sel:2,sort:'new',"),
         ("""<div class="fzone"><div class="flt" role="tablist" aria-label="สถานะ">${fl}</div></div>""",
-         """<div class="fzone"><div class="flt" role="tablist" aria-label="สถานะ">${fl}</div><select class="tpsel" aria-label="ประเภทเรื่อง" onchange="S.tp=this.value;render()">${[['all','ทุกเรื่อง',all.length],...(nu?[['urg','ด่วน',nu]]:[]),...TOPICS.filter(t=>tc[t[0]]).map(t=>[t[0],t[1],tc[t[0]]])].map(([k,t,v])=>`<option value="${k}" ${S.tp===k?'selected':''}>${k==='all'?'ทุกเรื่อง':t+' ('+v+')'}</option>`).join('')}</select></div>"""),
+         """<div class="fzone"><div class="fz1"><div class="flt" role="tablist" aria-label="สถานะ">${fl}</div><select class="tpsel" aria-label="ประเภทเรื่อง" onchange="S.tp=this.value;render()">${[['all','ทุกเรื่อง',all.length],...(nu?[['urg','ด่วน',nu]]:[]),...TOPICS.filter(t=>tc[t[0]]).map(t=>[t[0],t[1],tc[t[0]]])].map(([k,t,v])=>`<option value="${k}" ${S.tp===k?'selected':''}>${k==='all'?'ทุกเรื่อง':t+' ('+v+')'}</option>`).join('')}</select></div><input class="srch" id="q" type="search" placeholder="ค้นหาชื่อ ชื่อ LINE ห้อง หรือเรื่อง" value="${esc(S.q)}" aria-label="ค้นหาแชท"></div>"""),
+        ('<input class="srch" id="q" type="search" placeholder="ค้นหาชื่อ ชื่อ LINE ห้อง หรือเรื่อง" value="${esc(S.q)}" aria-label="ค้นหาแชท">\n', ''),
         ('ดูเพิ่มเติม ›</button></div><div class="sr3">${noteH}</div></div>`;', 'ดูเพิ่มเติม ›</button></div></div>`;'),
         ('const floor=7.9*parseFloat(', 'const floor=7.7*parseFloat('),
         # ความสูงหัวกล่องคงที่ทุกแชท ไม่ยืดหดตามเนื้อหา
