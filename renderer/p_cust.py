@@ -67,6 +67,8 @@ def build_rev():
              'bk': r['booking_id'] or '', 'reply': r['reply_status'], 'at': r['created_at'][:10]} for r in REVIEWS]
 
 def data_block():
+    cu = build_cu()
+    mseq = max([len(m['members'])] + [int(re.sub(r'\D', '', c['memberNo']) or 0) for c in cu if c['memberNo']])
     types = []
     for r in ROOMS:
         t = zone_th(r) + ' · ' + r['type']
@@ -76,7 +78,7 @@ def data_block():
          'const rtype=code=>(' + J(rtmap) + ')[code]||"";\n'
          'const RTLIST=' + J(types) + ';\n'
          'const PROMOS=[{id:\'p1\',name:\'ส่วนลดห้องพักพาร์ตเนอร์ 10%\',d:\'ทุกห้อง · ทุกวัน\',valid:\'1 ม.ค. – 31 ธ.ค. 2569\'},{id:\'p2\',name:\'พักวันธรรมดา ลด 15%\',d:\'จันทร์–พฤหัสบดี · จอง 3 ห้องขึ้นไป\',valid:\'1 ต.ค. 2569 – 31 มี.ค. 2570\'},{id:\'p3\',name:\'แถมอาหารเช้า 2 ที่\',d:\'ทุกการจอง · ต่อห้อง\',valid:\'20 ต.ค. – 30 พ.ย. 2569\'},{id:\'p4\',name:\'เรทพิเศษห้องประชุม ลด 20%\',d:\'จองล่วงหน้าอย่างน้อย 7 วัน\',valid:\'1 ม.ค. – 31 ธ.ค. 2569\'}];\n'
-         'let CU=' + J(build_cu()) + ',ST=' + J(build_st()) + ',CO=' + J(build_co()) + ',stSeq=1000,custSeq=0,memSeq=' + str(len(m['members'])) + ';\n'
+         'let CU=' + J(cu) + ',ST=' + J(build_st()) + ',CO=' + J(build_co()) + ',stSeq=1000,custSeq=0,memSeq=' + str(mseq) + ';\n'
          'const REV=' + J(build_rev()) + ';\n')
     return s
 

@@ -292,17 +292,6 @@ CUST_SAVE = [
      "else h+=`<div class=\"lrow\"><div><button class=\"bkno num\" data-bkno=\"${s.no}\">${s.no}</button>"),
     ("if(withName){const c=cuOf(s.cust);h+=`<div class=\"lrow\"><div class=\"num\">${s.no}</div>",
      "if(withName){const c=cuOf(s.cust);h+=`<div class=\"lrow\"><div><button class=\"bkno num\" data-bkno=\"${s.no}\">${s.no}</button></div>"),
-    # สมัครสมาชิก: ออกรหัสสมาชิกจากฐานข้อมูล
-    ("      let c=dup;\n      if(!c){c={id:'C'+String(++custSeq).padStart(4,'0'),",
-     "      if(window.__ppReg)return;\n      let c=dup;const isNew=!c;\n      if(!c){c={id:'N'+Date.now().toString(36).toUpperCase(),"),
-    ("      c.memberNo='M'+String(++memSeq).padStart(3,'0'); c.memberSince=TODAY;\n      closeModal();",
-     "      window.__ppReg=1;$('rok').disabled=true;$('rok').textContent='กำลังบันทึก…';\n"
-     "      ppCust('member',{gid:c.id,is_new:isNew,base:memSeq,company:R.company||'',data:{name:c.name,phone:c.phone,line:c.line,addr:c.addr,prov:c.prov,bday:c.bday,purpose:c.purpose||''}}).then(j=>{window.__ppReg=0;\n"
-     "      c.memberNo=j.memberNo; c.memberSince=TODAY; memSeq=Math.max(memSeq,+String(j.memberNo).replace(/\\D/g,''));\n"
-     "      if(isNew&&R.company)ppCust('company',{gid:c.id,company:R.company}).catch(()=>{});\n      closeModal();"),
-    ("      try{parent.postMessage({pbr:'memreg',name:c.name,phone:c.phone,no:c.memberNo},'*')}catch(_){}\n    };",
-     "      try{parent.postMessage({pbr:'memreg',name:c.name,phone:c.phone,no:c.memberNo},'*')}catch(_){}\n"
-     "      }).catch(e=>{window.__ppReg=0;if(isNew){const i=CU.indexOf(c);if(i>=0)CU.splice(i,1)}$('rok').disabled=false;$('rok').textContent='ยืนยันสมัครสมาชิก';$('rerr').innerHTML=`<div class=\"err\" role=\"alert\">บันทึกไม่สำเร็จ: ${esc(e.message)}</div>`});\n    };"),
 ]
 
 PROF_CSS = """
@@ -322,6 +311,92 @@ PROF_CSS = """
 .copick.on{border-color:var(--purple);background:#F6F0FB}
 #coq{border:1.5px solid var(--line);border-radius:12px;padding:.55rem .85rem;font:inherit;background:#fff;box-sizing:border-box}
 #coUn{color:#B3263E!important;border-color:#E9B8C0!important}
+.sheet.wide{width:min(52rem,100%)!important}
+.regsteps{list-style:none;display:flex;gap:.4rem;margin:.8rem 0 0;padding:0;flex-wrap:wrap}
+.regsteps li{display:flex;align-items:center;gap:.35rem;font-size:.85rem;opacity:.75;background:rgba(255,255,255,.14);border-radius:99px;padding:.2rem .7rem .2rem .25rem}
+.regsteps li i{font-style:normal;width:1.5rem;height:1.5rem;border-radius:50%;display:grid;place-items:center;background:rgba(255,255,255,.25);font-weight:700;font-size:.8rem}
+.regsteps li.on{opacity:1;background:#fff;color:var(--pink);font-weight:700}
+.regsteps li.on i{background:var(--pink);color:#fff}
+.regsteps li.done{opacity:1}
+.regbody{grid-template-columns:1fr 1fr!important;gap:.9rem 1rem!important;padding:1.1rem 1.4rem .8rem!important;align-content:start;min-height:16rem}
+.regbody .full{grid-column:1/-1}
+.regchips{display:flex;flex-wrap:wrap;gap:.45rem}
+.regchips button{border:2px solid var(--line);background:#fff;border-radius:99px;padding:.45rem 1.1rem;font:inherit;font-weight:600;min-height:2.8rem;cursor:pointer}
+.regchips button[aria-pressed="true"]{background:var(--ink);border-color:var(--ink);color:#fff}
+.regsum .kvr{padding:.35rem 0}
+@media (max-width:640px){.regbody{grid-template-columns:1fr!important}}
+"""
+
+
+REG_MODAL = r"""
+/* ============ สมัครสมาชิก (แบบเป็นขั้นตอน · บันทึกจริง) ============ */
+function regModal(preId,q0,ph){
+  const qn=String(q0||'').trim().toLowerCase(),pd=digits(ph||'');
+  let pre=(preId&&cuOf(preId))||CU.find(c=>!c.memberNo&&((qn&&strip(c.name).toLowerCase().includes(qn))||(pd.length>=9&&digits(c.phone)===pd)))||null;
+  const P=pre||{};
+  const R={name:P.name||(q0||''),gender:P.gender||'',bday:P.bday||'',phone:P.phone||(ph||''),line:P.line||'',addr:P.addr||'',prov:P.prov||'',
+    company:P.company||'',purpose:P.purpose||'',special:P.special||''};
+  const GEN=['ชาย','หญิง','เพศหลากหลาย','ไม่ระบุ'],PUR=['ทำงาน','แวะพัก','งานบุญ','ราชการ/อบรม'];
+  const STEPS=['ข้อมูลส่วนตัว','ติดต่อและที่อยู่','การเข้าพัก','ตรวจสอบและยืนยัน'];
+  let step=1,err='',busy=false;
+  const nextNo=()=>pbm('M'+String(memSeq+1).padStart(3,'0'));
+  const inp=(id,lab,k,o={})=>`<div class="fld${o.full?' full':''}"><label for="${id}">${lab}</label><input id="${id}" data-k="${k}" ${o.type?`type="${o.type}"`:''} ${o.im?`inputmode="${o.im}"`:''} placeholder="${o.ph||''}" value="${esc(R[k]||'')}"></div>`;
+  const chips=(k,list,lab)=>`<div class="fld full"><span class="lb">${lab}</span><div class="regchips" role="group" aria-label="${lab}">${list.map(x=>`<button type="button" data-ck="${k}" data-cv="${x}" aria-pressed="${R[k]===x}">${x}</button>`).join('')}</div></div>`;
+  const dupOf=()=>{const d=digits(R.phone);return d.length>=9?CU.find(x=>digits(x.phone)===d&&(!pre||x.id!==pre.id)):null};
+  function body(){
+    if(step===1) return inp('rg1','ชื่อ-สกุล *','name',{ph:'เช่น คุณสมชาย ใจดี',full:true})+chips('gender',GEN,'เพศ')+inp('rg3','วันเกิด (ถ้ามี)','bday',{type:'date'});
+    if(step===2) return inp('rg4','เบอร์โทร *','phone',{type:'tel',im:'tel',ph:'08X-XXX-XXXX'})+inp('rg5','Line ID','line',{ph:'ชื่อ LINE หรือ ID'})
+      +inp('rg6','ที่อยู่','addr',{ph:'บ้านเลขที่ หมู่ ตำบล อำเภอ',full:true})+inp('rg7','จังหวัด','prov',{ph:'เช่น ขอนแก่น'});
+    if(step===3) return `<div class="fld full"><label for="rg8">บริษัท (ถ้ามี)</label><select id="rg8" data-k="company"><option value="">— ไม่มี —</option>${CO.map(x=>`<option value="${x.id}" ${x.id===R.company?'selected':''}>${esc(x.name)}</option>`).join('')}</select></div>`
+      +chips('purpose',PUR,'วัตถุประสงค์การเข้าพัก (ถ้ามี)')+inp('rg9','ความต้องการพิเศษ','special',{ph:'เช่น ไม่ทานเนื้อหมู ขอห้องชั้นล่าง',full:true});
+    const kv=(k,v)=>`<div class="kvr"><span>${k}</span><div><b>${esc(v||'-')}</b></div></div>`;
+    return `<div class="full regsum">${pre?`<div class="sum" style="margin-bottom:.6rem">สมัครให้ลูกค้าเดิมในระบบ: <b>${esc(pre.name)}</b> (ข้อมูลจะอัปเดตตามนี้)</div>`:''}
+      ${kv('ชื่อ-สกุล',R.name)}${kv('เพศ',R.gender)}${kv('วันเกิด',R.bday?bdFmt(R.bday):'')}${kv('เบอร์โทร',R.phone)}${kv('Line ID',R.line)}${kv('ที่อยู่',R.addr)}${kv('จังหวัด',R.prov)}
+      ${kv('บริษัท',R.company?(coOf(R.company)||{}).name:'')}${kv('วัตถุประสงค์',R.purpose)}${kv('ความต้องการพิเศษ',R.special)}
+      <div class="sum" style="margin-top:.7rem">รหัสสมาชิกที่จะออกให้: <b>${nextNo()}</b> (ออกอัตโนมัติเมื่อยืนยัน)</div></div>`;
+  }
+  function draw(){
+    const st=STEPS.map((t,i)=>`<li class="${i+1<step?'done':i+1===step?'on':''}"><i>${i+1<step?'✓':i+1}</i><span>${t}</span></li>`).join('');
+    openModal(`<div class="sh"><button class="x" data-close aria-label="ปิด">${ico('x')}</button><div class="rn">สมัครสมาชิก</div><div class="bkn">สมาชิกใช้สิทธิ์แลกของและร่วมโปรโมชัน</div><ol class="regsteps">${st}</ol></div>
+     <div class="sb regbody">${body()}${err?`<div class="err full" role="alert">${esc(err)}</div>`:''}</div>
+     <div class="sf">${step>1?`<button class="btn ghost" id="rgBack">ย้อนกลับ</button>`:`<button class="btn ghost" data-close>ยกเลิก</button>`}<span style="flex:1"></span>
+      <button class="btn" id="rgNext">${step<4?'ถัดไป':busy?'กำลังบันทึก…':'ยืนยันสมัครสมาชิก'}</button></div>`,()=>{
+      $('msheet').classList.add('wide');
+      $('msheet').querySelectorAll('[data-k]').forEach(e=>e.oninput=e.onchange=()=>{R[e.dataset.k]=e.value});
+      $('msheet').querySelectorAll('[data-ck]').forEach(b=>b.onclick=()=>{const k=b.dataset.ck;R[k]=R[k]===b.dataset.cv?'':b.dataset.cv;draw()});
+      if($('rgBack'))$('rgBack').onclick=()=>{err='';step--;draw()};
+      $('rgNext').onclick=next;
+      const f=$('msheet').querySelector('.regbody input');if(f&&step<4)setTimeout(()=>f.focus(),30);
+    });
+  }
+  function next(){
+    if(busy)return;err='';
+    if(step===1&&!R.name.trim()){err='กรุณากรอกชื่อ-สกุล';return draw()}
+    if(step===2){
+      if(digits(R.phone).length<9){err='กรุณากรอกเบอร์โทรให้ครบ';return draw()}
+      const d=dupOf();
+      if(d&&d.memberNo){err=`เบอร์นี้เป็นสมาชิกอยู่แล้ว (${d.name} · ${pbm(d.memberNo)})`;return draw()}
+      if(d&&!pre){pre=d;['line','addr','prov','company','purpose','special','gender','bday'].forEach(k=>{if(!R[k]&&d[k])R[k]=d[k]})}
+    }
+    if(step<4){step++;return draw()}
+    save();
+  }
+  function save(){
+    busy=true;draw();
+    const isNew=!pre, c=pre||{id:'N'+Date.now().toString(36).toUpperCase(),name:'',phone:'',line:'',addr:'',prov:'',company:'',special:'',memberNo:'',memberSince:null,added:TODAY,bias:'',gender:''};
+    const data={name:R.name.trim(),phone:R.phone.trim(),line:R.line.trim(),addr:R.addr.trim(),prov:R.prov.trim(),bday:R.bday||'',gender:R.gender,purpose:R.purpose,special:R.special.trim()};
+    ppCust('member',{gid:c.id,is_new:isNew,base:memSeq,company:R.company||'',data}).then(j=>{
+      if(!isNew&&(R.company||'')!==(c.company||''))ppCust('company',{gid:c.id,company:R.company||''}).catch(()=>{});
+      Object.assign(c,data,{company:R.company||'',memberNo:j.memberNo,memberSince:TODAY});
+      if(isNew)CU.push(c);
+      memSeq=Math.max(memSeq,+String(j.memberNo).replace(/\D/g,''));
+      closeModal(); S.detail={kind:'c',id:c.id,tab:'info'}; S.edit=false; S.view='list'; render(); window.scrollTo({top:0,behavior:'smooth'});
+      toast(`สมัครสมาชิกให้ ${c.name} แล้ว (${pbm(c.memberNo)})`);
+      try{parent.postMessage({pbr:'memreg',name:c.name,phone:c.phone,no:c.memberNo},'*')}catch(_){}
+    }).catch(e=>{busy=false;err='บันทึกไม่สำเร็จ: '+e.message;draw()});
+  }
+  draw();
+}
 """
 
 
@@ -330,4 +405,9 @@ def custprof(h):
     j = h.index('function compDetail(k){')
     h = h[:i] + CUST_DETAIL + h[j:]
     h = _r(h, CUST_SAVE, 'cust-save')
+    i = h.index('function regModal(')
+    j = h.index('function ruleModal(')
+    h = h[:i] + REG_MODAL.lstrip() + h[j:]
+    h = _r(h, [("function closeModal(){$('mscrim').classList.remove('open');",
+                "function closeModal(){$('mscrim').classList.remove('open');$('msheet').classList.remove('wide');")], 'cust-close')
     return _css(h, PROF_CSS)
