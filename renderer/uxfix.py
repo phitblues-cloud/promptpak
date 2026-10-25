@@ -105,10 +105,15 @@ LC_CSS = """
 .sr1x .more{margin:0!important;flex:none}
 .statbox .purp{line-height:1.6;padding-bottom:.05rem}
 .prow{display:flex;flex-direction:column;align-items:flex-start;gap:.2rem}
-.prow .sr3{border-top:0!important;padding-top:0!important;flex-wrap:wrap}
+.prow .sr3{border-top:0!important;padding-top:0!important;flex-wrap:nowrap!important;white-space:nowrap;overflow-x:auto;scrollbar-width:none;max-width:100%}
+.prow .sr3 .sn{white-space:nowrap}
+.prow .sr3 .addn{order:-1;flex:none}
+.prow{max-width:100%;min-width:0}
 .prow .addn{padding:.05rem .5rem!important;font-size:.72rem!important;min-height:0!important}
 .pancol .statbox{padding:.5rem .8rem .45rem!important;gap:.15rem!important}
-.th2{padding:.55rem 1.1rem!important}
+.th2{padding:.55rem 1.1rem!important;display:flex!important;flex-direction:column!important;flex-wrap:nowrap!important;align-items:stretch!important;justify-content:flex-start;overflow:hidden;box-sizing:border-box}
+.th2 small{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.pancol .statbox{justify-content:flex-start!important;overflow:hidden;box-sizing:border-box}
 .th2 h2{line-height:1.15!important}
 .th2 small{line-height:1.4}
 .gbox .gh{padding:.5rem 1.1rem!important}
@@ -136,7 +141,9 @@ def linechat(h):
         ("""<div class="fzone"><div class="flt" role="tablist" aria-label="สถานะ">${fl}</div></div>""",
          """<div class="fzone"><div class="flt" role="tablist" aria-label="สถานะ">${fl}</div><select class="tpsel" aria-label="ประเภทเรื่อง" onchange="S.tp=this.value;render()">${[['all','ทุกเรื่อง',all.length],...(nu?[['urg','ด่วน',nu]]:[]),...TOPICS.filter(t=>tc[t[0]]).map(t=>[t[0],t[1],tc[t[0]]])].map(([k,t,v])=>`<option value="${k}" ${S.tp===k?'selected':''}>${k==='all'?'ทุกเรื่อง':t+' ('+v+')'}</option>`).join('')}</select></div>"""),
         ('ดูเพิ่มเติม ›</button></div><div class="sr3">${noteH}</div></div>`;', 'ดูเพิ่มเติม ›</button></div></div>`;'),
-        ('const floor=7.9*parseFloat(', 'const floor=5.2*parseFloat('),
+        ('const floor=7.9*parseFloat(', 'const floor=7.7*parseFloat('),
+        # ความสูงหัวกล่องคงที่ทุกแชท ไม่ยืดหดตามเนื้อหา
+        ('const H=Math.ceil(Math.max(rh(th),rh(sb),gH+rh(fz),floor));', 'const H=Math.ceil(Math.max(gH+rh(fz),floor));'),
     ], 'linechat')
     return _css(h, LC_CSS)
 
