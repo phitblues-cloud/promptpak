@@ -812,7 +812,7 @@ function bkPage(b,v,H,co){
   if(!pg){pg=document.createElement('div');pg.id='bkpg';pg.setAttribute('data-keep','');P.prepend(pg)}
   P.classList.add('pg');
   pg.innerHTML=`<button type="button" class="back" data-bkback>${ico('left')}กลับรายการจอง</button>
-   <div class="sheet xl bkpgs"><div class="sh">${bkHead(v,H)}</div>
+   <div class="sheet xl bkpgs"><div class="sh bkph"><div class="bkpt"><div class="bkno">${v.no}</div><div class="bkwho">${H.esc(v.title)} · ห้อง ${v.room}</div></div><div class="badges bkst">${v.badges}</div></div>
     <div class="sb"><div class="sb2">${bkBody(v,H)}</div></div>
     <div class="sf"><button class="btn ghost" id="dFin">ดูบิลในเมนูการเงิน</button>${co?'<button class="btn ghost" id="dQt">ใบเสนอราคา</button><button class="btn ghost" id="dIv">ใบแจ้งหนี้รวม</button>':''}<button class="btn pri" data-bkback>กลับรายการจอง</button></div></div>`;
   pg.querySelectorAll('[data-bkback]').forEach(x=>x.onclick=bkBack);
@@ -831,6 +831,11 @@ BKPAGE_CSS = """
 #bkpg .back .ic,#bkpg .back svg{width:1.2rem;height:1.2rem}
 #bkpg .bkpgs{width:100%;max-width:none;max-height:none;animation:none;box-shadow:0 10px 30px -18px rgba(40,10,40,.35);border:1.5px solid var(--line)}
 #bkpg .bkpgs .sh{position:static}
+#bkpg .bkph{display:flex!important;align-items:center;justify-content:space-between;gap:1rem;flex-wrap:wrap;padding:.85rem 1.3rem!important;min-height:0}
+#bkpg .bkno{font-family:var(--serif);font-size:1.6rem;font-weight:700;line-height:1.25;letter-spacing:.01em}
+#bkpg .bkwho{font-size:1.02rem;font-weight:600;opacity:.95;margin-top:.1rem;line-height:1.5}
+#bkpg .bkst{margin:0!important;padding:0!important;background:none!important;border:0!important;box-shadow:none!important;justify-content:flex-end;gap:.5rem}
+#bkpg .bkst .badge{font-size:1rem;padding:.4rem 1rem;border-radius:99px;font-weight:700;box-shadow:0 2px 8px rgba(40,10,40,.18)}
 #bkpg .bkpgs .sb{overflow:visible}
 #bkpg .bkpgs .sf{position:static;flex-wrap:wrap}
 #bkpg .bkpgs .sf .btn{flex:1 1 12rem}
