@@ -104,7 +104,7 @@ LC_CSS = """
 .srs{display:flex;flex-wrap:wrap;gap:.3rem;align-items:center}
 .sr1x .more{margin:0!important;flex:none}
 .statbox .purp{line-height:1.6;padding-bottom:.05rem}
-.prow{display:flex;flex-wrap:wrap;align-items:center;gap:.25rem .6rem}
+.prow{display:flex;flex-direction:column;align-items:flex-start;gap:.2rem}
 .prow .sr3{border-top:0!important;padding-top:0!important;flex-wrap:wrap}
 .prow .addn{padding:.05rem .5rem!important;font-size:.72rem!important;min-height:0!important}
 .pancol .statbox{padding:.5rem .8rem .45rem!important;gap:.15rem!important}
