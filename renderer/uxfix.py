@@ -105,6 +105,7 @@ LC_CSS = """
 .th2 .nmb h2{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0}
 .th2 .coline{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .aisum2 .aih{justify-content:space-between}
+.aisum2{position:relative;z-index:3;margin-top:-1.4rem!important;margin-bottom:.35rem!important;box-shadow:0 6px 18px rgba(46,31,43,.13),0 1px 3px rgba(46,31,43,.08)}
 .srl{display:flex;flex-direction:column;gap:.3rem;min-width:0}
 .srs{display:flex;flex-wrap:wrap;gap:.3rem;align-items:center}
 .sr1x .more{margin:0!important;flex:none}
