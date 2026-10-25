@@ -101,10 +101,21 @@ LC_CSS = """
 .srs{display:flex;flex-wrap:wrap;gap:.3rem;align-items:center}
 .sr1x .more{margin:0!important;flex:none}
 .statbox .purp{line-height:1.6;padding-bottom:.05rem}
+.prow{display:flex;flex-wrap:wrap;align-items:center;gap:.25rem .6rem}
+.prow .sr3{border-top:0!important;padding-top:0!important;flex-wrap:wrap}
+.prow .addn{padding:.05rem .5rem!important;font-size:.72rem!important;min-height:0!important}
+.pancol .statbox{padding:.5rem .8rem .45rem!important;gap:.15rem!important}
+.th2{padding:.55rem 1.1rem!important}
+.th2 h2{line-height:1.15!important}
+.th2 small{line-height:1.4}
+.gbox .gh{padding:.5rem 1.1rem!important}
+.fzone{padding:.4rem .6rem!important;gap:.3rem!important}
+.fzone .flt{gap:.2rem!important}
+.fzone .flt button{padding:.05rem .45rem!important;font-size:.72rem!important;min-height:1.75rem!important}
 .fzone{flex-wrap:nowrap!important}
 .fzone .flt{flex:0 1 auto;min-width:0;overflow-x:auto;scrollbar-width:none;flex-wrap:nowrap!important}
 .fzone .flt button{white-space:nowrap;flex:none}
-.fzone .tpsel{flex:0 0 auto;width:7.6rem;margin-left:auto;padding:0 1.3rem 0 .55rem;text-overflow:ellipsis}
+.fzone .tpsel{flex:0 0 auto;width:6.6rem;font-size:.72rem;margin-left:auto;padding:0 1.3rem 0 .55rem;text-overflow:ellipsis}
 """
 
 
@@ -115,12 +126,14 @@ def linechat(h):
         ("""<div class="aisum"><h3>✦ AI สรุป</h3><p>${esc(a.sum)}</p></div>""",
          """<button type="button" class="aisum2" onclick="this.classList.toggle('open')" title="กดเพื่ออ่านทั้งหมด"><span class="aih"><span class="grp ${grp[1]}">${esc(grp[0])}</span><b>✦ AI สรุป</b></span><span class="ait">${esc(a.sum)}</span></button>"""),
         ("""<div class="statbox"><div class="sr1"><span class="bs ${bs[1]}">${bs[0]}</span>${bd.unpaid?'<span class="tg tg-red">ยังไม่ชำระ</span>':''}<button type="button" class="more" data-act="more">ดูเพิ่มเติม ›</button></div>${(()=>{const p=bparts(c),pu=purpOf(c);return p?`<div class="sr2"><div class="rmw"><span class="rmb">${esc(p[0])}</span><span class="rmr">${esc(p[1])}</span></div>${pu?`<div class="purp">${esc(pu)}</div>`:''}</div>`:''})()}""",
-         """<div class="statbox"><div class="sr1x"><div class="srl">${(()=>{const p=bparts(c),pu=purpOf(c),st=`<div class="srs"><span class="bs ${bs[1]}">${bs[0]}</span>${bd.unpaid?'<span class="tg tg-red">ยังไม่ชำระ</span>':''}</div>`;return p?`<div class="rmw"><span class="rmb">${esc(p[0])}</span><span class="rmr">${esc(p[1])}</span></div>${st}${pu?`<div class="purp">${esc(pu)}</div>`:''}`:`${st}<div class="purp">ยังไม่มีการจอง</div>`})()}</div><button type="button" class="more" data-act="more">ดูเพิ่มเติม ›</button></div>"""),
+         """<div class="statbox"><div class="sr1x"><div class="srl">${(()=>{const p=bparts(c),pu=purpOf(c),st=`<div class="srs"><span class="bs ${bs[1]}">${bs[0]}</span>${bd.unpaid?'<span class="tg tg-red">ยังไม่ชำระ</span>':''}</div>`;return p?`<div class="rmw"><span class="rmb">${esc(p[0])}</span><span class="rmr">${esc(p[1])}</span></div>${st}<div class="prow">${pu?`<div class="purp">${esc(pu)}</div>`:''}<div class="sr3">${noteH}</div></div>`:`${st}<div class="prow"><div class="purp">ยังไม่มีการจอง</div><div class="sr3">${noteH}</div></div>`})()}</div><button type="button" class="more" data-act="more">ดูเพิ่มเติม ›</button></div>"""),
         ("""<button type="button" data-sort="ai" aria-pressed="${S.sort==='ai'}">ด่วนก่อน</button><button type="button" data-sort="new" aria-pressed="${S.sort==='new'}">ล่าสุด</button>""",
          """<button type="button" data-sort="new" aria-pressed="${S.sort==='new'}">ล่าสุด</button><button type="button" data-sort="ai" aria-pressed="${S.sort==='ai'}">ด่วน</button>"""),
         ("const S={f:'all',tp:'all',q:'',sel:2,sort:'ai',", "const S={f:'all',tp:'all',q:'',sel:2,sort:'new',"),
         ("""<div class="fzone"><div class="flt" role="tablist" aria-label="สถานะ">${fl}</div></div>""",
-         """<div class="fzone"><div class="flt" role="tablist" aria-label="สถานะ">${fl}</div><select class="tpsel" aria-label="ประเภทเรื่อง" onchange="S.tp=this.value;render()">${[['all','ทุกเรื่อง',all.length],...(nu?[['urg','ด่วน',nu]]:[]),...TOPICS.filter(t=>tc[t[0]]).map(t=>[t[0],t[1],tc[t[0]]])].map(([k,t,v])=>`<option value="${k}" ${S.tp===k?'selected':''}>${k==='all'?'ทุกเรื่อง':t} (${v})</option>`).join('')}</select></div>"""),
+         """<div class="fzone"><div class="flt" role="tablist" aria-label="สถานะ">${fl}</div><select class="tpsel" aria-label="ประเภทเรื่อง" onchange="S.tp=this.value;render()">${[['all','ทุกเรื่อง',all.length],...(nu?[['urg','ด่วน',nu]]:[]),...TOPICS.filter(t=>tc[t[0]]).map(t=>[t[0],t[1],tc[t[0]]])].map(([k,t,v])=>`<option value="${k}" ${S.tp===k?'selected':''}>${k==='all'?'ทุกเรื่อง':t+' ('+v+')'}</option>`).join('')}</select></div>"""),
+        ('ดูเพิ่มเติม ›</button></div><div class="sr3">${noteH}</div></div>`;', 'ดูเพิ่มเติม ›</button></div></div>`;'),
+        ('const floor=7.9*parseFloat(', 'const floor=5.2*parseFloat('),
     ], 'linechat')
     return _css(h, LC_CSS)
 
