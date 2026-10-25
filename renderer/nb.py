@@ -123,7 +123,7 @@ for i, b in enumerate(sorted(m['bookings'], key=lambda x: x['booking_id'])):
         'id': 'b' + b['booking_id'][4:],
         'no': b['booking_id'], 'group': b['group_id'], 'room': b['room_id'],
         'start': ci, 'nights': b['nights'], 'end': co,
-        'gid': b['guest_id'], 'guest': disp(g), 'phone': g['phone'], 'email': g['email'],
+        'gid': b['guest_id'], 'guest': (b.get('_snap') or {}).get('name') or disp(g), 'phone': (b.get('_snap') or {}).get('phone') or g['phone'], 'email': g['email'],
         'line': g['line_display_name'], 'lineOn': not b.get('_staff'),
         'bf': b.get('bf', 0), 'disc': b.get('disc', 0), 'promo': b.get('promo_code', ''),
         'mem': bool(g['is_member']), 'visits': g['stays_completed_or_inhouse'] or g['bookings_total'] or 1,

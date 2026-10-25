@@ -445,8 +445,24 @@ def build(base, export, now):
     # สมัครสมาชิกจากโมดูลลูกค้า → ทุกโมดูลเห็นว่าเป็นสมาชิก (ป้ายในการ์ดหน้าแรก/ป๊อปอัปการจอง/แชท)
     gby = {g['guest_id']: g for g in m['guests']}
     mem_ids = {x['guest_id'] for x in m['members']}
+    done_st = ('เช็คเอาท์แล้ว', 'ยกเลิก', 'ไม่มาตามนัด')
     for gid, d in m['cust_state'].items():
         g = gby.get(gid)
+        # แก้ชื่อ/เบอร์/LINE ในโมดูลลูกค้า: การจองที่จบแล้วเก็บข้อมูลเดิมไว้เป็นประวัติ · การจองที่ยังดำเนินอยู่ใช้ข้อมูลปัจจุบัน
+        if g and any(d.get(k) for k in ('name', 'phone', 'line')):
+            old = {'name': 'คุณ' + g['first_name'] + (' ' + g['last_name'] if g['last_name'] else ''), 'phone': g['phone']}
+            for b in m['bookings']:
+                if b['guest_id'] == gid and '_snap' not in b and (b['booking_status'] in done_st or b['checkout_date'] < today.isoformat()):
+                    b['_snap'] = old
+            if d.get('name'):
+                nm = re.sub(r'^คุณ\s*', '', d['name']).strip()
+                first, _, last = nm.partition(' ')
+                g['first_name'], g['last_name'] = first, last.strip()
+                g['full_name'] = nm
+            if d.get('phone'):
+                g['phone'] = d['phone']
+            if d.get('line'):
+                g['line_display_name'] = d['line']
         if g and d.get('memberNo'):
             g['is_member'] = True
             if gid not in mem_ids:
