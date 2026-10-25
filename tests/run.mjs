@@ -321,6 +321,19 @@ ok('AI สรุปกล่อง CRM: กันโค้ดแปลกปล�
   ok('เอกสารยืนยันตัวตน: ตรวจเลขบัตร, ภาพต้องยินยอม, ไม่ฝังภาพในหน้า, ลบภาพเกิน 1 ปี');
 }
 
+// 11f) เพิ่มบริษัทใหม่ → ทุกโมดูลเห็น และผูกลูกค้าได้
+{
+  const cust = d => call('/api/app?part=cust', { method: 'POST', body: JSON.stringify(d) });
+  assert.equal((await cust({ k: 'comp', gid: 'KTEST1', data: { name: 'บริษัท ทดสอบ', tax: '0405561000120' } })).status, 400);
+  assert.equal((await cust({ k: 'comp', gid: 'KTEST1', data: { name: '' } })).status, 500);
+  assert.equal((await cust({ k: 'comp', gid: 'KTEST1', data: { name: 'บริษัท ขอนแก่นวิศวกรรม จำกัด', tax: '0405561000124', phone: '043123456' } })).body.ok, true);
+  assert.equal((await cust({ k: 'comp', gid: 'KTEST2', data: { name: 'อีกบริษัท', tax: '0405561000124' } })).status, 500);
+  await cust({ k: 'company', gid: 'G04', company: 'KTEST1' });
+  const M = (await call('/api/app?part=mods&since=x')).body.mods;
+  assert.ok(M.cust.includes('"id":"KTEST1","name":"บริษัท ขอนแก่นวิศวกรรม จำกัด"') && M.cust.includes('"company":"KTEST1"'));
+  ok('เพิ่มบริษัทใหม่ (ตรวจเลขผู้เสียภาษี/กันซ้ำ) และผูกลูกค้าได้');
+}
+
 // 12) กันเดา PIN
 for (let i = 0; i < 8; i++) await call('/api/app?part=pin', { method: 'POST', body: JSON.stringify({ role: 'owner', pin: '000000' }) });
 assert.equal((await call('/api/app?part=pin', { method: 'POST', body: JSON.stringify({ role: 'owner', pin: '246810' }) })).status, 429);

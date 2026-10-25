@@ -73,7 +73,7 @@ def build_co():
     for c in m['companies']:
         ct = co_contact(c['company_id'])
         co.append({'id': c['company_id'], 'name': c['name_th'], 'tax': c['tax_id'], 'hq': c['billing_branch'],
-                   'contact': ct['guest_id'] if ct else None, 'phone': ct['phone'] if ct else '', 'email': ct['email'] if ct else '',
+                   'contact': ct['guest_id'] if ct else None, 'phone': ct['phone'] if ct else c.get('phone', ''), 'email': ct['email'] if ct else c.get('email', ''),
                    'addr': clean_addr(c['billing_address']), 'promos': []})
     return co
 

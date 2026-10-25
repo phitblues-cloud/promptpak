@@ -442,5 +442,20 @@ def build(base, export, now):
                      sent=[dict(x, at=_bkk(x['at'])) for x in (v.get('sent') or [])])
     m['chat_state'] = cs
     m['cust_state'] = export.get('cust_state') or {}
+    # บริษัทที่พนักงานเพิ่มใหม่ (จากหน้าสมัครสมาชิก/ตั้งค่าบริษัท)
+    if export.get('comp_state') and m['companies']:
+        tmpl = m['companies'][0]
+        have = {c['company_id'] for c in m['companies']}
+        for cid, d in sorted(export['comp_state'].items()):
+            if cid in have or not d.get('name'):
+                continue
+            c = {k: _blank_like(v) for k, v in tmpl.items()}
+            nm = d['name']
+            short = re.sub(r'^(บริษัท|บจก\.|หจก\.|บมจ\.)\s*', '', nm)
+            short = re.sub(r'\s*(จำกัด|\(มหาชน\))\s*', ' ', short).strip() or nm
+            c.update({'company_id': cid, 'name_th': nm, 'name_short': short, 'tax_id': d.get('tax', ''),
+                      'billing_branch': d.get('branch') or 'สำนักงานใหญ่', 'billing_address': d.get('addr', ''),
+                      'account_stage': 'ลูกค้าใหม่', 'credit_days': 0, 'phone': d.get('phone', ''), 'email': d.get('email', '')})
+            m['companies'].append(c)
     m['cust_ids'] = export.get('cust_ids') or {}
     return m

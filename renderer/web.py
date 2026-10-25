@@ -156,6 +156,10 @@ def _build(now, role='owner'):
         export['cust_state'] = rpc('pp_cust_state') or {}
     except Exception:
         export['cust_state'] = {}
+    try:   # บริษัทที่เพิ่มใหม่ (ข้ามได้ถ้ายังไม่ได้รัน 10_company.sql)
+        export['comp_state'] = rpc('pp_comp_state') or {}
+    except Exception:
+        export['comp_state'] = {}
     try:   # เลขบัตร/หนังสือเดินทาง (ข้ามได้ถ้ายังไม่ได้รัน 09_idcard.sql)
         export['cust_ids'] = rpc('pp_cust_ids') or {}
     except Exception:
@@ -266,6 +270,13 @@ def handle(method, query, cookie_header, body, ip):
             data = json.loads(body or '{}')
             if not isinstance(data, dict) or not data.get('k') or not data.get('gid'):
                 return 400, J, json.dumps({'error': 'ข้อมูลไม่ครบ'}, ensure_ascii=False)
+            if data['k'] == 'comp':   # เพิ่มบริษัทใหม่ (gid = รหัสบริษัท)
+                d = data.get('data') or {}
+                tax = ''.join(ch for ch in str(d.get('tax', '')) if ch.isdigit())
+                if tax and not thai_id_ok(tax):
+                    return 400, J, json.dumps({'error': 'เลขผู้เสียภาษีไม่ถูกต้อง (ตรวจหลักสุดท้ายไม่ผ่าน)'}, ensure_ascii=False)
+                d['tax'] = tax
+                return 200, J, json.dumps(rpc('pp_comp', {'p': {'cid': data['gid'], 'data': d}, 'p_role': role}), ensure_ascii=False)
             if data['k'] == 'idcard':   # เลขบัตร/หนังสือเดินทาง + ภาพบัตร (เมื่อยินยอม)
                 if data.get('doc_type', 'id') == 'id' and not thai_id_ok(''.join(ch for ch in str(data.get('doc_no', '')) if ch.isdigit())):
                     return 400, J, json.dumps({'error': 'เลขบัตรประชาชนไม่ถูกต้อง (ตรวจหลักสุดท้ายไม่ผ่าน)'}, ensure_ascii=False)
