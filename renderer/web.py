@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """หลังบ้านของหน้าจอ v196: ล็อกอินด้วย PIN, ส่งแอปพร้อมข้อมูลจริง, ส่งโมดูลที่ข้อมูลเปลี่ยน"""
-import datetime, json, os
+import datetime, json, os, urllib.request, urllib.error
 import render, overlay, session
 from db import rpc, DbError
 
@@ -111,6 +111,32 @@ def patch_crm_ai(h):
     return h[:i] + json.dumps(O, ensure_ascii=False).replace('</', '<\\/') + h[i + end:]
 
 
+def line_push(to, text):
+    """ส่งข้อความหาลูกค้าทาง LINE (push · นับโควตาข้อความรายเดือนของ LINE OA) คืนข้อความผิดพลาด หรือ None ถ้าสำเร็จ"""
+    if os.environ.get('LOCAL_DEV'):   # เครื่องทดสอบ: ไม่ส่งจริง
+        LINE_OUTBOX.append({'to': to, 'text': text})
+        return None
+    token = (os.environ.get('LINE_CHANNEL_ACCESS_TOKEN') or '').strip()
+    if not token:
+        return 'ยังไม่ได้ตั้งค่า LINE_CHANNEL_ACCESS_TOKEN'
+    req = urllib.request.Request('https://api.line.me/v2/bot/message/push', method='POST',
+                                 data=json.dumps({'to': to, 'messages': [{'type': 'text', 'text': text}]}).encode(),
+                                 headers={'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json'})
+    try:
+        urllib.request.urlopen(req, timeout=10).read()
+        return None
+    except urllib.error.HTTPError as e:
+        msg = e.read().decode('utf-8', 'replace')[:200]
+        if e.code == 429:
+            return 'โควตาข้อความ LINE เดือนนี้หมดหรือส่งถี่เกินไป'
+        return f'{e.code} {msg}'
+    except Exception as e:
+        return type(e).__name__
+
+
+LINE_OUTBOX = []
+
+
 def _daily():
     """กฎวันจริง: การจองที่เลยวันเข้าพักแล้วไม่เช็คอิน -> ยกเลิก (ข้ามได้ถ้ายังไม่ได้รัน 05_noshow.sql)"""
     try:
@@ -122,6 +148,10 @@ def _daily():
 def _build(now):
     _daily()
     export = rpc('pp_export')
+    try:   # สถานะแชท (ข้ามได้ถ้ายังไม่ได้รัน 07_chat.sql)
+        export['chat_state'] = rpc('pp_chat_state') or {}
+    except Exception:
+        export['chat_state'] = {}
     return overlay.build(render.base_mock(), export, now), export['stamp']
 
 
@@ -176,6 +206,29 @@ def handle(method, query, cookie_header, body, ip):
                 return 400, J, json.dumps({'error': 'ข้อมูลไม่ครบ'}, ensure_ascii=False)
             out = rpc('pp_act', {'p': data, 'p_role': role})
             return 200, J, json.dumps(out, ensure_ascii=False)
+        if method == 'POST' and part == 'chat':   # ปุ่มในหน้าแชท LINE -> บันทึกจริง (และส่งเข้า LINE ถ้าเป็นแชทจริง)
+            if not role:
+                return 401, J, json.dumps({'error': 'ต้องเข้าสู่ระบบใหม่'}, ensure_ascii=False)
+            data = json.loads(body or '{}')
+            if not isinstance(data, dict) or not data.get('k') or not data.get('key'):
+                return 400, J, json.dumps({'error': 'ข้อมูลไม่ครบ'}, ensure_ascii=False)
+            line = None
+            if data['k'] == 'send':
+                text = str(data.get('body') or '').strip()[:4900]
+                if not text:
+                    return 400, J, json.dumps({'error': 'ข้อความว่าง'}, ensure_ascii=False)
+                data['body'] = text
+                to = rpc('pp_chat_target', {'p_key': str(data['key'])})
+                if to:
+                    err = line_push(to, text)
+                    if err:
+                        return 502, J, json.dumps({'error': 'ส่งเข้า LINE ไม่สำเร็จ: ' + err}, ensure_ascii=False)
+                    line = 'sent'
+                else:
+                    line = 'sample'
+                data['line'] = line
+            rpc('pp_chat', {'p': data, 'p_role': role})
+            return 200, J, json.dumps({'ok': True, 'line': line})
         if part == 'mods':
             if not role:
                 return 401, J, '{}'

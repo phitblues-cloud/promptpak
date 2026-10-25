@@ -429,10 +429,16 @@ def build(base, export, now):
             if x['sender'] == 'AI':
                 body = '✨ ' + body
             msgs.append({'seq': i, 'from': who, 'at': _bkk(x['at']), 'text': body, 'type': 'text'})
-        m['line_chats'].append({'thread_id': 'T9%03d' % n, 'guest_id': gid, 'line_display_name': t.get('display_name') or '',
+        m['line_chats'].append({'thread_id': 'T9%03d' % n, 'db_key': 'db:%s' % t['id'], 'guest_id': gid, 'line_display_name': t.get('display_name') or '',
                                 'line_user_id': t['line_user_id'],
                                 'topic_tags': ['ส่งต่อพนักงาน'] if t.get('needs_staff') else ['AI ตอบ'],
                                 'status': 'รอพนักงาน' if t.get('needs_staff') else 'ปิดแล้ว',
                                 'unread_count': 1 if t.get('needs_staff') else 0,
                                 'linked_booking_id': linked, 'last_message_at': msgs[-1]['at'], 'messages': msgs})
+    # สถานะแชทที่พนักงานตั้ง (ชื่อแชท/หมายเหตุ/ปิดเคส/อ่านแล้ว/ข้อความในแชทตัวอย่าง) เวลาแปลงเป็นเวลาไทย
+    cs = {}
+    for k, v in (export.get('chat_state') or {}).items():
+        cs[k] = dict(v, closed_at=_bkk(v.get('closed_at')), read_at=_bkk(v.get('read_at')),
+                     sent=[dict(x, at=_bkk(x['at'])) for x in (v.get('sent') or [])])
+    m['chat_state'] = cs
     return m

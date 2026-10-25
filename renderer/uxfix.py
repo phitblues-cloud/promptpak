@@ -161,5 +161,53 @@ def apply(M):
     if 'cust' in M:
         M['cust'] = cust(M['cust'])
     if 'linechat' in M:
-        M['linechat'] = linechat(M['linechat'])
+        M['linechat'] = chatsave(linechat(M['linechat']))
     return M
+
+
+# ---------- หน้าแชท LINE: ปุ่มบันทึกจริง (ต้องรัน supabase/07_chat.sql) ----------
+CHAT_HELPER = r"""
+function ppChat(k,d){
+  const body=JSON.stringify(Object.assign({k},d||{}));
+  return fetch(top.location.origin+'/api/app?part=chat',{method:'POST',credentials:'same-origin',headers:{'Content-Type':'application/json'},body})
+   .then(r=>r.json().catch(()=>({})).then(j=>{if(!r.ok)throw new Error(j.error||('รหัส '+r.status));try{parent.postMessage({pbr:'pp-saved'},'*')}catch(_){}return j}));
+}
+function ppChatFail(e){const msg='⚠️ บันทึกไม่สำเร็จ: '+e.message;try{toast(msg)}catch(_){console.error(msg)}}
+try{const k=sessionStorage.getItem('pp_lc_sel'),c=CV.find(x=>x.key===k);if(c)S.sel=c.id}catch(_){}
+"""
+
+CHAT_SAVE = [
+    # หมายเหตุ: เก็บกับแชท (บันทึกจริง)
+    ("const snOf=c=>{const h=hbOf(c);return h?(h.note?h.note.split(' · '):[]):c.sn};",
+     "const snOf=c=>c.sn||[];"),
+    ("function setNotes(c,arr){const h=hbOf(c);if(h){h.note=arr.join(' · ');try{parent.postMessage({pbr:'bknote',bk:h.bk,note:h.note},'*')}catch(_){}}else c.sn=arr}",
+     "function setNotes(c,arr){const old=c.sn||[];c.sn=arr;ppChat('notes',{key:c.key,notes:arr}).catch(e=>{c.sn=old;render();ppChatFail(e)})}"),
+    # ส่งข้อความ: แชทจริงส่งเข้า LINE แล้วจึงแสดง · แชทตัวอย่างบันทึกอย่างเดียว
+    ("""  c.m.push(['s',txt,nowTm(),PEND.slice()]); PEND=[]; $('#rt').value=''; c.st='wait'; c.ago=0; render(); toast('ส่งแล้ว · สถานะเป็น "รอตอบ" (ต้นแบบ: ยังไม่ได้ส่งเข้า LINE จริง)');""",
+     """  if(!txt){toast('ส่งรูป/ไฟล์เข้า LINE ยังไม่รองรับ · พิมพ์ข้อความแทนได้');return}
+  if(window.__ppSending)return;window.__ppSending=1;const sb=document.querySelector('[data-act="send"]');if(sb){sb.disabled=true;sb.textContent='กำลังส่ง…'}
+  const hadFile=PEND.length;
+  ppChat('send',{key:c.key,body:txt}).then(j=>{c.m.push(['s',txt,nowTm()]); PEND=[]; if($('#rt'))$('#rt').value=''; c.st='wait'; c.ago=0; c.read=true; render();
+    toast((j.line==='sent'?'ส่งเข้า LINE แล้ว':'บันทึกแล้ว · แชทตัวอย่าง ไม่ได้ส่งเข้า LINE')+(hadFile?' · รูป/ไฟล์ยังไม่ได้ส่ง':''))})
+   .catch(ppChatFail).finally(()=>{window.__ppSending=0;const b2=document.querySelector('[data-act="send"]');if(b2){b2.disabled=false;b2.textContent='ส่ง'}});"""),
+    # ปิดเคส
+    ("else if(a==='close'){const c=CV.find(x=>x.id===S.sel);c.st='done';render();toast('ปิดเคสแล้ว · งานด่วนในหน้าแรกจะหายไปด้วย')}",
+     "else if(a==='close'){const c=CV.find(x=>x.id===S.sel),o=c.st;c.st='done';c.read=true;render();ppChat('close',{key:c.key}).then(()=>toast('ปิดเคสแล้ว · งานด่วนในหน้าแรกจะหายไปด้วย')).catch(e=>{c.st=o;render();ppChatFail(e)})}"),
+    # เปลี่ยนชื่อแชท
+    ("else if(a==='nmsave'){const v=$('#nmI').value.trim();const c=CV.find(x=>x.id===S.sel);if(v)c.name=v;S.edn=false;render();toast('เปลี่ยนชื่อแชทแล้ว (ต้นแบบ)')}",
+     "else if(a==='nmsave'){const v=$('#nmI').value.trim();const c=CV.find(x=>x.id===S.sel),o=c.name;if(v)c.name=v;S.edn=false;render();if(v)ppChat('name',{key:c.key,alias:v}).then(()=>toast('เปลี่ยนชื่อแชทแล้ว')).catch(e=>{c.name=o;render();ppChatFail(e)})}"),
+    ("else if(a==='nmreal'){const c=CV.find(x=>x.id===S.sel);c.name=c.real;S.edn=false;render()}",
+     "else if(a==='nmreal'){const c=CV.find(x=>x.id===S.sel),o=c.name;c.name=c.real;S.edn=false;render();ppChat('name',{key:c.key,alias:c.real}).then(()=>toast('ใช้ชื่อจริงแล้ว')).catch(e=>{c.name=o;render();ppChatFail(e)})}"),
+    # เปิดอ่านแชท -> บันทึกว่าอ่านแล้ว
+    ("if(b=q('.cv')){S.sel=+b.dataset.id;",
+     "if(b=q('.cv')){S.sel=+b.dataset.id;{const c=CV.find(x=>x.id===S.sel);if(c&&unreadOf(c)){c.read=true;ppChat('read',{key:c.key}).catch(()=>{})}}"),
+    # จำแชทที่เปิดอยู่ ตอนหน้าจอโหลดข้อมูลใหม่
+    ("function render(){\n  const keep=",
+     "function render(){\n  try{const c=CV.find(x=>x.id===S.sel);if(c)sessionStorage.setItem('pp_lc_sel',c.key)}catch(_){}\n  const keep="),
+]
+
+
+def chatsave(h):
+    h = _r(h, CHAT_SAVE, 'linechat-save')
+    k = h.index('function render(){')
+    return h[:k] + CHAT_HELPER + h[k:]

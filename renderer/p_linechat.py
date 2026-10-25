@@ -55,11 +55,26 @@ def build():
             elif x['type'] == 'file': tx = '📎 ' + tx
             elif x['type'] == 'flex': tx = '🧾 ' + tx
             msgs.append([who, tx, tlabel(x['at'])])
+        key = t.get('db_key') or t['thread_id']
+        cs = (m.get('chat_state') or {}).get(key) or {}
+        for x in cs.get('sent') or []:   # ข้อความที่พนักงานพิมพ์ในแชทตัวอย่าง
+            msgs.append(['s', x['body'], tlabel(x['at'])])
+            last = max(last, x['at'])
+        ago = max(0, (REFMS - msl(last)) // 60000)
+        cust_at = max([x['at'] for x in t['messages'] if x['from'] == 'ลูกค้า'] or [''])
+        staff_at = max([x['at'] for x in t['messages'] if x['from'] == 'พนักงาน'] + [x['at'] for x in cs.get('sent') or []] or [''])
         n_st = len([s for s in BK if s['gid'] == g['guest_id'] and s['start'] <= D0])
         co = CO[g['company_id']]['name_th'] if g['company_id'] in CO else ''
         st = 'new' if (t['unread_count'] > 0 or t['status'] == 'รอพนักงาน') else 'done'
+        if staff_at and staff_at >= cust_at and msgs and msgs[-1][0] == 's':
+            st = 'wait'   # พนักงานตอบล่าสุด รอลูกค้าตอบกลับ
+        if cs.get('closed_at') and cs['closed_at'] >= max(cust_at, staff_at):
+            st = 'done'
         c = {'id': i, 'name': 'คุณ' + g['nickname'], 'line': t['line_display_name'], 'ago': ago, 'st': st,
-             'room': b['room'] if b else '', 'stay': stay_txt(b) if b else '', 'co': co, 'stays': n_st, 'sum': '', 'm': msgs}
+             'room': b['room'] if b else '', 'stay': stay_txt(b) if b else '', 'co': co, 'stays': n_st, 'sum': '', 'm': msgs,
+             'key': key, 'sn': list(cs.get('notes') or []), 'read': bool(cs.get('read_at') and cs['read_at'] >= cust_at)}
+        if cs.get('alias'):
+            c['name'] = cs['alias']
         CV.append(c)
         if b:
             BKN[str(i)] = b['no']; BD[str(i)] = bd_of(b)
@@ -77,7 +92,7 @@ def patch(h):
     # ลบ CV.push(id 10) ... ถึงก่อน BS
     i = h.index("CV.push({id:10,"); j = h.index("const BS={")
     h = h[:i] + 'const BD=' + J(BD) + ';\nconst PF=' + J(PF) + ';\nconst LCX=' + J(LCX) + ';\nconst PURP=' + J(purp) + ';\n' + \
-        "CV.forEach(c=>{if(LCX[c.id])Object.assign(c,LCX[c.id])});\nCV.forEach(c=>{c.purp=PURP[c.id]||'';c.bd=BD[c.id];Object.assign(c,PF[c.id]);c.sn=[]});\n" + h[j:]
+        "CV.forEach(c=>{if(LCX[c.id])Object.assign(c,LCX[c.id])});\nCV.forEach(c=>{c.purp=PURP[c.id]||'';c.bd=BD[c.id];Object.assign(c,PF[c.id]);c.sn=c.sn||[]});\n" + h[j:]
     h = R(h, "<option ${c.own==='พลอย'?'selected':''}>พลอย</option><option ${c.own==='เมท'?'selected':''}>เมท</option>",
           "<option ${c.own==='ป้าใจ'?'selected':''}>ป้าใจ</option><option ${c.own==='ดวน'?'selected':''}>ดวน</option><option ${c.own==='ใบ'?'selected':''}>ใบ</option><option ${c.own==='เจ้าของ'?'selected':''}>เจ้าของ</option>", 1, 'lc-own')
     return h

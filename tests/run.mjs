@@ -266,6 +266,24 @@ ok('AI สรุปกล่อง CRM: กันโค้ดแปลกปล�
   assert.ok(hm.includes('ppSave(') && hm.includes('part=act'));
 }
 
+// 11c) หน้าแชท LINE: ส่งข้อความ/ปิดเคส/ชื่อแชท/หมายเหตุ บันทึกจริง
+{
+  const chat = d => call('/api/app?part=chat', { method: 'POST', body: JSON.stringify(d) });
+  const tid = psql('-c', "select id from chat_threads where not is_seed order by id limit 1");
+  let a = await chat({ k: 'send', key: 'db:' + tid, body: 'สวัสดีค่ะ พนักงานตอบเอง' });
+  assert.equal(a.body.line, 'sent');
+  assert.equal(psql('-c', `select meta->>'line' from chat_messages where thread_id=${tid} and sender='พนักงาน' order by id desc limit 1`), 'sent');
+  assert.equal(psql('-c', `select needs_staff from chat_threads where id=${tid}`), 'f');
+  assert.equal((await chat({ k: 'send', key: 'T002', body: 'แชทตัวอย่าง' })).body.line, 'sample');
+  await chat({ k: 'name', key: 'T002', alias: 'คุณฝ้าย VIP' });
+  await chat({ k: 'notes', key: 'T002', notes: ['ชอบห้องชั้นล่าง'] });
+  await chat({ k: 'close', key: 'db:' + tid });
+  assert.equal((await chat({ k: 'send', key: 'db:999999', body: 'x' })).status, 500);
+  const L = (await call('/api/app?part=mods&since=x')).body.mods.linechat;
+  assert.ok(L.includes('คุณฝ้าย VIP') && L.includes('ชอบห้องชั้นล่าง') && L.includes('แชทตัวอย่าง') && L.includes('part=chat'));
+  ok('หน้าแชท LINE: ส่งข้อความ (แชทจริงเข้า LINE) / ชื่อแชท / หมายเหตุ / ปิดเคส บันทึกจริง');
+}
+
 // 12) กันเดา PIN
 for (let i = 0; i < 8; i++) await call('/api/app?part=pin', { method: 'POST', body: JSON.stringify({ role: 'owner', pin: '000000' }) });
 assert.equal((await call('/api/app?part=pin', { method: 'POST', body: JSON.stringify({ role: 'owner', pin: '246810' }) })).status, 429);
