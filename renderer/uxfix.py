@@ -129,7 +129,8 @@ LC_CSS = """
 .fzone{flex-wrap:nowrap!important;flex-direction:column!important;align-items:stretch!important;justify-content:center;gap:.4rem!important}
 .fz1{display:flex;align-items:center;gap:.3rem;min-width:0}
 .fzone .srch{min-height:2.2rem;padding:.25rem .75rem;font-size:.88rem;box-sizing:border-box}
-.listcol,.thrcol,.pancol{height:calc(100vh - 6.4rem)!important}
+@media (min-width:901px){.listcol,.thrcol,.pancol{height:calc(100vh - 6.4rem)!important}
+#app{padding-bottom:.6rem!important}.listcol,.thrcol,.pancol{min-height:26rem!important}}
 .fzone .flt{flex:0 1 auto;min-width:0;overflow-x:auto;scrollbar-width:none;flex-wrap:nowrap!important}
 .fzone .flt button{white-space:nowrap;flex:none}
 .fzone .tpsel{flex:0 0 auto;width:6.6rem;font-size:.72rem;margin-left:auto;padding:0 1.3rem 0 .55rem;text-overflow:ellipsis}
