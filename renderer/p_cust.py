@@ -47,7 +47,26 @@ def build_cu():
         if d.get('memberNo'):
             c['memberNo'] = d['memberNo']
             c['memberSince'] = dno(d['memberSince']) if d.get('memberSince') else D0
+    # เอกสารยืนยันตัวตน: พนักงานเห็นเลขแบบปิดบางส่วน · ภาพบัตรโหลดตอนเจ้าของกดดูเท่านั้น
+    owner = m.get('_role', 'owner') == 'owner'
+    ids = m.get('cust_ids') or {}
+    for c in cu:
+        x = ids.get(c['id'])
+        doc = {'t': x['t'], 'no': x['no'], 'img': bool(x.get('img')), 'ca': (x.get('ca') or '')[:10], 'cb': x.get('cb') or ''} if x else \
+              ({'t': 'id', 'no': c['nid'], 'img': False, 'ca': '', 'cb': ''} if c.get('nid') else None)
+        if doc:
+            doc['mask'] = mask_doc(doc['t'], doc['no'])
+            if not owner:
+                doc['no'] = ''
+        c['doc'] = doc
+        c['nid'] = (doc['no'] if doc and doc['t'] == 'id' else '')
     return cu
+
+
+def mask_doc(t, no):
+    if t == 'id' and len(no) == 13:
+        return f'{no[0]}-xxxx-xxxxx-xx-{no[12]}'
+    return (no[:2] + 'x' * max(0, len(no) - 4) + no[-2:]) if len(no) > 4 else 'xxxx'
 
 def build_co():
     co = []

@@ -145,7 +145,7 @@ def _daily():
         pass
 
 
-def _build(now):
+def _build(now, role='owner'):
     _daily()
     export = rpc('pp_export')
     try:   # สถานะแชท (ข้ามได้ถ้ายังไม่ได้รัน 07_chat.sql)
@@ -156,7 +156,34 @@ def _build(now):
         export['cust_state'] = rpc('pp_cust_state') or {}
     except Exception:
         export['cust_state'] = {}
-    return overlay.build(render.base_mock(), export, now), export['stamp']
+    try:   # เลขบัตร/หนังสือเดินทาง (ข้ามได้ถ้ายังไม่ได้รัน 09_idcard.sql)
+        export['cust_ids'] = rpc('pp_cust_ids') or {}
+    except Exception:
+        export['cust_ids'] = {}
+    m = overlay.build(render.base_mock(), export, now)
+    m['_role'] = role   # พนักงานเห็นเลขบัตรแบบปิดบางส่วน
+    _purge_ids(m, now)
+    return m, export['stamp']
+
+
+def _purge_ids(m, now):
+    """ลบภาพบัตรที่เก็บเกิน 1 ปี ของลูกค้าที่ไม่ได้เข้าพักภายใน 1 ปี"""
+    if not any(v.get('img') for v in (m.get('cust_ids') or {}).values()):
+        return
+    cut = (datetime.date.fromisoformat(now[:10]) - datetime.timedelta(days=365)).isoformat()
+    keep = sorted({b['guest_id'] for b in m['bookings']
+                   if b['booking_status'] not in ('ยกเลิก', 'ไม่มาตามนัด') and b['checkout_date'] >= cut})
+    try:
+        rpc('pp_id_purge', {'p_keep': keep})
+    except Exception:
+        pass
+
+
+def thai_id_ok(d):
+    if len(d) != 13 or not d.isdigit():
+        return False
+    s = sum(int(d[i]) * (13 - i) for i in range(12))
+    return (11 - s % 11) % 10 == int(d[12])
 
 
 def page(role):
@@ -165,7 +192,7 @@ def page(role):
     if not role:   # ยังไม่เข้าสู่ระบบ: ส่งเฉพาะหน้าล็อกอิน ไม่มีข้อมูลลูกค้า
         return pre + '{}' + post
     now = now_bkk()
-    mock, stamp = _build(now)
+    mock, stamp = _build(now, role)
     M = render.modules(mock, now)
     M['crm'] = patch_crm_ai(M['crm'])
     k = post.rindex('</script>')
@@ -239,8 +266,19 @@ def handle(method, query, cookie_header, body, ip):
             data = json.loads(body or '{}')
             if not isinstance(data, dict) or not data.get('k') or not data.get('gid'):
                 return 400, J, json.dumps({'error': 'ข้อมูลไม่ครบ'}, ensure_ascii=False)
+            if data['k'] == 'idcard':   # เลขบัตร/หนังสือเดินทาง + ภาพบัตร (เมื่อยินยอม)
+                if data.get('doc_type', 'id') == 'id' and not thai_id_ok(''.join(ch for ch in str(data.get('doc_no', '')) if ch.isdigit())):
+                    return 400, J, json.dumps({'error': 'เลขบัตรประชาชนไม่ถูกต้อง (ตรวจหลักสุดท้ายไม่ผ่าน)'}, ensure_ascii=False)
+                if role != 'owner' and 'img' in data and not data.get('img'):
+                    data.pop('img')   # ลบภาพบัตรได้เฉพาะเจ้าของ
+                return 200, J, json.dumps(rpc('pp_cust_id', {'p': data, 'p_role': role}), ensure_ascii=False)
             out = rpc('pp_cust', {'p': data, 'p_role': role})
             return 200, J, json.dumps(out, ensure_ascii=False)
+        if part == 'idimg':   # ดูภาพบัตร: เฉพาะเจ้าของ
+            if role != 'owner':
+                return 403, J, json.dumps({'error': 'เฉพาะเจ้าของเท่านั้น'}, ensure_ascii=False)
+            gid = (query.get('gid') or [''])[0]
+            return 200, J, json.dumps({'img': rpc('pp_cust_id_img', {'p_gid': gid})})
         if part == 'mods':
             if not role:
                 return 401, J, '{}'
@@ -250,7 +288,7 @@ def handle(method, query, cookie_header, body, ip):
             if stamp == since:
                 return 200, J, json.dumps({'stamp': stamp})
             now = now_bkk()
-            mock, stamp = _build(now)
+            mock, stamp = _build(now, role)
             return 200, J, json.dumps({'stamp': stamp, 'mods': render.modules(mock, now, REFRESH)}, ensure_ascii=False)
         html = page(role)
         return 200, {'Content-Type': 'text/html; charset=utf-8', 'Cache-Control': 'no-store'}, html

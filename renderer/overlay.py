@@ -442,4 +442,5 @@ def build(base, export, now):
                      sent=[dict(x, at=_bkk(x['at'])) for x in (v.get('sent') or [])])
     m['chat_state'] = cs
     m['cust_state'] = export.get('cust_state') or {}
+    m['cust_ids'] = export.get('cust_ids') or {}
     return m

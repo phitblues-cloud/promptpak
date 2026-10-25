@@ -301,6 +301,26 @@ ok('AI สรุปกล่อง CRM: กันโค้ดแปลกปล�
   ok('ลูกค้าและสมาชิก: แก้ข้อมูล/เพศ/ผูกบริษัท/สมัครสมาชิก บันทึกจริง (ไม่เก็บเลขบัตร)');
 }
 
+// 11e) เลขบัตร/หนังสือเดินทาง + ภาพบัตรเมื่อยินยอม · พนักงานเห็นแบบปิดเลข
+{
+  const cust = d => call('/api/app?part=cust', { method: 'POST', body: JSON.stringify(d) });
+  const img = 'data:image/jpeg;base64,' + Buffer.from('fake-jpeg').toString('base64');
+  assert.equal((await cust({ k: 'idcard', gid: 'G02', doc_type: 'id', doc_no: '1101700230700' })).status, 400);
+  assert.equal((await cust({ k: 'idcard', gid: 'G02', doc_type: 'id', doc_no: '1-1017-00230-70-8', img })).status, 500);
+  assert.equal((await cust({ k: 'idcard', gid: 'G02', doc_type: 'id', doc_no: '1-1017-00230-70-8', img, consent: true })).body.ok, true);
+  assert.equal((await cust({ k: 'idcard', gid: 'G03', doc_type: 'passport', doc_no: 'aa123456' })).body.ok, true);
+  assert.equal((await call('/api/app?part=idimg&gid=G02')).body.img, img);
+  let C = (await call('/api/app?part=mods&since=x')).body.mods.cust;
+  assert.ok(C.includes('"no":"1101700230708"') && C.includes('"mask":"1-xxxx-xxxxx-xx-8"') && C.includes('"no":"AA123456"'));
+  assert.ok(!C.includes('fake-jpeg') && !C.includes(img));
+  await cust({ k: 'idcard', gid: 'NOSTAY1', doc_type: 'id', doc_no: '1101700230708', img, consent: true });
+  psql('-c', "update cust_id set img_at = now() - interval '400 days' where gid in ('G02','NOSTAY1')");
+  await call('/api/app?part=mods&since=x');
+  assert.equal(psql('-c', "select img is null from cust_id where gid='NOSTAY1'"), 't');   // ไม่ได้พักภายใน 1 ปี → ลบภาพ
+  assert.equal(psql('-c', "select img is null from cust_id where gid='G02'"), 'f');       // ยังพักภายใน 1 ปี → เก็บไว้
+  ok('เอกสารยืนยันตัวตน: ตรวจเลขบัตร, ภาพต้องยินยอม, ไม่ฝังภาพในหน้า, ลบภาพเกิน 1 ปี');
+}
+
 // 12) กันเดา PIN
 for (let i = 0; i < 8; i++) await call('/api/app?part=pin', { method: 'POST', body: JSON.stringify({ role: 'owner', pin: '000000' }) });
 assert.equal((await call('/api/app?part=pin', { method: 'POST', body: JSON.stringify({ role: 'owner', pin: '246810' }) })).status, 429);

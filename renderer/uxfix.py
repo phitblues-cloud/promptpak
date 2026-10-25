@@ -242,10 +242,10 @@ CUST_DETAIL = r"""function custDetail(c){
   if(ed){
     h+=row('ชื่อ-สกุล *',`<input id="eName" value="${esc(c.name)}">`)+row('เพศ',`<select id="eGen"><option value="">— เลือก —</option>${GEN.map(x=>`<option ${x===c.gender?'selected':''}>${x}</option>`).join('')}</select>`)
       +row('เบอร์โทร *',`<input id="ePhone" type="tel" value="${esc(c.phone)}">`)+row('Line ID',`<input id="eLine" value="${esc(c.line)}">`)
-      +row('วันเกิด',`<input id="eBd" type="date" value="${esc(c.bday||'')}">`)+row('เลขบัตรประชาชน',`<input id="eNid" inputmode="numeric" maxlength="17" value="${esc(nidFmt(c.nid))}" placeholder="X-XXXX-XXXXX-XX-X"><small class="hint">ยังไม่บันทึกลงระบบ (รอขั้นยินยอมตาม PDPA)</small>`)+row('ที่อยู่',`<input id="eAddr" value="${esc(c.addr)}">`)+row('จังหวัด',`<input id="eProv" value="${esc(c.prov)}">`)
+      +row('วันเกิด',`<input id="eBd" type="date" value="${esc(c.bday||'')}">`)+row('ที่อยู่',`<input id="eAddr" value="${esc(c.addr)}">`)+row('จังหวัด',`<input id="eProv" value="${esc(c.prov)}">`)
       +row('บริษัท (ถ้ามี)',k?`<b>${esc(k.name)}</b>`:'<b>-</b>');
   } else {
-    h+=row('ชื่อ-สกุล',`<b>${esc(c.name)}</b>`)+row('เพศ',`<b>${esc(c.gender||'-')}</b>`)+row('เบอร์โทร',`<b>${esc(c.phone)}</b>`)+row('Line ID',`<b>${esc(c.line||'-')}</b>`)+row('ที่อยู่',`<b>${esc(c.addr||'-')}</b>`)+row('จังหวัด',`<b>${esc(c.prov||'-')}</b>`)+row('วันเกิด',`<b>${esc(bdFmt(c.bday))}</b>`)+row('เลขบัตรประชาชน',`<b>${esc(c.nid?nidFmt(c.nid):'-')}</b>`)+row('ภาพบัตรประชาชน',c.idImg?`<a href="${c.idImg}" target="_blank" rel="noopener"><img src="${c.idImg}" alt="ภาพบัตรประชาชน" style="max-height:90px;border-radius:8px;border:1.5px solid var(--line)"></a>`:'<b>-</b>')
+    h+=row('ชื่อ-สกุล',`<b>${esc(c.name)}</b>`)+row('เพศ',`<b>${esc(c.gender||'-')}</b>`)+row('เบอร์โทร',`<b>${esc(c.phone)}</b>`)+row('Line ID',`<b>${esc(c.line||'-')}</b>`)+row('ที่อยู่',`<b>${esc(c.addr||'-')}</b>`)+row('จังหวัด',`<b>${esc(c.prov||'-')}</b>`)+row('วันเกิด',`<b>${esc(bdFmt(c.bday))}</b>`)+row('เอกสารยืนยันตัวตน',docH(c))
       +row('บริษัท (ถ้ามี)',coH);
   }
   h+=row('สถานะสมาชิก',c.memberNo?`<b>เป็นสมาชิก</b> · ${pbm(c.memberNo)} · ตั้งแต่ ${fD(c.memberSince)}`:`<b>ไม่เป็นสมาชิก</b>`)
@@ -255,6 +255,65 @@ CUST_DETAIL = r"""function custDetail(c){
     +row('ระยะเวลาการพัก',s.n?`<b>เฉลี่ย ${s.avgN.toFixed(1)} คืน / ครั้ง</b>`:'<b>-</b>',true)
     +row('ความต้องการพิเศษ',ed?`<input id="eSpec" value="${esc(c.special)}" placeholder="เช่น ไม่ทานเนื้อหมู ขอห้องชั้นล่าง">`:`<b>${esc(c.special||'-')}</b>`);
   return h+'</div>';
+}
+/* ---------- เอกสารยืนยันตัวตน (เลขบัตร/หนังสือเดินทาง + ภาพบัตรเมื่อลูกค้ายินยอม) ---------- */
+const DOCT={id:'บัตรประชาชน',passport:'หนังสือเดินทาง'};
+function thaiIdOk(d){if(!/^\d{13}$/.test(d))return false;let s=0;for(let i=0;i<12;i++)s+=+d[i]*(13-i);return (11-s%11)%10===+d[12]}
+function docErr(t,no){const d=t==='id'?no.replace(/\D/g,''):no.replace(/[^0-9A-Za-z]/g,'');
+  if(!d)return 'กรุณากรอกเลข'+DOCT[t];
+  if(t==='id'){if(d.length!==13)return 'เลขบัตรประชาชนต้องมี 13 หลัก';if(!thaiIdOk(d))return 'เลขบัตรประชาชนไม่ถูกต้อง กรุณาตรวจอีกครั้ง'}
+  else if(d.length<6||d.length>12)return 'เลขหนังสือเดินทางต้องมี 6–12 ตัว';
+  return ''}
+function docMask(t,no){no=String(no||'');return t==='id'&&no.length===13?`${no[0]}-xxxx-xxxxx-xx-${no[12]}`:(no.length>4?no.slice(0,2)+'x'.repeat(no.length-4)+no.slice(-2):'xxxx')}
+function docH(c){const d=c.doc;
+  if(!d)return `<b>-</b> <button class="btn ghost sm" data-docedit style="margin-left:.5rem">${ico('plus')}เพิ่มเอกสาร</button>`;
+  const owner=!!d.no;
+  return `<span class="hint" style="margin-right:.4rem">${DOCT[d.t]}</span><b class="num">${esc(owner&&S.docShow?(d.t==='id'?nidFmt(d.no):d.no):d.mask)}</b>
+   ${owner?`<button class="btn ghost sm" data-docshow>${S.docShow?'ซ่อนเลข':'แสดงเลข'}</button>`:''}
+   ${d.img?(owner?`<button class="btn ghost sm" data-docimg>ดูภาพบัตร</button>`:'<span class="hint">มีภาพบัตร (เจ้าของดูได้)</span>'):'<span class="hint">ไม่มีภาพบัตร</span>'}
+   <button class="btn ghost sm" data-docedit>แก้ไข</button>
+   ${d.img&&d.ca?`<div class="hint" style="margin-top:.2rem">ลูกค้ายินยอมให้เก็บภาพเมื่อ ${esc(bdFmt(d.ca))} · ลบภาพอัตโนมัติ 1 ปีหลังเข้าพักครั้งล่าสุด</div>`:''}`}
+function docImg(c){
+  openModal(`<div class="sh"><button class="x" data-close aria-label="ปิด">${ico('x')}</button><div class="rn">ภาพ${DOCT[c.doc.t]}</div><div class="bkn">${esc(c.name)} · เฉพาะเจ้าของ</div></div><div class="sb" id="dimg"><div class="empty">กำลังโหลด…</div></div><div class="sf"><button class="btn" data-close>ปิด</button></div>`,()=>{
+    fetch(top.location.origin+'/api/app?part=idimg&gid='+encodeURIComponent(c.id),{credentials:'same-origin'}).then(r=>r.json()).then(j=>{
+      $('dimg').innerHTML=j.img?`<img src="${j.img}" alt="ภาพบัตร" style="max-width:100%;border-radius:12px;border:1.5px solid var(--line)">`:`<div class="empty">${esc(j.error||'ไม่มีภาพ (อาจถูกลบตามระยะเก็บ 1 ปี)')}</div>`}).catch(()=>{$('dimg').innerHTML='<div class="empty">โหลดภาพไม่ได้</div>'})});
+}
+function ppImg(file){return new Promise((ok,no)=>{const u=URL.createObjectURL(file),im=new Image();im.onload=()=>{const k=Math.min(1,1200/Math.max(im.width,im.height)),cv=document.createElement('canvas');
+  cv.width=Math.round(im.width*k);cv.height=Math.round(im.height*k);cv.getContext('2d').drawImage(im,0,0,cv.width,cv.height);URL.revokeObjectURL(u);ok(cv.toDataURL('image/jpeg',.72))};im.onerror=no;im.src=u})}
+/* ช่องกรอกเอกสาร ใช้ทั้งในขั้นสมัครสมาชิกและหน้าแก้ไข · D={t,no,consent,img} */
+function docFields(D){
+  return `<div class="fld full"><span class="lb">ประเภทเอกสาร *</span><div class="regchips">${Object.entries(DOCT).map(([k,v])=>`<button type="button" data-dt="${k}" aria-pressed="${D.t===k}">${v}</button>`).join('')}</div></div>
+   <div class="fld full"><label for="dno">เลข${DOCT[D.t]} *</label><input id="dno" ${D.t==='id'?'inputmode="numeric" maxlength="17" placeholder="X-XXXX-XXXXX-XX-X"':'maxlength="12" placeholder="เช่น AA1234567" style="text-transform:uppercase"'} value="${esc(D.t==='id'?nidFmt(D.no):D.no)}"><small class="hint" id="dnoh">${D.t==='id'?'ระบบตรวจหลักสุดท้ายให้อัตโนมัติ':'ตัวอักษรและตัวเลขตามหน้าหนังสือเดินทาง'}</small></div>
+   <div class="fld full consent"><label class="ck"><input type="checkbox" id="dcon" ${D.consent?'checked':''}> <span>แจ้งลูกค้าแล้วว่าโรงแรมเก็บข้อมูลเพื่อทะเบียนผู้พักตามกฎหมาย และ<b>ลูกค้ายินยอมให้เก็บภาพบัตร</b></span></label>
+    <small class="hint">ภาพบัตรไม่บังคับ · ดูได้เฉพาะเจ้าของ · ลบอัตโนมัติ 1 ปีหลังเข้าพักครั้งล่าสุด</small></div>
+   <div class="fld full"><span class="lb">ภาพบัตร (ถ้ามี)</span>${D.img?`<div class="docprev"><img src="${D.img}" alt="ภาพบัตร"><button type="button" class="btn ghost sm" id="dimgx">ลบภาพ</button></div>`:
+     `<label class="btn ghost docpick${D.consent?'':' off'}"><input type="file" id="dfile" accept="image/*" capture="environment" ${D.consent?'':'disabled'} hidden>${ico('plus')} ถ่ายรูป / เลือกรูปบัตร</label>${D.consent?'':'<small class="hint">ติ๊กยินยอมก่อนจึงแนบภาพได้</small>'}`}</div>`}
+function docBind(D,redraw){
+  const q=s=>$('msheet').querySelector(s);
+  $('msheet').querySelectorAll('[data-dt]').forEach(b=>b.onclick=()=>{if(D.t!==b.dataset.dt){D.t=b.dataset.dt;D.no=''}redraw()});
+  q('#dno').oninput=e=>{{const er=$('msheet').querySelector('.err');if(er)er.remove()}if(D.t==='id'){const d=e.target.value.replace(/\D/g,'').slice(0,13);D.no=d;e.target.value=d.length===13?nidFmt(d):d;
+      const h=q('#dnoh');if(h){const er=d.length===13?docErr('id',d):'';h.textContent=er||(d.length===13?'✓ เลขถูกต้อง':'ระบบตรวจหลักสุดท้ายให้อัตโนมัติ');h.style.color=er?'#B3263E':(d.length===13?'#2E7D5B':'')}}
+    else{D.no=e.target.value.toUpperCase().replace(/[^0-9A-Z]/g,'').slice(0,12)}};
+  q('#dcon').onchange=e=>{D.consent=e.target.checked;if(!D.consent)D.img='';redraw()};
+  if(q('#dfile'))q('#dfile').onchange=e=>{const f=e.target.files[0];if(!f)return;ppImg(f).then(u=>{D.img=u;redraw()}).catch(()=>toast('อ่านไฟล์ภาพไม่ได้'))};
+  if(q('#dimgx'))q('#dimgx').onclick=()=>{D.img='';redraw()};
+}
+function docSave(c,D){
+  const no=D.t==='id'?D.no.replace(/\D/g,''):D.no,body={gid:c.id,doc_type:D.t,doc_no:no,consent:!!D.consent};
+  if(D.img)body.img=D.img; else if(D.had&&!D.consent)body.img='';
+  const view=D.owner||!c.doc, img=D.img?true:(body.img===''?false:!!D.had);
+  return ppCust('idcard',body).then(()=>{c.doc={t:D.t,no:view?no:'',mask:docMask(D.t,no),img,ca:D.img?new Date().toISOString().slice(0,10):((c.doc&&c.doc.ca)||''),cb:''};c.nid=(D.t==='id'&&view)?no:''})}
+function docModal(c){
+  const owner=!!(c.doc&&c.doc.no)||!c.doc;
+  const D={t:c.doc?c.doc.t:'id',no:c.doc&&c.doc.no?c.doc.no:'',consent:!!(c.doc&&c.doc.img),img:'',img0:'',had:!!(c.doc&&c.doc.img),owner:!!(c.doc&&c.doc.no)};
+  let err='';
+  const draw=()=>openModal(`<div class="sh"><button class="x" data-close aria-label="ปิด">${ico('x')}</button><div class="rn">เอกสารยืนยันตัวตน</div><div class="bkn">${esc(c.name)}${c.doc&&!c.doc.no?' · กรอกเลขใหม่ทั้งหมด (พนักงานไม่เห็นเลขเดิม)':''}</div></div>
+    <div class="sb regbody">${docFields(D)}${D.had&&!D.img?`<div class="full hint">มีภาพบัตรเดิมเก็บไว้ ${owner?'· ติ๊กยินยอมออกเพื่อลบภาพเดิม':''}</div>`:''}${err?`<div class="err full" role="alert">${esc(err)}</div>`:''}</div>
+    <div class="sf"><button class="btn ghost" data-close>ยกเลิก</button><span style="flex:1"></span><button class="btn" id="dok">บันทึก</button></div>`,()=>{
+      $('msheet').classList.add('wide');docBind(D,draw);
+      $('dok').onclick=()=>{err=docErr(D.t,D.no);if(err)return draw();if(!D.consent&&D.had){D.img=''}
+        $('dok').disabled=true;docSave(c,D).then(()=>{closeModal();render();toast('บันทึกเอกสารแล้ว')}).catch(e=>{err='บันทึกไม่สำเร็จ: '+e.message;draw()})}});
+  draw();
 }
 /* บันทึกลงฐานข้อมูลจริง */
 function ppCust(k,d){
@@ -283,9 +342,12 @@ CUST_SAVE = [
     # บันทึกแก้ไขข้อมูล (+ เพศ) ลงฐานข้อมูล · บริษัทแก้ผ่านปุ่มผูกบริษัท
     ("Object.assign(c,{name:n,phone:p,line:$('eLine').value.trim(),addr:$('eAddr').value.trim(),nid:($('eNid').value||'').replace(/\\D/g,''),bday:$('eBd').value||'',prov:$('eProv').value.trim(),company:$('eCo').value,special:$('eSpec').value.trim()});\n    S.edit=false;S.err='';render();toast('บันทึกข้อมูลลูกค้าแล้ว');return}",
      "const old=Object.assign({},c),d={name:n,phone:p,line:$('eLine').value.trim(),addr:$('eAddr').value.trim(),bday:$('eBd').value||'',prov:$('eProv').value.trim(),special:$('eSpec').value.trim(),gender:$('eGen').value};\n"
-     "    Object.assign(c,d,{nid:($('eNid').value||'').replace(/\\D/g,'')});\n"
+     "    Object.assign(c,d);\n"
      "    S.edit=false;S.err='';render();ppCust('edit',{gid:c.id,data:d}).then(()=>toast('บันทึกข้อมูลลูกค้าแล้ว')).catch(e=>{Object.assign(c,old);render();ppCustFail(e)});return}\n"
      "  if(a=t.closest('[data-copick]')){coPick(cuOf(S.detail.id));return}\n"
+     "  if(a=t.closest('[data-docedit]')){docModal(cuOf(S.detail.id));return}\n"
+     "  if(a=t.closest('[data-docshow]')){S.docShow=!S.docShow;render();return}\n"
+     "  if(a=t.closest('[data-docimg]')){docImg(cuOf(S.detail.id));return}\n"
      "  if(a=t.closest('[data-bkno]')){try{parent.postMessage({pbr:'bkdetail',no:a.dataset.bkno},'*')}catch(_){}return}"),
     # เลขการจองในประวัติ กดดูรายละเอียด (ป๊อปอัปเดียวกับหน้าแรก/การจอง)
     ("else h+=`<div class=\"lrow\"><div><span class=\"num\">${s.no}</span>",
@@ -324,6 +386,13 @@ PROF_CSS = """
 .regchips button{border:2px solid var(--line);background:#fff;border-radius:99px;padding:.45rem 1.1rem;font:inherit;font-weight:600;min-height:2.8rem;cursor:pointer}
 .regchips button[aria-pressed="true"]{background:var(--ink);border-color:var(--ink);color:#fff}
 .regsum .kvr{padding:.35rem 0}
+.consent{background:#FFF8E8;border:1.5px solid #F1DDAE;border-radius:14px;padding:.7rem .9rem}
+.consent .ck{display:flex;gap:.6rem;align-items:flex-start;font-weight:500;cursor:pointer;line-height:1.5}
+.consent .ck input{width:1.4rem;height:1.4rem;min-height:0;flex:none;margin-top:.15rem;accent-color:var(--pink)}
+.docpick{display:inline-flex;align-items:center;gap:.4rem;cursor:pointer;width:max-content}
+.docpick.off{opacity:.45;pointer-events:none}
+.docprev{display:flex;align-items:flex-end;gap:.8rem}
+.docprev img{max-height:9rem;max-width:60%;border-radius:12px;border:1.5px solid var(--line)}
 @media (max-width:640px){.regbody{grid-template-columns:1fr!important}}
 """
 
@@ -336,8 +405,9 @@ function regModal(preId,q0,ph){
   const P=pre||{};
   const R={name:P.name||(q0||''),gender:P.gender||'',bday:P.bday||'',phone:P.phone||(ph||''),line:P.line||'',addr:P.addr||'',prov:P.prov||'',
     company:P.company||'',purpose:P.purpose||'',special:P.special||''};
+  const D={t:(P.doc&&P.doc.t)||'id',no:(P.doc&&P.doc.no)||'',consent:false,img:'',had:!!(P.doc&&P.doc.img),owner:!!(P.doc&&P.doc.no)};
   const GEN=['ชาย','หญิง','เพศหลากหลาย','ไม่ระบุ'],PUR=['ทำงาน','แวะพัก','งานบุญ','ราชการ/อบรม'];
-  const STEPS=['ข้อมูลส่วนตัว','ติดต่อและที่อยู่','การเข้าพัก','ตรวจสอบและยืนยัน'];
+  const STEPS=['ข้อมูลส่วนตัว','บัตรประชาชน','ติดต่อและที่อยู่','การเข้าพัก','ตรวจสอบและยืนยัน'],LAST=STEPS.length;
   let step=1,err='',busy=false;
   const nextNo=()=>pbm('M'+String(memSeq+1).padStart(3,'0'));
   const inp=(id,lab,k,o={})=>`<div class="fld${o.full?' full':''}"><label for="${id}">${lab}</label><input id="${id}" data-k="${k}" ${o.type?`type="${o.type}"`:''} ${o.im?`inputmode="${o.im}"`:''} placeholder="${o.ph||''}" value="${esc(R[k]||'')}"></div>`;
@@ -345,13 +415,14 @@ function regModal(preId,q0,ph){
   const dupOf=()=>{const d=digits(R.phone);return d.length>=9?CU.find(x=>digits(x.phone)===d&&(!pre||x.id!==pre.id)):null};
   function body(){
     if(step===1) return inp('rg1','ชื่อ-สกุล *','name',{ph:'เช่น คุณสมชาย ใจดี',full:true})+chips('gender',GEN,'เพศ')+inp('rg3','วันเกิด (ถ้ามี)','bday',{type:'date'});
-    if(step===2) return inp('rg4','เบอร์โทร *','phone',{type:'tel',im:'tel',ph:'08X-XXX-XXXX'})+inp('rg5','Line ID','line',{ph:'ชื่อ LINE หรือ ID'})
+    if(step===2) return docFields(D)+(pre&&pre.doc&&!pre.doc.no?`<div class="full hint">ลูกค้ามีเอกสารในระบบแล้ว (${esc(pre.doc.mask)}) · กรอกเลขอีกครั้งเพื่อยืนยัน</div>`:'');
+    if(step===3) return inp('rg4','เบอร์โทร *','phone',{type:'tel',im:'tel',ph:'08X-XXX-XXXX'})+inp('rg5','Line ID','line',{ph:'ชื่อ LINE หรือ ID'})
       +inp('rg6','ที่อยู่','addr',{ph:'บ้านเลขที่ หมู่ ตำบล อำเภอ',full:true})+inp('rg7','จังหวัด','prov',{ph:'เช่น ขอนแก่น'});
-    if(step===3) return `<div class="fld full"><label for="rg8">บริษัท (ถ้ามี)</label><select id="rg8" data-k="company"><option value="">— ไม่มี —</option>${CO.map(x=>`<option value="${x.id}" ${x.id===R.company?'selected':''}>${esc(x.name)}</option>`).join('')}</select></div>`
+    if(step===4) return `<div class="fld full"><label for="rg8">บริษัท (ถ้ามี)</label><select id="rg8" data-k="company"><option value="">— ไม่มี —</option>${CO.map(x=>`<option value="${x.id}" ${x.id===R.company?'selected':''}>${esc(x.name)}</option>`).join('')}</select></div>`
       +chips('purpose',PUR,'วัตถุประสงค์การเข้าพัก (ถ้ามี)')+inp('rg9','ความต้องการพิเศษ','special',{ph:'เช่น ไม่ทานเนื้อหมู ขอห้องชั้นล่าง',full:true});
     const kv=(k,v)=>`<div class="kvr"><span>${k}</span><div><b>${esc(v||'-')}</b></div></div>`;
     return `<div class="full regsum">${pre?`<div class="sum" style="margin-bottom:.6rem">สมัครให้ลูกค้าเดิมในระบบ: <b>${esc(pre.name)}</b> (ข้อมูลจะอัปเดตตามนี้)</div>`:''}
-      ${kv('ชื่อ-สกุล',R.name)}${kv('เพศ',R.gender)}${kv('วันเกิด',R.bday?bdFmt(R.bday):'')}${kv('เบอร์โทร',R.phone)}${kv('Line ID',R.line)}${kv('ที่อยู่',R.addr)}${kv('จังหวัด',R.prov)}
+      ${kv('ชื่อ-สกุล',R.name)}${kv('เพศ',R.gender)}${kv('วันเกิด',R.bday?bdFmt(R.bday):'')}${kv(DOCT[D.t],docMask(D.t,D.t==='id'?D.no.replace(/\D/g,''):D.no)+(D.img?' · แนบภาพแล้ว (ลูกค้ายินยอม)':''))}${kv('เบอร์โทร',R.phone)}${kv('Line ID',R.line)}${kv('ที่อยู่',R.addr)}${kv('จังหวัด',R.prov)}
       ${kv('บริษัท',R.company?(coOf(R.company)||{}).name:'')}${kv('วัตถุประสงค์',R.purpose)}${kv('ความต้องการพิเศษ',R.special)}
       <div class="sum" style="margin-top:.7rem">รหัสสมาชิกที่จะออกให้: <b>${nextNo()}</b> (ออกอัตโนมัติเมื่อยืนยัน)</div></div>`;
   }
@@ -360,25 +431,27 @@ function regModal(preId,q0,ph){
     openModal(`<div class="sh"><button class="x" data-close aria-label="ปิด">${ico('x')}</button><div class="rn">สมัครสมาชิก</div><div class="bkn">สมาชิกใช้สิทธิ์แลกของและร่วมโปรโมชัน</div><ol class="regsteps">${st}</ol></div>
      <div class="sb regbody">${body()}${err?`<div class="err full" role="alert">${esc(err)}</div>`:''}</div>
      <div class="sf">${step>1?`<button class="btn ghost" id="rgBack">ย้อนกลับ</button>`:`<button class="btn ghost" data-close>ยกเลิก</button>`}<span style="flex:1"></span>
-      <button class="btn" id="rgNext">${step<4?'ถัดไป':busy?'กำลังบันทึก…':'ยืนยันสมัครสมาชิก'}</button></div>`,()=>{
+      <button class="btn" id="rgNext">${step<LAST?'ถัดไป':busy?'กำลังบันทึก…':'ยืนยันสมัครสมาชิก'}</button></div>`,()=>{
       $('msheet').classList.add('wide');
+      if(step===2)docBind(D,draw);
       $('msheet').querySelectorAll('[data-k]').forEach(e=>e.oninput=e.onchange=()=>{R[e.dataset.k]=e.value});
       $('msheet').querySelectorAll('[data-ck]').forEach(b=>b.onclick=()=>{const k=b.dataset.ck;R[k]=R[k]===b.dataset.cv?'':b.dataset.cv;draw()});
       if($('rgBack'))$('rgBack').onclick=()=>{err='';step--;draw()};
       $('rgNext').onclick=next;
-      const f=$('msheet').querySelector('.regbody input');if(f&&step<4)setTimeout(()=>f.focus(),30);
+      const f=$('msheet').querySelector('.regbody input:not([type=checkbox]):not([type=file])');if(f&&step<LAST)setTimeout(()=>f.focus(),30);
     });
   }
   function next(){
     if(busy)return;err='';
     if(step===1&&!R.name.trim()){err='กรุณากรอกชื่อ-สกุล';return draw()}
-    if(step===2){
+    if(step===2){const e=docErr(D.t,D.no);if(e){err=e;return draw()}}
+    if(step===3){
       if(digits(R.phone).length<9){err='กรุณากรอกเบอร์โทรให้ครบ';return draw()}
       const d=dupOf();
       if(d&&d.memberNo){err=`เบอร์นี้เป็นสมาชิกอยู่แล้ว (${d.name} · ${pbm(d.memberNo)})`;return draw()}
       if(d&&!pre){pre=d;['line','addr','prov','company','purpose','special','gender','bday'].forEach(k=>{if(!R[k]&&d[k])R[k]=d[k]})}
     }
-    if(step<4){step++;return draw()}
+    if(step<LAST){step++;return draw()}
     save();
   }
   function save(){
@@ -388,6 +461,7 @@ function regModal(preId,q0,ph){
     ppCust('member',{gid:c.id,is_new:isNew,base:memSeq,company:R.company||'',data}).then(j=>{
       if(!isNew&&(R.company||'')!==(c.company||''))ppCust('company',{gid:c.id,company:R.company||''}).catch(()=>{});
       Object.assign(c,data,{company:R.company||'',memberNo:j.memberNo,memberSince:TODAY});
+      docSave(c,D).then(()=>render()).catch(e=>toast('⚠️ บันทึกเอกสารไม่สำเร็จ: '+e.message+' · แก้ไขได้ที่หน้าโปรไฟล์'));
       if(isNew)CU.push(c);
       memSeq=Math.max(memSeq,+String(j.memberNo).replace(/\D/g,''));
       closeModal(); S.detail={kind:'c',id:c.id,tab:'info'}; S.edit=false; S.view='list'; render(); window.scrollTo({top:0,behavior:'smooth'});
