@@ -46,8 +46,9 @@ def modules(mock, now, only=None):
         M[k] = _load('p_' + k).patch(M[k])
     import realtime
     realtime.apply(M, now[:10])
-    import persist
+    import persist, uxfix
     persist.apply(M)
+    uxfix.apply(M)
     return {k: M[k] for k in (only or ORDER)} if only else M
 
 
