@@ -96,7 +96,10 @@ LC_CSS = """
 .th2 .nmc{flex:1;min-width:0}
 .th2 .nmrow{flex-direction:column-reverse;align-items:stretch;gap:.1rem}
 .th2 .tags{justify-content:flex-end;padding-top:0}
-.th2 .nmb{max-width:100%;min-width:0;display:inline-flex;align-items:center}
+.th2 .nmb{max-width:100%;min-width:0;display:inline-flex;align-items:center;min-height:0!important;height:auto!important;padding:0!important;margin:0!important;vertical-align:top}
+.th2 .nmc{display:flex;flex-direction:column;align-items:flex-start;gap:0}
+.th2 .nmc small{max-width:100%;margin:0}
+.th2 .nmrow{flex:none}
 .th2 .nmb h2{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0}
 .th2 .coline{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .aisum2 .aih{justify-content:space-between}
@@ -130,7 +133,7 @@ LC_CSS = """
 def linechat(h):
     h = _r(h, [
         ("""<div class="th-h"><div>${nmH}<small>${c.real&&c.real!==c.name?esc(c.real)+' · ':''}LINE: ${esc(c.line)}</small></div><div class="tags"><span class="grp ${grp[1]}">${esc(grp[0])}</span>${warnIc(warnLv(c,a),'2.1rem')}<button type="button" class="btn ghost sm pinfo" data-act="pop" aria-label="เปิดแผงเครื่องมือ">เครื่องมือ</button></div><div class="gtags"><span class="tg">${memOf(c)?'เป็นสมาชิก':'ไม่ได้เป็นสมาชิก'}</span><span class="tg">${SEG[c.seg]}</span>${c.co?`<span class="tg tg-co">🏢 ${esc(c.co)}</span>`:''}</div></div>""",
-         """<div class="th-h th2"><div class="nmrow"><div class="nmc">${nmH}</div><div class="tags"><span class="tg">${memOf(c)?'เป็นสมาชิก':'ไม่ได้เป็นสมาชิก'}</span><span class="tg">${SEG[c.seg]}</span>${warnIc(warnLv(c,a),'2.1rem')}<button type="button" class="btn ghost sm pinfo" data-act="pop" aria-label="เปิดแผงเครื่องมือ">เครื่องมือ</button></div></div><small>${c.real&&c.real!==c.name?esc(c.real)+' · ':''}LINE: ${esc(c.line)}</small>${c.co?`<small class="coline">🏢 ${esc(c.co)}</small>`:''}</div>"""),
+         """<div class="th-h th2"><div class="nmrow"><div class="nmc">${nmH}<small>${c.real&&c.real!==c.name?esc(c.real)+' · ':''}LINE: ${esc(c.line)}</small>${c.co?`<small class="coline">🏢 ${esc(c.co)}</small>`:''}</div><div class="tags"><span class="tg">${memOf(c)?'เป็นสมาชิก':'ไม่ได้เป็นสมาชิก'}</span><span class="tg">${SEG[c.seg]}</span>${warnIc(warnLv(c,a),'2.1rem')}<button type="button" class="btn ghost sm pinfo" data-act="pop" aria-label="เปิดแผงเครื่องมือ">เครื่องมือ</button></div></div></div>"""),
         ("""<div class="aisum"><h3>✦ AI สรุป</h3><p>${esc(a.sum)}</p></div>""",
          """<button type="button" class="aisum2" onclick="this.classList.toggle('open')" title="กดเพื่ออ่านทั้งหมด"><span class="aih"><span class="grp ${grp[1]}">${esc(grp[0])}</span><b>✦ AI สรุป</b></span><span class="ait">${esc(a.sum)}</span></button>"""),
         ("""<div class="statbox"><div class="sr1"><span class="bs ${bs[1]}">${bs[0]}</span>${bd.unpaid?'<span class="tg tg-red">ยังไม่ชำระ</span>':''}<button type="button" class="more" data-act="more">ดูเพิ่มเติม ›</button></div>${(()=>{const p=bparts(c),pu=purpOf(c);return p?`<div class="sr2"><div class="rmw"><span class="rmb">${esc(p[0])}</span><span class="rmr">${esc(p[1])}</span></div>${pu?`<div class="purp">${esc(pu)}</div>`:''}</div>`:''})()}""",
