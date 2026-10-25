@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """หลังบ้านของหน้าจอ v196: ล็อกอินด้วย PIN, ส่งแอปพร้อมข้อมูลจริง, ส่งโมดูลที่ข้อมูลเปลี่ยน"""
-import datetime, json, os, urllib.request, urllib.error
+import datetime, json, os, re, urllib.request, urllib.error
 import render, overlay, session
 from db import rpc, DbError
 
@@ -135,6 +135,54 @@ def line_push(to, text):
 
 
 LINE_OUTBOX = []
+
+OCR_PROMPT = (
+    'ภาพนี้คือบัตรประจำตัวประชาชนไทยหรือหนังสือเดินทาง ที่พนักงานโรงแรมถ่ายเพื่อลงทะเบียนผู้พัก (ลูกค้ายินยอมแล้ว) '
+    'อ่านข้อมูลแล้วตอบเป็น JSON อย่างเดียว ไม่มีข้อความอื่น ตามรูปแบบนี้: '
+    '{"doc_type":"id หรือ passport","doc_no":"เลขบัตร 13 หลัก หรือเลขหนังสือเดินทาง ไม่มีขีด","title":"นาย/นาง/นางสาว/Mr./Ms. ฯลฯ",'
+    '"first_name":"ชื่อภาษาไทย (ถ้าไม่มีใช้ภาษาอังกฤษ)","last_name":"นามสกุล","gender":"ชาย หรือ หญิง หรือ ว่าง",'
+    '"birth_date":"YYYY-MM-DD เป็น ค.ศ. (แปลง พ.ศ. ลบ 543)","address":"ที่อยู่ตามบัตร ไม่รวมจังหวัด","province":"จังหวัด ไม่มีคำว่า จ."} '
+    'ช่องที่อ่านไม่ออกหรือไม่มีให้ใส่ "" ห้ามเดา · ถ้าไม่ใช่บัตรหรือหนังสือเดินทาง ให้ตอบ {"error":"ไม่ใช่ภาพบัตร"}')
+
+
+def id_ocr(img):
+    """อ่านข้อมูลจากภาพบัตรด้วย Claude (ภาพไม่ถูกเก็บที่ผู้ให้บริการ AI นอกเหนือการประมวลผลคำขอนี้)"""
+    mt = img.split(';', 1)[0][5:] if img.startswith('data:') else ''
+    if mt not in ('image/jpeg', 'image/png', 'image/webp') or ',' not in img:
+        return {'error': 'ไฟล์ภาพไม่ถูกต้อง'}
+    if os.environ.get('PP_FAKE_OCR'):   # ทดสอบในเครื่อง
+        return _ocr_clean(json.loads(os.environ['PP_FAKE_OCR']))
+    key = (os.environ.get('ANTHROPIC_API_KEY') or '').strip()
+    if not key:
+        return {'error': 'ยังไม่ได้ตั้งค่า ANTHROPIC_API_KEY'}
+    model = (os.environ.get('ANTHROPIC_MODEL') or '').strip() or 'claude-sonnet-5-5'
+    body = {'model': model, 'max_tokens': 600, 'messages': [{'role': 'user', 'content': [
+        {'type': 'image', 'source': {'type': 'base64', 'media_type': mt, 'data': img.split(',', 1)[1]}},
+        {'type': 'text', 'text': OCR_PROMPT}]}]}
+    req = urllib.request.Request('https://api.anthropic.com/v1/messages', method='POST', data=json.dumps(body).encode(),
+                                 headers={'x-api-key': key, 'anthropic-version': '2023-06-01', 'content-type': 'application/json'})
+    try:
+        out = json.loads(urllib.request.urlopen(req, timeout=25).read())
+        txt = ''.join(c.get('text', '') for c in out.get('content', []) if c.get('type') == 'text')
+        i, j = txt.find('{'), txt.rfind('}')
+        d = json.loads(txt[i:j + 1])
+    except Exception as e:
+        return {'error': 'อ่านบัตรไม่สำเร็จ (' + type(e).__name__ + ')'}
+    return _ocr_clean(d)
+
+
+def _ocr_clean(d):
+    if d.get('error'):
+        return {'error': str(d['error'])[:100]}
+    r = {k: str(d.get(k) or '').strip()[:200] for k in ('doc_type', 'doc_no', 'title', 'first_name', 'last_name', 'gender', 'birth_date', 'address', 'province')}
+    r['doc_type'] = 'passport' if r['doc_type'] == 'passport' else 'id'
+    r['doc_no'] = ''.join(ch for ch in r['doc_no'] if ch.isalnum()).upper()
+    if r['gender'] not in ('ชาย', 'หญิง'):
+        r['gender'] = 'ชาย' if r['title'] in ('นาย', 'Mr.', 'MR.', 'Mr', 'ด.ช.') else ('หญิง' if r['title'] in ('นาง', 'นางสาว', 'น.ส.', 'Mrs.', 'Ms.', 'Miss', 'ด.ญ.') else '')
+    if not re.match(r'^\d{4}-\d{2}-\d{2}$', r['birth_date']):
+        r['birth_date'] = ''
+    r['id_ok'] = r['doc_type'] != 'id' or thai_id_ok(r['doc_no'])
+    return r
 
 
 def _daily():
@@ -286,6 +334,13 @@ def handle(method, query, cookie_header, body, ip):
                 return 200, J, json.dumps(rpc('pp_cust_id', {'p': data, 'p_role': role}), ensure_ascii=False)
             out = rpc('pp_cust', {'p': data, 'p_role': role})
             return 200, J, json.dumps(out, ensure_ascii=False)
+        if method == 'POST' and part == 'idocr':   # อ่านข้อมูลจากภาพบัตร (ลูกค้ายินยอมแล้ว)
+            if not role:
+                return 401, J, json.dumps({'error': 'ต้องเข้าสู่ระบบใหม่'}, ensure_ascii=False)
+            img = (json.loads(body or '{}') or {}).get('img') or ''
+            if len(img) > 700000:
+                return 400, J, json.dumps({'error': 'ภาพใหญ่เกินไป'}, ensure_ascii=False)
+            return 200, J, json.dumps(id_ocr(img), ensure_ascii=False)
         if part == 'idimg':   # ดูภาพบัตร: เฉพาะเจ้าของ
             if role != 'owner':
                 return 403, J, json.dumps({'error': 'เฉพาะเจ้าของเท่านั้น'}, ensure_ascii=False)

@@ -334,6 +334,16 @@ ok('AI สรุปกล่อง CRM: กันโค้ดแปลกปล�
   ok('เพิ่มบริษัทใหม่ (ตรวจเลขผู้เสียภาษี/กันซ้ำ) และผูกลูกค้าได้');
 }
 
+// 11g) อ่านข้อมูลจากภาพบัตร (จำลอง AI)
+{
+  process.env.PP_FAKE_OCR = JSON.stringify({ doc_type: 'id', doc_no: '1-1017-00230-70-8', title: 'นาย', first_name: 'สมชาย', last_name: 'ใจดี', birth_date: '1990-01-02', address: 'x', province: 'ขอนแก่น' });
+  const r = (await call('/api/app?part=idocr', { method: 'POST', body: JSON.stringify({ img: 'data:image/jpeg;base64,AAAA' }) })).body;
+  assert.equal(r.doc_no, '1101700230708'); assert.equal(r.gender, 'ชาย'); assert.equal(r.id_ok, true);
+  assert.ok((await call('/api/app?part=idocr', { method: 'POST', body: JSON.stringify({ img: 'nope' }) })).body.error);
+  delete process.env.PP_FAKE_OCR;
+  ok('อ่านข้อมูลจากภาพบัตร: แยกเลขบัตร/เพศจากคำนำหน้า/ตรวจเลข');
+}
+
 // 12) กันเดา PIN
 for (let i = 0; i < 8; i++) await call('/api/app?part=pin', { method: 'POST', body: JSON.stringify({ role: 'owner', pin: '000000' }) });
 assert.equal((await call('/api/app?part=pin', { method: 'POST', body: JSON.stringify({ role: 'owner', pin: '246810' }) })).status, 429);

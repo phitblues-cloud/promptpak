@@ -283,19 +283,22 @@ function ppImg(file){return new Promise((ok,no)=>{const u=URL.createObjectURL(fi
 /* ช่องกรอกเอกสาร ใช้ทั้งในขั้นสมัครสมาชิกและหน้าแก้ไข · D={t,no,consent,img} */
 function docFields(D){
   return `<div class="fld full"><span class="lb">ประเภทเอกสาร *</span><div class="regchips">${Object.entries(DOCT).map(([k,v])=>`<button type="button" data-dt="${k}" aria-pressed="${D.t===k}">${v}</button>`).join('')}</div></div>
-   <div class="fld full"><label for="dno">เลข${DOCT[D.t]} *</label><input id="dno" ${D.t==='id'?'inputmode="numeric" maxlength="17" placeholder="X-XXXX-XXXXX-XX-X"':'maxlength="12" placeholder="เช่น AA1234567" style="text-transform:uppercase"'} value="${esc(D.t==='id'?nidFmt(D.no):D.no)}"><small class="hint" id="dnoh">${D.t==='id'?'ระบบตรวจหลักสุดท้ายให้อัตโนมัติ':'ตัวอักษรและตัวเลขตามหน้าหนังสือเดินทาง'}</small></div>
    <div class="fld full consent"><label class="ck"><input type="checkbox" id="dcon" ${D.consent?'checked':''}> <span>แจ้งลูกค้าแล้วว่าโรงแรมเก็บข้อมูลเพื่อทะเบียนผู้พักตามกฎหมาย และ<b>ลูกค้ายินยอมให้เก็บภาพบัตร</b></span></label>
     <small class="hint">ภาพบัตรไม่บังคับ · ดูได้เฉพาะเจ้าของ · ลบอัตโนมัติ 1 ปีหลังเข้าพักครั้งล่าสุด</small></div>
    <div class="fld full"><span class="lb">ภาพบัตร (ถ้ามี)</span>${D.img?`<div class="docprev"><img src="${D.img}" alt="ภาพบัตร"><button type="button" class="btn ghost sm" id="dimgx">ลบภาพ</button></div>`:
-     `<label class="btn ghost docpick${D.consent?'':' off'}"><input type="file" id="dfile" accept="image/*" capture="environment" ${D.consent?'':'disabled'} hidden>${ico('plus')} ถ่ายรูป / เลือกรูปบัตร</label>${D.consent?'':'<small class="hint">ติ๊กยินยอมก่อนจึงแนบภาพได้</small>'}`}</div>`}
-function docBind(D,redraw){
+     `<label class="btn ghost docpick${D.consent?'':' off'}"><input type="file" id="dfile" accept="image/*" capture="environment" ${D.consent?'':'disabled'} hidden>${ico('plus')} ถ่ายรูป / เลือกรูปบัตร (ระบบกรอกข้อมูลให้อัตโนมัติ)</label>${D.consent?'':'<small class="hint">ติ๊กยินยอมก่อนจึงแนบภาพได้</small>'}`}${D.ocr?`<div class="ocrst ${D.ocr.split(':')[0]}">${D.ocr==='busy'?'⏳ กำลังอ่านข้อมูลจากบัตร…':D.ocr==='ok'?'✓ กรอกข้อมูลจากบัตรให้แล้ว กรุณาตรวจสอบความถูกต้องอีกครั้ง':D.ocr==='chk'?'อ่านบัตรได้ แต่เลขบัตรตรวจหลักสุดท้ายไม่ผ่าน กรุณาแก้เลขให้ถูก':'อ่านข้อมูลจากบัตรไม่ได้ ('+esc(D.ocr.slice(4))+') · กรอกเอง'}</div>`:''}</div>
+   <div class="fld full"><label for="dno">เลข${DOCT[D.t]} *</label><input id="dno" ${D.t==='id'?'inputmode="numeric" maxlength="17" placeholder="X-XXXX-XXXXX-XX-X"':'maxlength="12" placeholder="เช่น AA1234567" style="text-transform:uppercase"'} value="${esc(D.t==='id'?nidFmt(D.no):D.no)}"><small class="hint" id="dnoh">${D.t==='id'?'ระบบตรวจหลักสุดท้ายให้อัตโนมัติ':'ตัวอักษรและตัวเลขตามหน้าหนังสือเดินทาง'}</small></div>`}
+function docBind(D,redraw,onOcr){
   const q=s=>$('msheet').querySelector(s);
   $('msheet').querySelectorAll('[data-dt]').forEach(b=>b.onclick=()=>{if(D.t!==b.dataset.dt){D.t=b.dataset.dt;D.no=''}redraw()});
   q('#dno').oninput=e=>{{const er=$('msheet').querySelector('.err');if(er)er.remove()}if(D.t==='id'){const d=e.target.value.replace(/\D/g,'').slice(0,13);D.no=d;e.target.value=d.length===13?nidFmt(d):d;
       const h=q('#dnoh');if(h){const er=d.length===13?docErr('id',d):'';h.textContent=er||(d.length===13?'✓ เลขถูกต้อง':'ระบบตรวจหลักสุดท้ายให้อัตโนมัติ');h.style.color=er?'#B3263E':(d.length===13?'#2E7D5B':'')}}
     else{D.no=e.target.value.toUpperCase().replace(/[^0-9A-Z]/g,'').slice(0,12)}};
   q('#dcon').onchange=e=>{D.consent=e.target.checked;if(!D.consent)D.img='';redraw()};
-  if(q('#dfile'))q('#dfile').onchange=e=>{const f=e.target.files[0];if(!f)return;ppImg(f).then(u=>{D.img=u;redraw()}).catch(()=>toast('อ่านไฟล์ภาพไม่ได้'))};
+  if(q('#dfile'))q('#dfile').onchange=e=>{const f=e.target.files[0];if(!f)return;ppImg(f).then(u=>{D.img=u;D.ocr='busy';redraw();
+    return fetch(top.location.origin+'/api/app?part=idocr',{method:'POST',credentials:'same-origin',headers:{'Content-Type':'application/json'},body:JSON.stringify({img:u})}).then(r=>r.json()).then(j=>{
+      if(j.error){D.ocr='err:'+j.error}else{D.t=j.doc_type==='passport'?'passport':'id';if(j.doc_no)D.no=j.doc_no;D.ocr=j.id_ok?'ok':'chk';if(onOcr)onOcr(j)}
+      redraw()}).catch(()=>{D.ocr='err:เชื่อมต่อไม่ได้';redraw()})}).catch(()=>toast('อ่านไฟล์ภาพไม่ได้'))};
   if(q('#dimgx'))q('#dimgx').onclick=()=>{D.img='';redraw()};
 }
 function docSave(c,D){
@@ -453,6 +456,15 @@ PROF_CSS = """
 .regchips button{border:2px solid var(--line);background:#fff;border-radius:99px;padding:.45rem 1.1rem;font:inherit;font-weight:600;min-height:2.8rem;cursor:pointer}
 .regchips button[aria-pressed="true"]{background:var(--ink);border-color:var(--ink);color:#fff}
 .regsum .kvr{padding:.35rem 0}
+.lookbar{background:#F3EEF9;border:1.5px solid #DDCDEE;border-radius:16px;padding:.75rem .9rem;display:grid;gap:.45rem}
+.lookbar label{font-weight:700}
+.lookbar.ok{display:flex;justify-content:space-between;align-items:center;gap:.6rem;background:#EAF6EF;border-color:#BFE3CC}
+.lkrow{display:flex;gap:.5rem}.lkrow input{flex:1;min-width:0;border:2px solid var(--line);background:#fff;border-radius:12px;padding:.5rem .8rem;min-height:2.8rem;font:inherit}
+.lkres{display:grid;gap:.35rem}
+.lkit{display:flex;flex-direction:column;align-items:flex-start;text-align:left;border:1.5px solid var(--line);background:#fff;border-radius:12px;padding:.5rem .8rem;font:inherit;cursor:pointer}
+.lkit small{color:var(--soft)}.lkit:disabled{opacity:.55;cursor:default}
+.ocrst{margin-top:.45rem;font-size:.88rem;font-weight:600;border-radius:10px;padding:.4rem .7rem}
+.ocrst.busy{background:#FFF6DD;color:#8A6200}.ocrst.ok{background:#EAF6EF;color:#2E7D5B}.ocrst.chk,.ocrst.err{background:#FDECEE;color:#B3263E}
 .regsec{font-family:var(--serif);font-weight:700;color:var(--pink);font-size:1.05rem;border-top:1.5px dashed var(--line);padding-top:.8rem;margin-top:.2rem}
 .compbox{background:#F8F4FC;border:1.5px solid #E2D4EF;border-radius:16px;padding:.9rem 1rem}
 .compbox .regbody{display:grid}
@@ -484,10 +496,18 @@ function regModal(preId,q0,ph){
   const inp=(id,lab,k,o={})=>`<div class="fld${o.full?' full':''}"><label for="${id}">${lab}</label><input id="${id}" data-k="${k}" ${o.type?`type="${o.type}"`:''} ${o.im?`inputmode="${o.im}"`:''} placeholder="${o.ph||''}" value="${esc(R[k]||'')}"></div>`;
   const chips=(k,list,lab)=>`<div class="fld full"><span class="lb">${lab}</span><div class="regchips" role="group" aria-label="${lab}">${list.map(x=>`<button type="button" data-ck="${k}" data-cv="${x}" aria-pressed="${R[k]===x}">${x}</button>`).join('')}</div></div>`;
   const dupOf=()=>{const d=digits(R.phone);return d.length>=9?CU.find(x=>digits(x.phone)===d&&(!pre||x.id!==pre.id)):null};
+  let lq='',lr=null;
+  function fill(c){pre=c;R.name=c.name||'';R.gender=c.gender||'';R.bday=c.bday||'';R.phone=c.phone||'';R.line=c.line||'';R.addr=c.addr||'';R.prov=c.prov||'';
+    R.company=c.company||'';R.purpose=c.purpose||'';R.special=c.special||'';
+    if(c.doc){D.t=c.doc.t;D.no=c.doc.no||'';D.had=!!c.doc.img;D.owner=!!c.doc.no}lr=null;lq='';err='';draw()}
+  function lookH(){
+    if(pre)return `<div class="full lookbar ok"><span>สมัครให้ลูกค้าเดิม: <b>${esc(pre.name)}</b> · ${esc(pre.phone||'')} · ดึงข้อมูลเดิมมากรอกแล้ว</span><button type="button" class="linkbtn" id="lkx">ไม่ใช่คนนี้</button></div>`;
+    return `<div class="full lookbar"><label for="lkq">ลูกค้าเคยมาพักแล้ว? ค้นหาจากเบอร์โทร</label><div class="lkrow"><input id="lkq" type="tel" inputmode="tel" placeholder="พิมพ์เบอร์โทรอย่างน้อย 4 ตัว" value="${esc(lq)}"><button type="button" class="btn ghost sm" id="lkb">ค้นหา</button></div>
+      ${lr?(lr.length?`<div class="lkres">${lr.map(c=>`<button type="button" class="lkit" data-lk="${c.id}" ${c.memberNo?'disabled':''}><b>${esc(c.name)}</b><small>${esc(c.phone)}${c.memberNo?' · เป็นสมาชิกแล้ว '+pbm(c.memberNo):' · ยังไม่เป็นสมาชิก — แตะเพื่อดึงข้อมูล'}</small></button>`).join('')}</div>`:'<small class="hint">ไม่พบเบอร์นี้ในระบบ · กรอกเป็นลูกค้าใหม่ได้เลย</small>'):''}</div>`}
   function body(){
-    if(step===1) return inp('rg1','ชื่อ-สกุล *','name',{ph:'เช่น คุณสมชาย ใจดี',full:true})+chips('gender',GEN,'เพศ')+inp('rg3','วันเกิด (ถ้ามี)','bday',{type:'date'})
+    if(step===1) return lookH()+inp('rg1','ชื่อ-สกุล *','name',{ph:'เช่น คุณสมชาย ใจดี',full:true})+chips('gender',GEN,'เพศ')+inp('rg3','วันเกิด (ถ้ามี)','bday',{type:'date'})
       +'<div class="full regsec">เอกสารยืนยันตัวตน</div>'+docFields(D)+(pre&&pre.doc&&!pre.doc.no?`<div class="full hint">ลูกค้ามีเอกสารในระบบแล้ว (${esc(pre.doc.mask)}) · กรอกเลขอีกครั้งเพื่อยืนยัน</div>`:'');
-    if(step===2) return inp('rg4','เบอร์โทร *','phone',{type:'tel',im:'tel',ph:'08X-XXX-XXXX'})+inp('rg5','Line ID','line',{ph:'ชื่อ LINE หรือ ID'})
+    if(step===2) return inp('rg4','เบอร์โทร *','phone',{type:'tel',im:'tel',ph:'08X-XXX-XXXX'})+inp('rg5','Line ID *','line',{ph:'ชื่อ LINE หรือ ID'})
       +inp('rg6','ที่อยู่','addr',{ph:'บ้านเลขที่ หมู่ ตำบล อำเภอ',full:true})+inp('rg7','จังหวัด','prov',{ph:'เช่น ขอนแก่น'})+`<div class="fld full"><label for="rg8">บริษัท (ถ้ามี)</label><select id="rg8"><option value="">— ไม่มี —</option>${CO.map(x=>`<option value="${x.id}" ${x.id===R.company?'selected':''}>${esc(x.name)}</option>`).join('')}</select><small class="hint">บริษัทใหม่ เพิ่มได้ที่แท็บ "บริษัท" → ปุ่ม "เพิ่ม"</small></div>`;
     if(step===3) return chips('purpose',PUR,'วัตถุประสงค์การเข้าพัก (ถ้ามี)')+inp('rg9','ความต้องการพิเศษ','special',{ph:'เช่น ไม่ทานเนื้อหมู ขอห้องชั้นล่าง',full:true});
     const kv=(k,v)=>`<div class="kvr"><span>${k}</span><div><b>${esc(v||'-')}</b></div></div>`;
@@ -503,7 +523,13 @@ function regModal(preId,q0,ph){
      <div class="sf">${step>1?`<button class="btn ghost" id="rgBack">ย้อนกลับ</button>`:`<button class="btn ghost" data-close>ยกเลิก</button>`}<span style="flex:1"></span>
       <button class="btn" id="rgNext">${step<LAST?'ถัดไป':busy?'กำลังบันทึก…':'ยืนยันสมัครสมาชิก'}</button></div>`,()=>{
       $('msheet').classList.add('wide');
-      if(step===1)docBind(D,draw);
+      if(step===1){docBind(D,draw,j=>{const nm=[j.first_name,j.last_name].filter(Boolean).join(' ');if(nm)R.name='คุณ'+nm.replace(/^คุณ/,'');
+          if(j.gender)R.gender=j.gender;if(j.birth_date)R.bday=j.birth_date;if(j.address)R.addr=j.address;if(j.province)R.prov=j.province.replace(/^จ\.\s*|^จังหวัด/,'')});
+        const lk=()=>{const d=digits($('lkq')?$('lkq').value:'');lq=$('lkq')?$('lkq').value:'';if(d.length<4){lr=null;err='พิมพ์เบอร์โทรอย่างน้อย 4 ตัว';return draw()}
+          err='';lr=CU.filter(c=>digits(c.phone).includes(d)).slice(0,6);draw()};
+        if($('lkb'))$('lkb').onclick=lk;if($('lkq'))$('lkq').onkeydown=e=>{if(e.key==='Enter'){e.preventDefault();lk()}};
+        $('msheet').querySelectorAll('[data-lk]').forEach(b=>b.onclick=()=>fill(cuOf(b.dataset.lk)));
+        if($('lkx'))$('lkx').onclick=()=>{pre=null;Object.keys(R).forEach(k=>R[k]='');D.no='';D.had=false;D.owner=false;draw()}}
       if(step===2){const sc=$('rg8');if(sc)sc.onchange=()=>{R.company=sc.value}}
       $('msheet').querySelectorAll('[data-k]').forEach(e=>e.oninput=e.onchange=()=>{R[e.dataset.k]=e.value});
       $('msheet').querySelectorAll('[data-ck]').forEach(b=>b.onclick=()=>{const k=b.dataset.ck;R[k]=R[k]===b.dataset.cv?'':b.dataset.cv;draw()});
@@ -518,6 +544,7 @@ function regModal(preId,q0,ph){
     if(step===1){const e=docErr(D.t,D.no);if(e){err=e;return draw()}}
     if(step===2){
       if(digits(R.phone).length<9){err='กรุณากรอกเบอร์โทรให้ครบ';return draw()}
+      if(!R.line.trim()){err='กรุณากรอก Line ID';return draw()}
       const d=dupOf();
       if(d&&d.memberNo){err=`เบอร์นี้เป็นสมาชิกอยู่แล้ว (${d.name} · ${pbm(d.memberNo)})`;return draw()}
       if(d&&!pre){pre=d;['line','addr','prov','company','purpose','special','gender','bday'].forEach(k=>{if(!R[k]&&d[k])R[k]=d[k]})}
