@@ -664,7 +664,11 @@ const ZN2=['ตึกใหม่','บ้านหลัง'];
 const coversRoom=(x,room)=>{const z=(RMZ.find(r=>r.c===room)||{}).z;return x.rooms&&x.rooms.length?x.rooms.includes(room):(x.zones||[]).includes(z)};
 function pickWho(room){const c=HKS.filter(x=>x.on&&coversRoom(x,room));if(!c.length)return '';
   const load=n=>TASKS.filter(t=>t.who===n&&t.st<3).length;return c.sort((a,b)=>load(a.n)-load(b.n)||(a.sort||0)-(b.sort||0))[0].n}
-const staffBody=x=>({id:x.id,name:x.n,on:x.on,zones:x.zones||[],rooms:x.rooms&&x.rooms.length?x.rooms:null,line_key:x.line||'',sort:x.sort||0});
+const DAYN=['อา','จ','อ','พ','พฤ','ศ','ส'],DAYO=[1,2,3,4,5,6,0];
+const schedOf=x=>!Array.isArray(x.days)||x.days.includes(HK_DOW),effOn=x=>x.ovr==null?schedOf(x):x.ovr;
+const daysTxt=x=>!Array.isArray(x.days)||x.days.length===7?'ทำงานทุกวัน':!x.days.length?'ยังไม่เลือกวันทำงาน':'ทำงาน '+DAYO.filter(d=>x.days.includes(d)).map(d=>DAYN[d]).join(' ');
+const GEAR='<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>';
+const staffBody=x=>({id:x.id,name:x.n,days:Array.isArray(x.days)?x.days:null,ovr:x.ovr==null?null:x.ovr,zones:x.zones||[],rooms:x.rooms&&x.rooms.length?x.rooms:null,line_key:x.line||'',sort:x.sort||0});
 let _hkSeeded=null;
 function saveStaff(x,extra){if(_hkSeeded===null)_hkSeeded=HAS_STAFF;const go=()=>ppHk('staff_save',Object.assign(staffBody(x),extra||{}));
   if(_hkSeeded)return go();_hkSeeded=true;   // ครั้งแรก: บันทึกรายชื่อเริ่มต้นทั้งหมด
@@ -681,10 +685,12 @@ function hkModal(){
   const roomsOf=x=>RMZ.filter(r=>(x.zones||[]).includes(r.z));
   const card=(x,i)=>{const n=TASKS.filter(t=>t.who===x.n&&t.st<5).length,isO=open===x.id,sel=x.rooms&&x.rooms.length?x.rooms:null;
     const scope=!(x.zones||[]).length?'<span class="hkw">ยังไม่กำหนดโซน · ไม่รับงานอัตโนมัติ</span>':sel?`${sel.length} ห้อง: ${sel.join(', ')}`:`ทุกห้องใน${x.zones.join(' และ ')}`;
-    return `<div class="hkc${isO?' open':''}"><div class="hkh"><button type="button" class="hkname" data-hko="${x.id}" aria-expanded="${isO}"><b>${esc(x.n)}</b>${n?` <small>(มีงาน ${n} ห้อง)</small>`:''}<span class="hks">${scope}${x.line?` · LINE: ${esc(lineName(x.line)||'ผูกแล้ว')}`:''}</span></button>
+    const tday=x.ovr==null?'':`<span class="hkov">วันนี้${x.ovr?'มาทำงาน (นอกวันทำงาน)':'หยุด'} · พรุ่งนี้กลับตามวันทำงาน</span>`;
+    return `<div class="hkc${isO?' open':''}"><div class="hkh"><button type="button" class="hkname" data-hko="${x.id}" aria-expanded="${isO}"><b>${esc(x.n)}</b>${n?` <small>(มีงาน ${n} ห้อง)</small>`:''}<span class="hks">${daysTxt(x)} · ${scope}${x.line?` · LINE: ${esc(lineName(x.line)||'ผูกแล้ว')}`:''}</span>${tday}</button>
       <label class="sw" title="${x.on?'ทำงานวันนี้':'หยุดวันนี้'}"><input type="checkbox" data-hkon="${i}" ${x.on?'checked':''}><i></i><span class="swl">${x.on?'ทำงาน':'หยุด'}</span></label>
-      <button type="button" class="hkchev" data-hko="${x.id}" aria-label="ตั้งค่า ${esc(x.n)}">${isO?'▴':'▾'}</button></div>
+      <button type="button" class="hkchev" data-hko="${x.id}" aria-expanded="${isO}" aria-label="ตั้งค่า ${esc(x.n)}">${GEAR}<span>ตั้งค่า</span></button></div>
      ${isO?`<div class="hkb">
+       <div class="hkf"><span class="lb">วันทำงาน <small class="hint">แตะเพื่อเลือก/เอาออก · วันที่ไม่ได้เลือก = วันหยุด ระบบไม่มอบหมายงาน</small></span><div class="regchips hkdays">${DAYO.map(d=>`<button type="button" data-hkd="${d}" aria-pressed="${!Array.isArray(x.days)||x.days.includes(d)}">${DAYN[d]}</button>`).join('')}</div></div>
        <div class="hkf"><span class="lb">โซนที่รับผิดชอบ</span><div class="regchips">${ZN2.map(z=>`<button type="button" data-hkz="${z}" aria-pressed="${(x.zones||[]).includes(z)}">${z}</button>`).join('')}</div></div>
        ${(x.zones||[]).length?`<div class="hkf"><span class="lb">ห้องที่รับผิดชอบ <small class="hint">${sel?'เลือกเฉพาะห้อง':'ตอนนี้: ทุกห้องในโซน · แตะเพื่อเลือกเฉพาะห้อง'}</small></span>
          <div class="hkrooms">${roomsOf(x).map(r=>`<button type="button" data-hkr="${r.c}" aria-pressed="${!sel||sel.includes(r.c)}" class="${sel?'':'all'}">${r.c}</button>`).join('')}</div>
@@ -693,7 +699,7 @@ function hkModal(){
          <small class="hint">ให้แม่บ้านเพิ่มเพื่อน LINE โรงแรมแล้วส่งข้อความมา 1 ครั้ง ชื่อจะขึ้นในรายการนี้</small></div>
        <div class="hkf hkrow2"><label class="lb" for="hkn_${x.id}">ชื่อ</label><input id="hkn_${x.id}" data-hkname value="${esc(x.n)}"><button type="button" class="btn ghost sm danger" data-hkdel="${x.id}">ลบรายชื่อ</button></div>
      </div>`:''}</div>`};
-  const draw=()=>openModal(`<div class="sh"><button class="x" data-close aria-label="ปิด">${ico('x')}</button><div class="rn">รายชื่อแม่บ้าน</div><div class="bkn">เปิด = ทำงานวันนี้ · แตะชื่อเพื่อตั้งค่าโซน ห้อง และ LINE · เช็คเอาท์แล้วระบบมอบหมายงานให้ตามโซนอัตโนมัติ</div></div>
+  const draw=()=>openModal(`<div class="sh"><button class="x" data-close aria-label="ปิด">${ico('x')}</button><div class="rn">รายชื่อแม่บ้าน</div><div class="bkn">สวิตช์ = ทำงาน/หยุดเฉพาะวันนี้ · กดตั้งค่าเพื่อเลือกวันทำงาน โซน ห้อง และ LINE · เช็คเอาท์แล้วระบบมอบหมายงานให้ตามโซนอัตโนมัติ</div></div>
    <div class="sb"><div id="hkl">${HKS.map(card).join('')}</div>
     <div class="hkadd"><input id="hkNew" type="text" placeholder="พิมพ์ชื่อแม่บ้านใหม่" aria-label="ชื่อแม่บ้านใหม่"><button type="button" class="btn" id="hkAdd">เพิ่มรายชื่อ</button></div>${addErr?`<div class="err" role="alert">${esc(addErr)}</div>`:''}
     <div class="hkgrp"><label class="lb" for="hkGrp">กลุ่ม LINE แม่บ้าน (ส่งสรุปงาน)</label><input id="hkGrp" value="${esc(HK_GROUP)}" placeholder="เชิญบัญชี LINE โรงแรมเข้ากลุ่ม แล้วระบบจะใส่รหัสกลุ่มให้"><small class="hint">ใช้ในขั้นต่อไป: ส่งการ์ดงานให้แม่บ้านแต่ละคน และสรุปงานเข้ากลุ่ม</small></div></div>
@@ -702,7 +708,9 @@ function hkModal(){
     const ms=$('msheet'),cur=()=>HKS.find(y=>y.id===open);
     const commit=(x,msg,extra)=>{syncHK();render();draw();saveStaff(x,extra).then(()=>msg&&toast(msg)).catch(hkFail)};
     ms.querySelectorAll('[data-hko]').forEach(b=>b.onclick=()=>{open=open===b.dataset.hko?null:b.dataset.hko;draw()});
-    ms.querySelectorAll('[data-hkon]').forEach(c=>c.onchange=()=>{const x=HKS[+c.dataset.hkon];x.on=c.checked;commit(x,`${x.n}: ${x.on?'ทำงานวันนี้':'หยุดวันนี้'}`)});
+    ms.querySelectorAll('[data-hkon]').forEach(c=>c.onchange=()=>{const x=HKS[+c.dataset.hkon];x.ovr=c.checked===schedOf(x)?null:c.checked;x.on=effOn(x);commit(x,`${x.n}: ${x.on?'ทำงานวันนี้':'หยุดวันนี้'}${x.ovr==null?'':' · พรุ่งนี้กลับตามวันทำงาน'}`)});
+    ms.querySelectorAll('[data-hkd]').forEach(b=>b.onclick=()=>{const x=cur(),d=+b.dataset.hkd;let s=Array.isArray(x.days)?[...x.days]:[0,1,2,3,4,5,6];
+      s=s.includes(d)?s.filter(v=>v!==d):[...s,d];x.days=s.length===7?null:s.sort();if(x.ovr===schedOf(x))x.ovr=null;x.on=effOn(x);commit(x,daysTxt(x))});
     ms.querySelectorAll('[data-hkz]').forEach(b=>b.onclick=()=>{const x=cur(),z=b.dataset.hkz;x.zones=(x.zones||[]).includes(z)?x.zones.filter(v=>v!==z):[...(x.zones||[]),z];
       if(x.rooms)x.rooms=x.rooms.filter(r=>x.zones.includes((RMZ.find(q=>q.c===r)||{}).z));commit(x)});
     ms.querySelectorAll('[data-hkr]').forEach(b=>b.onclick=()=>{const x=cur(),r=b.dataset.hkr;let s=x.rooms&&x.rooms.length?[...x.rooms]:roomsOf(x).map(q=>q.c);
@@ -721,7 +729,7 @@ function hkModal(){
         $('hkDelOk').onclick=()=>{const to=$('hkTo')?$('hkTo').value:'';const go=()=>ppHk('staff_del',{id:x.id,to});
           ((_hkSeeded===null?HAS_STAFF:_hkSeeded)?go():saveStaff(x).then(go)).then(()=>{HKS.splice(HKS.indexOf(x),1);pend.forEach(t=>t.who=to);open=null;syncHK();render();draw();toast(`ลบ ${x.n} แล้ว`)}).catch(hkFail)}})};
     const add=()=>{const v=$('hkNew').value.trim();if(!v){addErr='กรุณาพิมพ์ชื่อ';return draw()}if(HKS.some(x=>x.n===v)){addErr='มีชื่อนี้แล้ว';return draw()}
-      const x={id:'H'+Date.now().toString(36).toUpperCase(),n:v,on:true,zones:[],rooms:null,line:'',sort:HKS.length+1};HKS.push(x);addErr='';open=x.id;commit(x,`เพิ่ม ${v} แล้ว · เลือกโซนที่รับผิดชอบได้เลย`)};
+      const x={id:'H'+Date.now().toString(36).toUpperCase(),n:v,on:true,zones:[],rooms:null,line:'',sort:HKS.length+1,days:null,ovr:null};HKS.push(x);addErr='';open=x.id;commit(x,`เพิ่ม ${v} แล้ว · เลือกโซนที่รับผิดชอบได้เลย`)};
     $('hkAdd').onclick=add;$('hkNew').onkeydown=e=>{if(e.key==='Enter')add()};
     $('hkGrp').onchange=e=>{HK_GROUP=e.target.value.trim();ppHk('group_set',{value:HK_GROUP}).then(()=>toast('บันทึกกลุ่ม LINE แล้ว')).catch(hkFail)};
   });
@@ -765,7 +773,10 @@ HK_CSS = """
 .hkname b{font-size:1.05rem}.hkname small{color:var(--soft)}
 .hks{flex-basis:100%;font-size:.8rem;color:var(--soft)}.hkw{color:#A3152D}
 .swl{font-size:.85rem;min-width:2.6rem}
-.hkchev{border:1.5px solid var(--line);background:#fff;border-radius:10px;width:2.2rem;height:2.2rem;cursor:pointer;color:var(--soft)}
+.hkchev{border:1.5px solid var(--line);background:#fff;border-radius:12px;min-height:2.5rem;padding:0 .8rem;cursor:pointer;color:var(--ink);display:inline-flex;align-items:center;gap:.35rem;font:inherit;font-weight:600;font-size:.9rem;flex:none}
+.hkchev[aria-expanded="true"]{background:#F3EEF9;border-color:#D7C4EA;color:var(--purple)}
+.hkov{flex-basis:100%;font-size:.78rem;color:#A3152D;font-weight:600}
+.hkc .hkdays button{min-width:3.2rem;padding:.4rem .7rem}
 .hkb{border-top:1.5px dashed var(--line);padding:.8rem .9rem;display:grid;gap:.8rem;background:#FCFAF7}
 .hkf{display:grid;gap:.35rem}.hkf .lb{font-weight:700}
 .hkf select,.hkf input,.hkgrp input{border:2px solid var(--line);border-radius:12px;padding:.5rem .7rem;min-height:2.7rem;font:inherit;background:#fff}

@@ -390,6 +390,20 @@ ok('AI สรุปกล่อง CRM: กันโค้ดแปลกปล�
   const M = (await call('/api/app?part=mods&since=x')).body.mods.hk;
   assert.ok(M.includes('"n":"แก้ว"') && !M.includes('"n":"ใบ"') && M.includes('dbid:') && M.includes('pickWho'));
   ok('แม่บ้าน: มอบหมายตามโซน/ห้อง/คนหยุด · งานทำความสะอาดบันทึกจริง · ลบรายชื่อโอนงาน');
+  // วันทำงานประจำสัปดาห์ + สวิตช์วันนี้
+  const dow = +psql('-c', 'select extract(dow from pp_today())::int');
+  const notToday = [0, 1, 2, 3, 4, 5, 6].filter(d => d !== dow);
+  await hk({ k: 'staff_save', id: 'H4', name: 'แก้ว', zones: ['บ้านหลัง'], sort: 4, days: notToday, ovr: null });
+  r = (await hk({ k: 'task_new', room: 'C10', kind: 'out' })).body; assert.equal(r.who, '');            // วันนี้ไม่ใช่วันทำงาน
+  await hk({ k: 'staff_save', id: 'H4', name: 'แก้ว', zones: ['บ้านหลัง'], sort: 4, days: notToday, ovr: true });
+  r = (await hk({ k: 'task_new', room: 'C11', kind: 'out' })).body; assert.equal(r.who, 'แก้ว');        // กดมาทำงานวันนี้
+  assert.equal(psql('-c', "select ovr_day = pp_today() from hk_staff where id='H4'"), 't');
+  await hk({ k: 'staff_save', id: 'H4', name: 'แก้ว', zones: ['บ้านหลัง'], sort: 4, days: null, ovr: true }); // ตรงตาราง → ล้างค่าวันนี้
+  assert.equal(psql('-c', "select ovr_on is null from hk_staff where id='H4'"), 't');
+  assert.equal((await hk({ k: 'staff_save', id: 'H4', name: 'แก้ว', days: [9] })).status, 500);
+  const M2 = (await call('/api/app?part=mods&since=x')).body.mods.hk;
+  assert.ok(M2.includes('HK_DOW=') && M2.includes('data-hkd') && M2.includes('"days":null'));
+  ok('แม่บ้าน: วันทำงานประจำสัปดาห์ + สวิตช์ทำงาน/หยุดเฉพาะวันนี้');
 }
 
 // 12) กันเดา PIN

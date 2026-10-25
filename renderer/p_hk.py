@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 from patch_all import R, J
 from nb import *
+import datetime
 
 HKAT = {h['room_id']: h for h in m['housekeeping_at_ref']}
 
@@ -14,16 +15,16 @@ def guests_by_room():
 def patch(h):
     hs = m.get('hk_state') or {}
     if hs.get('has_staff'):
-        staff = [{'id': x['id'], 'n': x['name'], 'on': x['on'], 'zones': x['zones'] or [], 'rooms': x['rooms'], 'line': x.get('line_key') or '', 'sort': x.get('sort') or 0} for x in hs.get('staff') or []]
+        staff = [{'id': x['id'], 'n': x['name'], 'on': x['on'], 'zones': x['zones'] or [], 'rooms': x['rooms'], 'line': x.get('line_key') or '', 'sort': x.get('sort') or 0, 'days': x.get('days'), 'ovr': x.get('ovr')} for x in hs.get('staff') or []]
     else:   # ยังไม่เคยตั้งค่า: ใช้รายชื่อเริ่มต้น (บันทึกทั้งหมดเมื่อแก้ไขครั้งแรก)
-        staff = [{'id': 'H1', 'n': 'ป้าใจ', 'on': True, 'zones': [], 'rooms': None, 'line': '', 'sort': 1},
-                 {'id': 'H2', 'n': 'ดวน', 'on': True, 'zones': ['ตึกใหม่'], 'rooms': None, 'line': '', 'sort': 2},
-                 {'id': 'H3', 'n': 'ใบ', 'on': True, 'zones': ['บ้านหลัง'], 'rooms': None, 'line': '', 'sort': 3}]
+        staff = [{'id': 'H1', 'n': 'ป้าใจ', 'on': True, 'zones': [], 'rooms': None, 'line': '', 'sort': 1, 'days': None, 'ovr': None},
+                 {'id': 'H2', 'n': 'ดวน', 'on': True, 'zones': ['ตึกใหม่'], 'rooms': None, 'line': '', 'sort': 2, 'days': None, 'ovr': None},
+                 {'id': 'H3', 'n': 'ใบ', 'on': True, 'zones': ['บ้านหลัง'], 'rooms': None, 'line': '', 'sort': 3, 'days': None, 'ovr': None}]
     rooms = [{'c': r['code'], 'z': 'ตึกใหม่' if r['zone'] == 'A' else 'บ้านหลัง'} for r in ROOMS]
     chats = [{'k': t['db_key'], 'n': (t.get('line_display_name') or '') } for t in m['line_chats'] if t.get('db_key')]
     i = h.index("const HKS=["); j = h.index("\n", i)
     h = h[:i] + ("const HKS=" + J(staff) + ";\nconst HK_DB=" + ('true' if hs else 'false') + ",HAS_STAFF=" + ('true' if hs.get('has_staff') else 'false')
-                 + ";\nlet HK_GROUP=" + J(hs.get('group') or '') + ";\nconst RMZ=" + J(rooms) + ";\nconst LCH=" + J(chats) + ";") + h[j:]
+                 + ";\nlet HK_GROUP=" + J(hs.get('group') or '') + ";\nconst HK_DOW=" + str((datetime.date.fromisoformat(REF).weekday() + 1) % 7) + ";\nconst RMZ=" + J(rooms) + ";\nconst LCH=" + J(chats) + ";") + h[j:]
     # แขกล่าสุดของห้อง
     i = h.index("const GUESTS={"); j = h.index("};", i) + 2
     h = h[:i] + "const GUESTS=" + J(guests_by_room()) + ";" + h[j:]
