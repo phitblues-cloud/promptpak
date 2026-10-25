@@ -328,7 +328,7 @@ function compModal(k0){
   const isNew=!k0,k=k0||{};
   const K={name:k.name||'',short:k.short||'',type:k.type||'',site:k.site||'',tax:String(k.tax||'').replace(/\D/g,''),branch:k.hq||'สำนักงานใหญ่',addr:k.addr||'',
     pay:k.pay||'',credit:String(k.credit||''),cname:k.cname||'',crole:k.crole||'',cphone:k.phone||'',cemail:k.email||'',cline:k.cline||'',cdecide:!!k.cdecide};
-  const STEPS=['ข้อมูลบริษัท','ใบกำกับภาษีและการชำระเงิน','ผู้ติดต่อ','ตรวจสอบและยืนยัน'],LAST=STEPS.length;
+  const STEPS=['ข้อมูลบริษัท','ใบกำกับภาษี (ถ้ามี)','ผู้ติดต่อ','ตรวจสอบและยืนยัน'],LAST=STEPS.length;
   let step=1,err='',busy=false;
   const inp=(id,lab,key,o={})=>`<div class="fld${o.full?' full':''}"><label for="${id}">${lab}</label><input id="${id}" data-kk="${key}" ${o.im?`inputmode="${o.im}"`:''} ${o.ml?`maxlength="${o.ml}"`:''} placeholder="${o.ph||''}" value="${esc(K[key]||'')}"></div>`;
   const chips=(key,list,lab,lb)=>`<div class="fld full"><span class="lb">${lab}</span><div class="regchips">${list.map(x=>`<button type="button" data-ckk="${key}" data-cv="${x}" aria-pressed="${K[key]===x}">${lb?lb(x):x}</button>`).join('')}</div></div>`;
@@ -336,22 +336,21 @@ function compModal(k0){
     if(step===1) return inp('k1','ชื่อบริษัท / หน่วยงาน *','name',{ph:'เช่น บริษัท ตัวอย่าง จำกัด',full:true})+inp('k2','ชื่อย่อ (แสดงบนการ์ดหน้าแรก)','short',{ph:'เช่น ตัวอย่าง'})
       +'<div></div>'+chips('type',COTYPE,'ประเภทธุรกิจ *')+inp('k3','สถานที่ทำงานใกล้โรงแรม (ถ้ามี)','site',{ph:'เช่น โรงงาน/หน้างาน ต.โคกสูง อ.อุบลรัตน์',full:true})
       +'<small class="hint full" style="margin-top:-.5rem">ที่ที่พนักงานของบริษัทมาทำงานระหว่างพักกับเรา ซึ่งอาจไม่ใช่ที่อยู่ออกใบกำกับภาษี</small>';
-    if(step===2) return inp('k4','เลขประจำตัวผู้เสียภาษี (13 หลัก) *','tax',{im:'numeric',ml:13,ph:'0105XXXXXXXXX'})+inp('k5','สำนักงานใหญ่ / สาขา','branch',{ph:'สำนักงานใหญ่ หรือ สาขาที่ 00001'})
-      +inp('k6','ที่อยู่สำหรับออกใบกำกับภาษี *','addr',{ph:'เลขที่ ถนน ตำบล อำเภอ จังหวัด รหัสไปรษณีย์',full:true})
-      +chips('pay',Object.keys(COPAY),'วิธีชำระค่าห้อง',x=>COPAY[x])+(K.pay==='credit'?inp('k7','เครดิต (วัน)','credit',{im:'numeric',ml:3,ph:'เช่น 30'}):'');
+    if(step===2) return inp('k4','เลขประจำตัวผู้เสียภาษี (13 หลัก)','tax',{im:'numeric',ml:13,ph:'0105XXXXXXXXX'})+inp('k5','สำนักงานใหญ่ / สาขา','branch',{ph:'สำนักงานใหญ่ หรือ สาขาที่ 00001'})
+      +inp('k6','ที่อยู่สำหรับออกใบกำกับภาษี','addr',{ph:'เลขที่ ถนน ตำบล อำเภอ จังหวัด รหัสไปรษณีย์',full:true})
+      +'<small class="hint full">ไม่บังคับ · กรอกเมื่อบริษัทต้องการใบกำกับภาษี</small>';
     if(step===3) return inp('k8','ชื่อผู้ติดต่อ *','cname',{ph:'เช่น คุณสมศักดิ์ ใจดี'})+inp('k9','ตำแหน่ง / บทบาท','crole',{ph:'เช่น ฝ่ายจัดซื้อ, ผู้จองห้องให้ทีม'})
       +inp('k10','เบอร์โทร *','cphone',{im:'tel',ph:'08X-XXX-XXXX'})+inp('k11','อีเมล (ส่งใบแจ้งหนี้)','cemail',{ph:'account@company.co.th'})+inp('k12','LINE','cline',{ph:'ชื่อ LINE หรือ ID'})
       +`<div class="fld"><span class="lb">&nbsp;</span><label class="ck" style="display:flex;gap:.5rem;align-items:center;min-height:3rem"><input type="checkbox" id="k13" ${K.cdecide?'checked':''} style="width:1.3rem;height:1.3rem;min-height:0;accent-color:var(--pink)"> เป็นผู้ตัดสินใจเลือกที่พัก</label></div>`;
     const kv=(a,b)=>`<div class="kvr"><span>${a}</span><div><b>${esc(b||'-')}</b></div></div>`;
     return `<div class="full regsum">${kv('ชื่อบริษัท',K.name)}${kv('ชื่อย่อ',K.short)}${kv('ประเภทธุรกิจ',K.type)}${kv('สถานที่ทำงานใกล้โรงแรม',K.site)}${kv('เลขผู้เสียภาษี',K.tax)}${kv('สำนักงานใหญ่ / สาขา',K.branch)}${kv('ที่อยู่ออกใบกำกับภาษี',K.addr)}
-      ${kv('วิธีชำระ',K.pay?coPayTxt(K):'')}${kv('ผู้ติดต่อ',K.cname+(K.crole?' · '+K.crole:'')+(K.cdecide?' (ผู้ตัดสินใจ)':''))}${kv('เบอร์โทร',K.cphone)}${kv('อีเมล',K.cemail)}${kv('LINE',K.cline)}</div>`;
+      ${kv('ผู้ติดต่อ',K.cname+(K.crole?' · '+K.crole:'')+(K.cdecide?' (ผู้ตัดสินใจ)':''))}${kv('เบอร์โทร',K.cphone)}${kv('อีเมล',K.cemail)}${kv('LINE',K.cline)}</div>`;
   }
   function vErr(){
     if(step===1){if(!K.name.trim())return 'กรุณากรอกชื่อบริษัท';if(!K.type)return 'กรุณาเลือกประเภทธุรกิจ';
       const n=strip(K.name).toLowerCase(),d=CO.find(x=>x.id!==k.id&&strip(x.name).toLowerCase()===n);if(d)return `${d.name} มีในระบบแล้ว`}
-    if(step===2){if(K.tax.length!==13)return 'เลขผู้เสียภาษีต้องมี 13 หลัก';if(!thaiIdOk(K.tax))return 'เลขผู้เสียภาษีไม่ถูกต้อง กรุณาตรวจอีกครั้ง';
-      const d=CO.find(x=>x.id!==k.id&&String(x.tax||'').replace(/\D/g,'')===K.tax);if(d)return `เลขผู้เสียภาษีนี้คือ ${d.name} ซึ่งมีในระบบแล้ว`;
-      if(!K.addr.trim())return 'กรุณากรอกที่อยู่สำหรับออกใบกำกับภาษี';if(K.pay==='credit'&&!(+K.credit>0))return 'กรุณากรอกจำนวนวันเครดิต'}
+    if(step===2&&K.tax){if(K.tax.length!==13)return 'เลขผู้เสียภาษีต้องมี 13 หลัก';if(!thaiIdOk(K.tax))return 'เลขผู้เสียภาษีไม่ถูกต้อง กรุณาตรวจอีกครั้ง';
+      const d=CO.find(x=>x.id!==k.id&&String(x.tax||'').replace(/\D/g,'')===K.tax);if(d)return `เลขผู้เสียภาษีนี้คือ ${d.name} ซึ่งมีในระบบแล้ว`}
     if(step===3){if(!K.cname.trim())return 'กรุณากรอกชื่อผู้ติดต่อ';if(digits(K.cphone).length<9)return 'กรุณากรอกเบอร์โทรให้ครบ';
       if(K.cemail&&!/^\S+@\S+\.\S+$/.test(K.cemail))return 'อีเมลไม่ถูกต้อง'}
     return ''}
@@ -373,11 +372,11 @@ function compModal(k0){
   function save(){
     busy=true;draw();
     const cid=isNew?'K'+Date.now().toString(36).toUpperCase():k.id;
-    const d={name:K.name.trim(),short:K.short.trim(),type:K.type,site:K.site.trim(),tax:K.tax,branch:K.branch.trim()||'สำนักงานใหญ่',addr:K.addr.trim(),pay:K.pay,credit:K.pay==='credit'?String(+K.credit||0):'0',
+    const d={name:K.name.trim(),short:K.short.trim(),type:K.type,site:K.site.trim(),tax:K.tax,branch:K.branch.trim()||'สำนักงานใหญ่',addr:K.addr.trim(),
       cname:K.cname.trim(),crole:K.crole.trim(),cphone:K.cphone.trim(),cemail:K.cemail.trim(),cline:K.cline.trim(),cdecide:K.cdecide?'1':'0'};
     ppCust('comp',{gid:cid,data:d}).then(()=>{
       const o=isNew?{id:cid,contact:null,promos:[]}:k;
-      Object.assign(o,{name:d.name,short:d.short,type:d.type,site:d.site,tax:d.tax,hq:d.branch,addr:d.addr,pay:d.pay,credit:+d.credit,cname:d.cname,crole:d.crole,phone:d.cphone,email:d.cemail,cline:d.cline,cdecide:K.cdecide});
+      Object.assign(o,{name:d.name,short:d.short,type:d.type,site:d.site,tax:d.tax,hq:d.branch,addr:d.addr,cname:d.cname,crole:d.crole,phone:d.cphone,email:d.cemail,cline:d.cline,cdecide:K.cdecide});
       if(isNew)CO.push(o);
       closeModal();S.detail={kind:'k',id:cid,tab:'info'};render();window.scrollTo({top:0,behavior:'smooth'});
       toast(isNew?`เพิ่ม ${d.name} แล้ว`:'บันทึกข้อมูลบริษัทแล้ว');
@@ -479,7 +478,7 @@ function regModal(preId,q0,ph){
     company:P.company||'',purpose:P.purpose||'',special:P.special||''};
   const D={t:(P.doc&&P.doc.t)||'id',no:(P.doc&&P.doc.no)||'',consent:false,img:'',had:!!(P.doc&&P.doc.img),owner:!!(P.doc&&P.doc.no)};
   const GEN=['ชาย','หญิง','เพศหลากหลาย','ไม่ระบุ'],PUR=['ทำงาน','แวะพัก','งานบุญ','ราชการ/อบรม'];
-  const STEPS=['ข้อมูลส่วนตัวและบัตร','ติดต่อและที่อยู่','การเข้าพัก','ตรวจสอบและยืนยัน'],LAST=STEPS.length;
+  const STEPS=['ข้อมูลส่วนตัวและบัตร','ติดต่อ ที่อยู่ และบริษัท','การเข้าพัก','ตรวจสอบและยืนยัน'],LAST=STEPS.length;
   let step=1,err='',busy=false;
   const nextNo=()=>pbm('M'+String(memSeq+1).padStart(3,'0'));
   const inp=(id,lab,k,o={})=>`<div class="fld${o.full?' full':''}"><label for="${id}">${lab}</label><input id="${id}" data-k="${k}" ${o.type?`type="${o.type}"`:''} ${o.im?`inputmode="${o.im}"`:''} placeholder="${o.ph||''}" value="${esc(R[k]||'')}"></div>`;
@@ -489,9 +488,8 @@ function regModal(preId,q0,ph){
     if(step===1) return inp('rg1','ชื่อ-สกุล *','name',{ph:'เช่น คุณสมชาย ใจดี',full:true})+chips('gender',GEN,'เพศ')+inp('rg3','วันเกิด (ถ้ามี)','bday',{type:'date'})
       +'<div class="full regsec">เอกสารยืนยันตัวตน</div>'+docFields(D)+(pre&&pre.doc&&!pre.doc.no?`<div class="full hint">ลูกค้ามีเอกสารในระบบแล้ว (${esc(pre.doc.mask)}) · กรอกเลขอีกครั้งเพื่อยืนยัน</div>`:'');
     if(step===2) return inp('rg4','เบอร์โทร *','phone',{type:'tel',im:'tel',ph:'08X-XXX-XXXX'})+inp('rg5','Line ID','line',{ph:'ชื่อ LINE หรือ ID'})
-      +inp('rg6','ที่อยู่','addr',{ph:'บ้านเลขที่ หมู่ ตำบล อำเภอ',full:true})+inp('rg7','จังหวัด','prov',{ph:'เช่น ขอนแก่น'});
-    if(step===3) return `<div class="fld full"><label for="rg8">บริษัท (ถ้ามี)</label><select id="rg8"><option value="">— ไม่มี —</option>${CO.map(x=>`<option value="${x.id}" ${x.id===R.company?'selected':''}>${esc(x.name)}</option>`).join('')}</select><small class="hint">บริษัทใหม่ เพิ่มได้ที่แท็บ "บริษัท" → ปุ่ม "เพิ่ม"</small></div>`
-      +chips('purpose',PUR,'วัตถุประสงค์การเข้าพัก (ถ้ามี)')+inp('rg9','ความต้องการพิเศษ','special',{ph:'เช่น ไม่ทานเนื้อหมู ขอห้องชั้นล่าง',full:true});
+      +inp('rg6','ที่อยู่','addr',{ph:'บ้านเลขที่ หมู่ ตำบล อำเภอ',full:true})+inp('rg7','จังหวัด','prov',{ph:'เช่น ขอนแก่น'})+`<div class="fld full"><label for="rg8">บริษัท (ถ้ามี)</label><select id="rg8"><option value="">— ไม่มี —</option>${CO.map(x=>`<option value="${x.id}" ${x.id===R.company?'selected':''}>${esc(x.name)}</option>`).join('')}</select><small class="hint">บริษัทใหม่ เพิ่มได้ที่แท็บ "บริษัท" → ปุ่ม "เพิ่ม"</small></div>`;
+    if(step===3) return chips('purpose',PUR,'วัตถุประสงค์การเข้าพัก (ถ้ามี)')+inp('rg9','ความต้องการพิเศษ','special',{ph:'เช่น ไม่ทานเนื้อหมู ขอห้องชั้นล่าง',full:true});
     const kv=(k,v)=>`<div class="kvr"><span>${k}</span><div><b>${esc(v||'-')}</b></div></div>`;
     return `<div class="full regsum">${pre?`<div class="sum" style="margin-bottom:.6rem">สมัครให้ลูกค้าเดิมในระบบ: <b>${esc(pre.name)}</b> (ข้อมูลจะอัปเดตตามนี้)</div>`:''}
       ${kv('ชื่อ-สกุล',R.name)}${kv('เพศ',R.gender)}${kv('วันเกิด',R.bday?bdFmt(R.bday):'')}${kv(DOCT[D.t],docMask(D.t,D.t==='id'?D.no.replace(/\D/g,''):D.no)+(D.img?' · แนบภาพแล้ว (ลูกค้ายินยอม)':''))}${kv('เบอร์โทร',R.phone)}${kv('Line ID',R.line)}${kv('ที่อยู่',R.addr)}${kv('จังหวัด',R.prov)}
@@ -506,7 +504,7 @@ function regModal(preId,q0,ph){
       <button class="btn" id="rgNext">${step<LAST?'ถัดไป':busy?'กำลังบันทึก…':'ยืนยันสมัครสมาชิก'}</button></div>`,()=>{
       $('msheet').classList.add('wide');
       if(step===1)docBind(D,draw);
-      if(step===3){const sc=$('rg8');if(sc)sc.onchange=()=>{R.company=sc.value}}
+      if(step===2){const sc=$('rg8');if(sc)sc.onchange=()=>{R.company=sc.value}}
       $('msheet').querySelectorAll('[data-k]').forEach(e=>e.oninput=e.onchange=()=>{R[e.dataset.k]=e.value});
       $('msheet').querySelectorAll('[data-ck]').forEach(b=>b.onclick=()=>{const k=b.dataset.ck;R[k]=R[k]===b.dataset.cv?'':b.dataset.cv;draw()});
       if($('rgBack'))$('rgBack').onclick=()=>{err='';step--;draw()};
@@ -566,7 +564,7 @@ def custprof(h):
         # หน้าข้อมูลบริษัท: ข้อมูลครบ + แก้ไขได้
         ("<div class=\"dbox\"><h4>ข้อมูลบริษัท</h4>${row('ชื่อบริษัท',`<b>${esc(k.name)}</b>`)+row('เลขผู้เสียภาษี',`<b>${k.tax}</b>`)+row('สำนักงานใหญ่ / สาขา',`<b>${esc(k.hq)}</b>`)\n    +row('ผู้ติดต่อ',ct?`<button class=\"linkbtn\" data-open=\"c:${ct.id}\">${esc(ct.name)}</button>`:'<b>-</b>')+row('เบอร์โทร',`<b>${esc(k.phone)}</b>`)+row('อีเมล',`<b>${esc(k.email)}</b>`)+row('ที่อยู่',`<b>${esc(k.addr)}</b>`)}",
          "<div class=\"dbox\"><h4>ข้อมูลบริษัท <button class=\"btn ghost sm\" data-coedit>${ico('pen')}แก้ไขข้อมูล</button></h4>${row('ชื่อบริษัท',`<b>${esc(k.name)}</b>`)+row('ชื่อย่อ',`<b>${esc(k.short||'-')}</b>`)+row('ประเภทธุรกิจ',`<b>${esc(k.type||'-')}</b>`)+row('สถานที่ทำงานใกล้โรงแรม',`<b>${esc(k.site||'-')}</b>`)"
-         "+row('เลขผู้เสียภาษี',`<b>${esc(k.tax||'-')}</b>`)+row('สำนักงานใหญ่ / สาขา',`<b>${esc(k.hq||'-')}</b>`)+row('ที่อยู่ออกใบกำกับภาษี',`<b>${esc(k.addr||'-')}</b>`)+row('วิธีชำระค่าห้อง',`<b>${esc(coPayTxt(k))}</b>`)"
+         "+row('เลขผู้เสียภาษี',`<b>${esc(k.tax||'-')}</b>`)+row('สำนักงานใหญ่ / สาขา',`<b>${esc(k.hq||'-')}</b>`)+row('ที่อยู่ออกใบกำกับภาษี',`<b>${esc(k.addr||'-')}</b>`)"
          "+row('ผู้ติดต่อ',(ct?`<button class=\"linkbtn\" data-open=\"c:${ct.id}\">${esc(k.cname||ct.name)}</button>`:`<b>${esc(k.cname||'-')}</b>`)+(k.crole?` <span class=\"hint\">${esc(k.crole)}</span>`:'')+(k.cdecide?' <span class=\"badge m-yes\">ผู้ตัดสินใจ</span>':''))"
          "+row('เบอร์โทร',`<b>${esc(k.phone||'-')}</b>`)+row('อีเมล',`<b>${esc(k.email||'-')}</b>`)+row('LINE',`<b>${esc(k.cline||'-')}</b>`)}"),
         ("function closeModal(){$('mscrim').classList.remove('open');",
