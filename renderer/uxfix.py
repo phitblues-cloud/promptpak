@@ -204,6 +204,8 @@ def apply(M):
         M['home'] = homepop(M['home'])
     if 'fin' in M:
         M['fin'] = finsave(M['fin'])
+    if 'mkt' in M:
+        M['mkt'] = mktsend(M['mkt'])
     for k in ('hk', 'crmtool', 'cust', 'crm', 'mkt'):
         if k in M:
             M[k] = modsave(M[k], k)
@@ -1331,3 +1333,20 @@ def modsave(h, key):
     data = _j.dumps(st, ensure_ascii=False).replace('</', '<\\/')
     k = h.rindex('</script>')
     return h[:k] + '\n/* ---- บันทึกจริง ---- */\nconst PPM_STATE=' + data + ';\n' + PPM_HELPER + '\ntry{\n' + sp['js'] + '\n}catch(e){console.error(e)}\n' + h[k:]
+
+
+# ---------- การตลาด: ปุ่มไมค์ (ยังจำลอง) → ปุ่มส่งข้อความ ----------
+SEND_SVG = ('<svg viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" stroke-width="2.2" '
+            'stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 19V5M5.5 11.5 12 5l6.5 6.5"/></svg>')
+
+
+def mktsend(h):
+    h = _r(h, [
+        ('<button class="mic" id="micBtn" aria-label="สั่งด้วยเสียง">🎙</button>', '<button class="mic" id="micBtn" aria-label="ส่งให้ AI">' + SEND_SVG + '</button>'),
+        ('<button class="mic" id="kmic" aria-label="สั่งด้วยเสียง">🎙</button>', '<button class="mic" id="kmic" aria-label="ส่งให้ AI">' + SEND_SVG + '</button>'),
+        ("$('#micBtn').onclick=()=>toast('ในระบบจริงกดค้างเพื่อพูดสั่งงานได้');",
+         "$('#micBtn').onclick=()=>{const i=$('#aiIn');if(!i.value.trim()){i.focus();toast('พิมพ์สิ่งที่อยากให้ AI ปรับก่อน แล้วกดส่ง');return}i.onkeydown({key:'Enter',target:i})};"),
+        ("if(q('#kmic')){toast('ในระบบจริงกดค้างเพื่อพูดสั่งงานได้');return}",
+         "if(q('#kmic')){const i=$('#kaiIn');if(!i||!i.value.trim()){i&&i.focus();toast('พิมพ์สิ่งที่อยากให้ AI ปรับก่อน แล้วกดส่ง');return}i.dispatchEvent(new KeyboardEvent('keydown',{key:'Enter',bubbles:true}));return}"),
+    ], 'mkt-send')
+    return _css(h, ".mic{display:grid;place-items:center;cursor:pointer;transition:transform .15s}.mic:active{transform:scale(.92)}")
