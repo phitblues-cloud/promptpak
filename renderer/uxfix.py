@@ -1391,7 +1391,7 @@ IDEA_CSS = r"""
 .icard.pt .ft>span{flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .idel{flex:none;width:28px;height:28px;margin:-6px -6px -6px 0;border:0;background:none;border-radius:50%;color:#B3A3AD;display:grid;place-items:center;padding:0}
 .idel:hover,.idel:active{background:#F8E1E4;color:var(--bad)}
-.idel svg{width:16px;height:16px}
+.idel svg{width:15px;height:15px}
 .iunh{color:var(--plum);font-weight:600;cursor:pointer;text-decoration:underline}
 .dlgfoot .bdel{margin-right:auto;color:var(--bad);background:none;border:1px solid #EBC5CC}
 .icard.pt .check{top:13px;right:13px;width:22px;height:22px;font-size:12px}
@@ -1421,12 +1421,12 @@ function cardHTML(i){const on=selected.has(i.id),k=boxOf(i.id),tn=TNOF(i),cat=CA
  return `<article class="icard pt ${on?'on':''}" data-card="${i.id}" tabindex="0" aria-pressed="${on}">${ck}<span class="k ${tn}"><i></i><b>${cat}</b></span>
   <h3>${i.t}</h3><div class="ft"><span>${i.url?`${i.src||''}${i.date?' · '+i.date:''}`:(i.src||'')}</span>${del}</div></article>`}
 var AISTAT=window.AISTAT||{insight:null,news:null};
-var TRASH='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 7h16M9 7V4.5h6V7M6.5 7l1 13h9l1-13M10 11v6M14 11v6"/></svg>';
+var TRASH='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M6.5 6.5l11 11M17.5 6.5l-11 11"/></svg>';var PP_OWN=!!document.querySelector('[data-ai]');
 window.PP_HID=window.PP_HID||[];
 function hidKey(x){return String(x.t||'').replace(/<[^>]*>/g,'').trim()}
 function isHid(x){return (window.PP_HID||[]).includes(hidKey(x))}
 function hideCard(id){const it=all().find(x=>x.id===id);if(!it)return;window.PP_HID.push(hidKey(it));selected.delete(id);
- try{$('#dlg').open&&$('#dlg').close()}catch(_){}renderFeed();renderChips();think();try{window.__ppm&&window.__ppm()}catch(_){}toast('ลบการ์ดแล้ว · กด "คืนการ์ดที่ลบ" ใต้หัวกล่องเพื่อเอากลับ')}
+ try{$('#dlg').open&&$('#dlg').close()}catch(_){}renderFeed();renderChips();think();try{window.__ppm&&window.__ppm()}catch(_){}toast('ลบการ์ดแล้ว · เอากลับได้ที่ "คืนการ์ดที่ลบ" ใต้หัวกล่อง')}
 function unhide(box){const ks=feeds[box==='hotel'?'hotel':sub].items.map(hidKey);window.PP_HID=window.PP_HID.filter(k=>!ks.includes(k));
  renderFeed();try{window.__ppm&&window.__ppm()}catch(_){}}
 function thTime(s){try{const d=new Date(s),M=['ม.ค.','ก.พ.','มี.ค.','เม.ย.','พ.ค.','มิ.ย.','ก.ค.','ส.ค.','ก.ย.','ต.ค.','พ.ย.','ธ.ค.'];
@@ -1434,7 +1434,7 @@ function thTime(s){try{const d=new Date(s),M=['ม.ค.','ก.พ.','มี.ค.
 function ideaHead(){const a=AISTAT.insight,b=AISTAT.news,hs=$('[data-box="hotel"]'),ns=$('[data-src="news"]');
  const hp=hs&&hs.parentElement.querySelector('.feedsrc');
  if(hp){if(a&&a.items&&a.items.length){const s=a.basis||{};hp.innerHTML=`Agent Insight วิเคราะห์เมื่อ ${thTime(a.at)} · จากข้อมูลในระบบ <b>${s.bookings} การจอง · ${s.guests} ลูกค้า · ${s.companies} บริษัท</b>${s.sample?` (เป็นข้อมูลตัวอย่าง ${s.sample} การจอง)`:''}`}
-  else hp.textContent=a&&a.loading?'Agent Insight กำลังวิเคราะห์ข้อมูลจริง… (ระหว่างนี้แสดงตัวเลขที่ระบบคำนวณ)':'ตัวเลขที่ระบบคำนวณจากข้อมูลการจอง'+(a&&a.error?' · Agent Insight ยังไม่พร้อม: '+a.error:'')}
+  else hp.textContent=a&&a.loading?'Agent Insight กำลังวิเคราะห์ข้อมูลจริง… (ระหว่างนี้แสดงตัวเลขที่ระบบคำนวณเอง)':a&&a.error?'Agent Insight วิเคราะห์ไม่สำเร็จ ('+a.error+') ตอนนี้จึงแสดงตัวเลขที่ระบบคำนวณเองแทน'+(PP_OWN?' · กด ↻ วิเคราะห์ใหม่ เพื่อลองอีกครั้ง':' · ระบบจะลองใหม่เองใน 30 นาที'):'ตัวเลขที่ระบบคำนวณเองจากข้อมูลการจอง'}
  if(ns){if(b&&(b.news||[]).length+(b.trends||[]).length)ns.textContent=`AI ค้นจากเว็บข่าวสาธารณะ สัปดาห์ละครั้ง (วันจันทร์) · ล่าสุด ${thTime(b.at)} · กดการ์ดเพื่ออ่านสรุปและลิงก์ข่าวต้นฉบับ`;
   else if(b&&b.loading)ns.textContent='AI กำลังค้นข่าวรอบโรงแรมจากเว็บ… (ใช้เวลาราว 1 นาที)';
   else if(b&&b.at)ns.textContent='AI ค้นเว็บรอบล่าสุดยังไม่พบข่าวที่เกี่ยวกับโรงแรม'+(b.error?' · '+b.error:'');

@@ -450,7 +450,9 @@ ok('AI สรุปกล่อง CRM: กันโค้ดแปลกปล�
 {
   const it = (k, x = {}) => ({ cat: 'ห้องว่าง', tn: 'hi', n: '95%', u: 'ว่าง', t: 'ข้อ ' + k, found: 'พบ', nums: [{ l: 'อาทิตย์', v: '5%' }], why: 'เพราะ', act: 'ทำ', src: 'booking', ...x });
   script.push(p => { const d = JSON.parse(p.messages[0].content); assert.ok(d.rooms_total > 0 && d.bookings.active > 0 && d.occupancy_by_weekday_last60_next14.length === 7);
-    return say(JSON.stringify({ items: [it(1, { t: 'ห้องว่าง <script>x</script>' }), it(2), it(3), it(4), it(5), it(6), { cat: 'ไม่มีหัวข้อ' }] }))(); });
+    assert.equal(p.tool_choice.name, 'save_insights');
+    return { stop_reason: 'tool_use', content: [{ type: 'tool_use', id: 'tu1', name: 'save_insights',
+      input: { items: [it(1, { t: 'ห้องว่าง <script>x</script>' }), it(2), it(3), it(4), it(5), it(6), { cat: 'ไม่มีหัวข้อ' }] } }] }; });
   let r = await call('/api/insight');
   assert.equal(r.body.items.length, 6); assert.ok(!r.body.items[0].t.includes('<script>')); assert.ok(r.body.basis.bookings > 0);
   r = await call('/api/insight'); assert.equal(r.body.items.length, 6);                     // ใช้ของเดิม ไม่เรียก AI ซ้ำ
