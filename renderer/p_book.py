@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 from patch_all import R, J
 from nb import *
+import datetime, re
 
 def book_item(b):
     o = {'id': 'b' + str(int(b['no'][4:])), 'no': b['no'], 'room': b['room'], 'start': b['start'], 'nights': b['nights'],
@@ -8,6 +9,37 @@ def book_item(b):
          'adults': b['adults'], 'kids': b['kids'], 'madeAt': b['madeAt'], 'note': b['note'], 'rate': b['rate'], 'purpose': b['purpose'],
          'bf': b.get('bf', 0), 'disc': b.get('disc', 0), 'code': b.get('promo', ''), 'email': b['email'], 'tax': b['tax'], 'cid': b['gid'], 'dep': b['dep'],
          'grp': b['grp'], 'mem': b['mem'], 'visits': b['visits'], 'lineNm': b['line'], 'lineOn': b['lineOn']}
+    # ข้อมูลลูกค้าสำหรับหน้ารายละเอียด: ที่อยู่ / บริษัทที่สังกัด / ความต้องการพิเศษ (ข้อมูลที่แก้ในโมดูลลูกค้ามาก่อน)
+    g = G.get(b['gid']) or {}
+    cs = (m.get('cust_state') or {}).get(b['gid']) or {}
+    addr = cs.get('addr') or g.get('address') or ''
+    if cs.get('prov') and cs['prov'] not in addr:
+        addr = (addr + ' จ.' + cs['prov']).strip()
+    o['gaddr'] = addr
+    o['worksite'] = b.get('worksite') or ''
+    # วันเกิด: ถ้าตรงกับคืนที่เข้าพัก ให้พนักงานอวยพรได้
+    bd = cs.get('bday') or g.get('birth_date') or ''
+    o['gbday'] = bd
+    if re.match(r'^\d{4}-\d{2}-\d{2}$', bd):
+        ref = datetime.date.fromisoformat(REF)
+        for k in range(b['start'], b['end'] + 1):
+            d = ref + datetime.timedelta(days=k - D0)
+            if (d.month, d.day) == (int(bd[5:7]), int(bd[8:10])):
+                o['bdayIn'] = d.isoformat(); break
+    # เลขบัตร/หนังสือเดินทาง: เจ้าของเห็นเต็ม · พนักงานเห็นแบบปิดบางส่วน
+    x = (m.get('cust_ids') or {}).get(b['gid'])
+    t, no = (x['t'], x['no']) if x else ('id', re.sub(r'\D', '', g.get('id_card_no') or ''))
+    if no:
+        if m.get('_role', 'owner') == 'owner':
+            txt = f'{no[0]}-{no[1:5]}-{no[5:10]}-{no[10:12]}-{no[12]}' if t == 'id' and len(no) == 13 else no
+        else:
+            txt = (f'{no[0]}-xxxx-xxxxx-xx-{no[12]}' if t == 'id' and len(no) == 13 else (no[:2] + 'x' * max(0, len(no) - 4) + no[-2:]))
+        o['gdoc'] = {'t': 'บัตรประชาชน' if t == 'id' else 'หนังสือเดินทาง', 'no': txt}
+    gc = cs.get('company') if cs.get('company') is not None else g.get('company_id')
+    o['gco'] = b.get('cname') or (CO[gc]['name_th'] if gc in CO else '')
+    o['gpref'] = cs.get('special') if cs.get('special') is not None else (g.get('preferences_note') or '')
+    sp = b.get('special')
+    o['bspec'] = (sp if isinstance(sp, str) else ', '.join(map(str, sp)) if isinstance(sp, list) else '') if sp else ''
     co = company_obj(b)
     if co:
         o['co'] = {'name': co['name'], 'tax': co['tax'], 'addr': co['addr'], 'hq': co['hq']}
