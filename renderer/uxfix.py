@@ -1437,7 +1437,7 @@ function ideaHead(){const a=AISTAT.insight,b=AISTAT.news,hs=$('[data-box="hotel"
   else hp.textContent=a&&a.loading?'Agent Insight กำลังวิเคราะห์ข้อมูลจริง… (ระหว่างนี้แสดงตัวเลขที่ระบบคำนวณเอง)':a&&a.error?'Agent Insight วิเคราะห์ไม่สำเร็จ ('+a.error+') ตอนนี้จึงแสดงตัวเลขที่ระบบคำนวณเองแทน'+(PP_OWN?' · กด ↻ วิเคราะห์ใหม่ เพื่อลองอีกครั้ง':' · ระบบจะลองใหม่เองใน 30 นาที'):'ตัวเลขที่ระบบคำนวณเองจากข้อมูลการจอง'}
  if(ns){if(b&&(b.news||[]).length+(b.trends||[]).length)ns.textContent=(sub==='trend'?'เทรนด์การตลาดของโรงแรมช่วงนี้':'ข่าวรอบเขื่อนอุบลรัตน์ → น้ำพอง → ขอนแก่น')+` · AI ค้นเว็บสัปดาห์ละครั้ง (วันจันทร์) · ล่าสุด ${thTime(b.at)} · กดการ์ดเพื่ออ่านสรุปและลิงก์ต้นฉบับ`;
   else if(b&&b.loading)ns.textContent='AI กำลังค้นข่าวรอบโรงแรมจากเว็บ… (ใช้เวลาราว 1 นาที)';
-  else if(b&&b.at)ns.textContent='AI ค้นเว็บรอบล่าสุดยังไม่พบข่าวที่เกี่ยวกับโรงแรม'+(b.error?' · '+b.error:'');
+  else if(b&&b.at){const rw=b.raw||{},n=(rw.news||0)+(rw.trends||0);ns.textContent=(!b.searches?'รอบล่าสุด AI ไม่ได้ค้นเว็บ':n?`AI ค้นเว็บ ${b.searches} ครั้ง พบ ${n} เรื่อง แต่ลิงก์ไม่ตรงกับผลค้นจริง จึงไม่แสดง (กันข่าวที่ AI แต่ง)`:`AI ค้นเว็บ ${b.searches} ครั้ง ยังไม่พบเรื่องที่เกี่ยวกับโรงแรม`)+' · กด ↻ ค้นข่าวใหม่ เพื่อลองอีกครั้ง'+(b.error?' · '+b.error:'')}
   else ns.textContent='ตัวอย่างหน้าตา (ยังไม่ได้ค้นข่าวจริง)'+(b&&b.error?' · '+b.error:'')}}
 var _rf0=renderFeed;renderFeed=function(){_rf0();ideaHead();
  [['hotel',$('[data-box="hotel"]')&&$('[data-box="hotel"]').parentElement.querySelector('.feedsrc')],['news',$('[data-src="news"]')]].forEach(([bx,el])=>{if(!el)return;
