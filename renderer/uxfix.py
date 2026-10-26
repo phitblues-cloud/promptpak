@@ -206,7 +206,7 @@ def apply(M):
         M['fin'] = finsave(M['fin'])
     if 'mkt' in M:
         import ctx
-        M['mkt'] = ideacards(mktsend(M['mkt']), (ctx.MOCK or {}).get('_role', 'owner') == 'owner')
+        M['mkt'] = planai(ideacards(mktsend(M['mkt']), (ctx.MOCK or {}).get('_role', 'owner') == 'owner'))
     for k in ('hk', 'crmtool', 'cust', 'crm', 'mkt'):
         if k in M:
             M[k] = modsave(M[k], k)
@@ -1498,3 +1498,74 @@ def ideacards(h, owner):
     k = h.rindex('</script>')
     h = h[:k] + IDEA_JS + h[k:]
     return _css(h, IDEA_CSS)
+
+
+# ---------- แผนการตลาดจาก AI: เลือก insight แล้ว Claude เสนอ 2–3 แผน · ช่องพิมพ์ส่งให้ AI จริง (api/plan.js) ----------
+PLAN_CSS = r"""
+.pfrom{display:inline-block;font-size:12px;color:var(--plum);background:#F2EAFA;border-radius:8px;padding:2px 8px;margin:0 0 6px}
+.pnew{background:#E3F2EA;color:#2E7D55;border-radius:6px;font-size:11px;padding:1px 6px;margin-left:6px;vertical-align:middle}
+.pcalc{font-size:11.5px;color:#9C8A95;margin-top:6px;line-height:1.5}
+.perr{font-size:12.5px;color:var(--warn);background:#FBEFD9;border-radius:10px;padding:6px 10px;margin:0 0 4px}
+"""
+
+PLAN_JS = r"""
+/* ---------- แผนการตลาดจาก AI ---------- */
+var PLAN_SEQ=0,PLAN_AT='',PLAN_ERR='';
+function itemCtx(i){const n=(i.nums||[]).map(x=>typeof x==='string'?x:`${x.l} ${x.v}`).join(' · ');
+ return {t:String(i.t||''),detail:String(i.found||i.why||i.d||i.sum||''),nums:n+(i.act?' · ควรทำ: '+i.act:'')}}
+function planCtx(extra){return Object.assign({items:[...selected.values()].map(itemCtx),
+ segments:segments.map(s=>({id:s.id,n:s.n,c:s.c,u:s.u,line:s.line,email:s.email,nights:s.nights})),
+ promos:promos.map(p=>({id:p.id,n:p.n,s:p.s||'',f:p.f})),price:PRICE},extra||{})}
+async function callPlan(body){const top=window.parent!==window?window.parent:window;
+ const r=await fetch(top.location.origin+'/api/plan',{method:'POST',credentials:'same-origin',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
+ const d=await r.json().catch(()=>({error:'ระบบตอบกลับผิดรูปแบบ'}));if(!r.ok||d.error)throw new Error(niceErr(d.error||('รหัส '+r.status)));return d}
+function toMenu(p,sel){if(p.promo==='new'&&p.newPromo){const id='pa'+Date.now().toString(36)+Math.floor(Math.random()*99);promos.push({id,n:p.newPromo.n,s:p.newPromo.s,f:p.newPromo.f,ai:1});p.promo=id;p.newP=1}
+ return Object.assign({},p,{thread:[],kpi:null,kpiSet:false,ai:1,fromT:(p.from||[]).map(n=>sel[n-1]&&sel[n-1].t).filter(Boolean)})}
+function fcOf(m){const f=forecast(m.seg,m.ch,m.promo);if(f.none||!m.acc)return f;
+ const lo=Math.max(1,Math.round(f.reach*m.acc[0]/100)),hi=Math.max(lo,Math.round(f.reach*m.acc[1]/100));
+ return Object.assign({},f,{lo,hi,nLo:Math.round(lo*f.n),nHi:Math.round(hi*f.n),rLo:lo*f.n*f.rate,rHi:hi*f.n*f.rate,a:m.acc[0],b:m.acc[1]})}
+function calcTxt(m,f){if(f.none)return '';return `${f.reach} ${f.unit}ที่ติดต่อได้ × ตอบรับ ${f.a!=null?f.a:20}–${f.b!=null?f.b:35}% × ${f.n} คืน × ${baht(f.rate)}`+(m.accWhy?` · ${m.accWhy}`:(m.ai?'':' (อัตราตอบรับเป็นค่าสมมติ)'))}
+function planHint(){const t=PLAN_AT?(()=>{const d=new Date(PLAN_AT);return `${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')} น.`})():'';
+ return (PLAN_ERR?`<p class="perr">AI คิดแผนไม่สำเร็จ (${PLAN_ERR}) จึงแสดงแผนสำเร็จรูปแทน · เลือกการ์ดใหม่เพื่อลองอีกครั้ง</p>`:'')+
+ `<p class="hint" style="margin:0">${PLAN_ERR?'แผนสำเร็จรูป':'AI เสนอ'} ${menus.length} แผน${t&&!PLAN_ERR?' · คิดเมื่อ '+t:''} · แตะแผนเพื่อปรับ หรือพิมพ์ด้านล่างให้ AI คิดแผนใหม่</p>`}
+function fallbackMenus(){let x=applySeg(buildMenus());if(x==='risk')x=[];if(Array.isArray(x))x.forEach(m=>{m.thread=[];m.kpi=null;m.kpiSet=false});return x}
+think=function(){chosen=null;clearTimeout(thinkT);$('#aireply').hidden=true;setPh();
+ if(!selected.size){menus=[];PLAN_ERR='';renderBasket();return}
+ const seq=++PLAN_SEQ,sel=[...selected.values()];
+ $('#bbody').innerHTML=`<div class="thinking"><i></i>AI กำลังคิดแผนจาก ${selected.size} เรื่องที่เลือก… ราว 15 วินาที</div>`;
+ callPlan(planCtx({mode:'new'})).then(d=>{if(seq!==PLAN_SEQ)return;PLAN_ERR='';PLAN_AT=d.at||'';menus=d.plans.map(p=>toMenu(p,sel));renderBasket()})
+  .catch(e=>{if(seq!==PLAN_SEQ)return;PLAN_ERR=e.message;PLAN_AT='';menus=fallbackMenus();renderBasket()})};
+async function aiAsk(q){const r=$('#aireply');r.hidden=false;
+ if(chosen==null){r.textContent='AI กำลังคิดแผนใหม่ตามที่พิมพ์… ราว 15 วินาที';const sel=[...selected.values()];
+  try{const d=await callPlan(planCtx({mode:'new',ask:q}));const nm=d.plans.map(p=>Object.assign(toMenu(p,sel),{isNew:1,from:q,rec:false}));
+   menus=[...nm,...(Array.isArray(menus)?menus:[])];chosen=null;setPh();r.textContent=d.reply||`เพิ่ม ${nm.length} แผนใหม่ไว้บนสุดแล้ว แผนเดิมยังอยู่ครบ`;renderBasket();$('#bbody').scrollTop=0}
+  catch(e){const n=genPlans(q);r.textContent=`AI ไม่ตอบ (${e.message}) · ใช้แผนสำเร็จรูปเพิ่ม ${n} แผนแทน`;renderBasket()}
+  return}
+ const m=menus[chosen];m.thread.push({r:'me',t:q});m.thread.push({r:'ai',t:'กำลังปรับแผน…'});renderBasket();r.hidden=true;
+ const keep=k=>JSON.stringify(m[k]);const before={goal:keep('goal'),seg:keep('seg'),promo:keep('promo'),ch:keep('ch'),tools:keep('tools')};
+ try{const plan={name:m.name,why:m.why,goal:m.goal,seg:m.seg,ch:m.ch,promo:m.promo,acc:m.acc,tools:m.tools,level:m.level};
+  const d=await callPlan(planCtx({mode:'revise',ask:q,plan}));const p=toMenu(d.plans[0],[...selected.values()]);
+  ['name','why','goal','seg','ch','promo','acc','accWhy','tools','level','newP'].forEach(k=>{if(p[k]!==undefined)m[k]=p[k]});m.ai=1;
+  const ch=Object.keys(before).filter(k=>before[k]!==keep(k)).concat(['fc']);m.thread[m.thread.length-1]={r:'ai',t:d.reply||'ปรับแผนแล้ว'};renderBasket(ch)}
+ catch(e){const res=adjust(m,q);m.thread[m.thread.length-1]={r:'ai',t:res.reply+` (AI ไม่ตอบ: ${e.message} · ปรับแบบพื้นฐานให้แทน)`};renderBasket(res.ch)}}
+"""
+
+
+def planai(h):
+    h = _r(h, [
+        ("function menuCard(m,i,active,ch=[]){const f=forecast(m.seg,m.ch,m.promo),", "function menuCard(m,i,active,ch=[]){const f=fcOf(m),"),
+        ("${m.rec?'<span class=\"rb\">AI แนะนำ</span>':''}${m.isNew||m.thread.length>1?",
+         "${m.rec?'<span class=\"rb\">AI แนะนำ</span>':''}${m.fromT&&m.fromT.length?`<span class=\"pfrom\">จาก: ${m.fromT.join(' + ')}</span>`:''}${m.isNew||m.thread.length>1?"),
+        ("<h3>${m.name}</h3><p class=\"why\">${m.why}</p>", "<h3>${m.name}${m.newP?'<span class=\"pnew\">โปรใหม่</span>':''}</h3><p class=\"why\">${m.why}</p>"),
+        ("<div><small>ความยาก</small><b>${m.level}</b></div></div>", "<div><small>ความยาก</small><b>${m.level}</b></div></div>${!active&&!f.none?`<div class=\"pcalc\">คิดจาก: ${calcTxt(m,f)}</div>`:''}"),
+        ("${f.reach} ${f.unit}ที่ติดต่อได้ × ตอบรับ 20–35% × ${f.n} คืน × ${baht(f.rate)} (อัตราตอบรับเป็นค่าสมมติ)", "${calcTxt(m,f)}"),
+        ("if(chosen==null){b.innerHTML=`<p class=\"hint\" style=\"margin:0\">${menus.length} แผน · แตะแผนเพื่อเริ่มปรับ หรือพิมพ์ด้านล่างให้ AI คิดแผนใหม่</p>`+",
+         "if(chosen==null){b.innerHTML=planHint()+"),
+        (" if(chosen==null||/คิดใหม่|แผนใหม่|แบบอื่น|ลองแบบ/.test(q)){const n=genPlans(q);",
+         " if(chosen==null||/คิดใหม่|แผนใหม่|แบบอื่น|ลองแบบ/.test(q)){chosen=null;aiAsk(q);return;const n=genPlans(q);"),
+        (" $('#aireply').hidden=true;const m=menus[chosen];m.thread.push({r:'me',t:q});const res=adjust(m,q);",
+         " aiAsk(q);return;\n $('#aireply').hidden=true;const m=menus[chosen];m.thread.push({r:'me',t:q});const res=adjust(m,q);"),
+    ], 'planai')
+    k = h.rindex('</script>')
+    h = h[:k] + PLAN_JS + h[k:]
+    return _css(h, PLAN_CSS)

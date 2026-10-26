@@ -469,6 +469,23 @@ ok('AI สรุปกล่อง CRM: กันโค้ดแปลกปล�
   ok('ศูนย์ไอเดีย: Agent Insight จากข้อมูลจริง (เก็บใช้ทั้งวัน) · ข่าวรับเฉพาะลิงก์จากผลค้นเว็บ');
 }
 
+// 11n) แผนการตลาดจาก AI: ใช้ได้เฉพาะกลุ่ม/โปร/ช่องทางที่มีในระบบ · เก็บไว้ใช้ซ้ำเมื่อเลือกชุดเดิม
+{
+  const body = { mode: 'new', items: [{ t: 'คืนวันอาทิตย์ห้องว่าง 95%', detail: 'd', nums: 'n' }], price: 597,
+    segments: [{ id: 's1', n: 'บริษัท', c: 8, u: 'บริษัท', line: 5, email: 8, nights: 3.4 }], promos: [{ id: 'p0', n: 'ไม่มีโปรโมชัน', f: 1 }, { id: 'p3', n: 'ลด 30%', f: 0.7 }] };
+  script.push(p => { assert.equal(p.tools[0].name, 'save_plans'); assert.ok(JSON.parse(p.messages[0].content).segments.length === 1);
+    return { stop_reason: 'tool_use', content: [{ type: 'tool_use', id: 'tp', name: 'save_plans', input: { plans: [
+      { name: 'เช็คอินคืนอาทิตย์', why: 'w', goal: 'g', seg: ['s1', 'sX'], ch: ['line', 'tiktok'], promo: 'p3', acc: [40, 20], tools: ['msg', 'hack'], level: 'ง่าย', from: [1, 9] },
+      { name: 'โปรใหม่', why: 'w', goal: 'g', seg: ['s1'], ch: ['email'], promo: 'new', new_promo: { n: 'แถมอาหารเช้า', s: 's', f: 0.2 }, acc: [5, 10], tools: [], level: 'ยาก', from: [1] },
+      { name: 'ไม่มีกลุ่ม', why: 'w', goal: 'g', seg: ['zz'], ch: ['line'], promo: 'p0', acc: [1, 2], tools: [], level: 'ง่าย', from: [] }] } }] }; });
+  let r = await call('/api/plan', { method: 'POST', body: JSON.stringify(body) });
+  assert.equal(r.body.plans.length, 2); const [a, b] = r.body.plans;
+  assert.deepEqual([a.seg, a.ch, a.tools, a.acc, a.from, a.rec], [['s1'], ['line'], ['msg'], [20, 40], [1], true]);
+  assert.equal(b.newPromo.f, 0.5);
+  r = await call('/api/plan', { method: 'POST', body: JSON.stringify(body) }); assert.equal(r.body.cached, true);   // ชุดเดิมไม่เรียก AI ซ้ำ
+  ok('แผนการตลาดจาก AI: กรองเฉพาะกลุ่ม/ช่องทางที่มีจริง · ใช้ซ้ำเมื่อเลือกชุดเดิม');
+}
+
 // 12) กันเดา PIN
 for (let i = 0; i < 8; i++) await call('/api/app?part=pin', { method: 'POST', body: JSON.stringify({ role: 'owner', pin: '000000' }) });
 assert.equal((await call('/api/app?part=pin', { method: 'POST', body: JSON.stringify({ role: 'owner', pin: '246810' }) })).status, 429);
