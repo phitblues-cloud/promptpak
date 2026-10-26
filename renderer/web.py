@@ -87,6 +87,8 @@ def app_script(role, stamp):
    ['pointerdown','keydown','input'].forEach(e=>d.addEventListener(e,()=>{LAST[k]=Date.now()},true))}catch(_){}};
    f.addEventListener('load',hook);hook()});
  window.addEventListener('message',e=>{const d=e.data||{};
+   if(d.pbr==='custpage'&&FR.cust){FR.cust.classList.add('ovl');FR.cust.contentWindow.postMessage(d,'*')}
+   if(d.pbr==='custpageclosed'&&FR.cust){FR.cust.classList.remove('ovl');if(d.miss)try{FR.book.contentWindow.postMessage({pbr:'toast',msg:'ไม่พบข้อมูลลูกค้าคนนี้ในเมนูลูกค้า'},'*')}catch(_){}}
    if(d.pbr==='pp-saved')setTimeout(()=>{busy=false;poll()},400);
    if(d.pbr==='pp-reload'){ST='x';setTimeout(()=>{busy=false;poll()},400)}});
  setInterval(poll,10000);setInterval(apply,2000);document.addEventListener('visibilitychange',poll);
