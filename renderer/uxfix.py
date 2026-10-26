@@ -1603,7 +1603,7 @@ def bkmulti(h):
     # ตัวช่วย (อยู่ในฟังก์ชันฟอร์ม)
     helpers = (
         "  F.grp=F.sel?[{k:F.key,n:1,bf:false}]:[];\n"
-        "  const G=k=>F.grp.find(g=>g.k===k), total=()=>F.grp.reduce((a,g)=>a+g.n,0), cap=()=>F.mode==='co'?10:5;\n"
+        "  const G=k=>F.grp.find(g=>g.k===k), total=()=>F.grp.reduce((a,g)=>a+g.n,0), cap=()=>Infinity;   // เจ้าของยกเลิกเพดานจำนวนห้องต่อการจอง (27 ต.ค.)\n"
         "  const keyOf=c=>{const r=roomOf(c);return r?typeKey(r):''}, bfOn=c=>{const g=G(keyOf(c));return !!(g&&g.bf)};\n"
         "  const shareOf=i=>{const n=F.picked.length||1;return Math.floor(people()/n)+(i<people()%n?1:0)};\n"
         "  const bfSum=()=>F.picked.reduce((a,c,i)=>a+(bfOn(c)?BF_PRICE*Math.max(1,shareOf(i))*F.nights:0),0);\n"
