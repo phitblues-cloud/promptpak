@@ -285,7 +285,7 @@ def chatsave(h):
 CUST_DETAIL = r"""function custDetail(c){
   const s=stat(c), t=S.detail.tab, ed=S.edit, k=c.company?coOf(c.company):null, rooms=staysOf(c.id,true).length;
   const row=(lab,val,auto)=>`<div class="kvr"><span>${lab}${auto?'<i class="auto">คำนวณอัตโนมัติ</i>':''}</span><div>${val}</div></div>`;
-  let h=`<button class="back" data-back>${ico('left')}กลับรายการลูกค้า</button>
+  let h=`<button class="back" data-back>${ico('left')}${S.fromBk?'กลับหน้าการจอง':'กลับรายการลูกค้า'}</button>
   <div class="dhead"><div class="avatar" aria-hidden="true">${esc(initial(c.name))}</div>
     <div><h3>${esc(c.name)}</h3><div class="sub">${c.memberNo?'รหัสสมาชิก '+pbm(c.memberNo):'ยังไม่เป็นสมาชิก'}</div></div>
     <div class="lvl lvl2"><small>กลุ่มลูกค้า</small>${badge(s.st)}</div></div>`;
@@ -652,7 +652,15 @@ def custprof(h):
          "+row('ผู้ติดต่อ',(ct?`<button class=\"linkbtn\" data-open=\"c:${ct.id}\">${esc(k.cname||ct.name)}</button>`:`<b>${esc(k.cname||'-')}</b>`)+(k.crole?` <span class=\"hint\">${esc(k.crole)}</span>`:'')+(k.cdecide?' <span class=\"badge m-yes\">ผู้ตัดสินใจ</span>':''))"
          "+row('เบอร์โทร',`<b>${esc(k.phone||'-')}</b>`)+row('อีเมล',`<b>${esc(k.email||'-')}</b>`)+row('LINE',`<b>${esc(k.cline||'-')}</b>`)}"),
         ("function closeModal(){$('mscrim').classList.remove('open');",
-                "function closeModal(){$('mscrim').classList.remove('open');$('msheet').classList.remove('wide');")], 'cust-close')
+                "function closeModal(){$('mscrim').classList.remove('open');$('msheet').classList.remove('wide');"),
+        # เปิดจากหน้ารายละเอียดการจอง: แสดงหน้าลูกค้าคนนั้นทับหน้าจอ · กดกลับ = กลับหน้าการจองเดิม
+        ("  if(a=t.closest('[data-back]')){S.promoPick=false;S.detail=null;",
+         "  if(a=t.closest('[data-back]')&&S.fromBk){const P=S.fromBk;S.fromBk=null;document.body.removeAttribute('data-keep');Object.assign(S,P);S.edit=false;render();try{parent.postMessage({pbr:'custpageclosed'},'*')}catch(_){}return}\n"
+         "  if(a=t.closest('[data-back]')){S.promoPick=false;S.detail=null;"),
+        ("window.addEventListener('message',e=>{const d=e.data||{};if(d.pbr==='view'&&d.view){",
+         "window.addEventListener('message',e=>{const d=e.data||{};if(d.pbr==='custpage'&&d.gid){if(!cuOf(d.gid)){try{parent.postMessage({pbr:'custpageclosed',miss:1},'*')}catch(_){}return}"
+         "if(!S.fromBk)S.fromBk={view:S.view,sub:S.sub,detail:S.detail};document.body.setAttribute('data-keep','');closeModal();S.view='list';S.sub='cust';S.detail={kind:'c',id:d.gid,tab:'info'};S.edit=false;render();window.scrollTo(0,0);return}"
+         "if(d.pbr==='view'&&d.view){")], 'cust-close')
     return _css(h, PROF_CSS)
 
 
@@ -807,71 +815,85 @@ def hk(h):
 
 # ---------- การจองทั้งหมด: กดรายการ → หน้ารายละเอียดเต็มจอ + ปุ่มกลับ (แบบหน้าลูกค้า) ----------
 BKPAGE_JS = r"""
-/* หน้ารายละเอียดการจอง — ลำดับแบบระบบโรงแรมใหญ่ (OPERA / Mews):
-   หัว (เลขยืนยัน · แขก · สถานะ) → คำขอพิเศษ/ข้อควรรู้ → ช่วงเข้าพัก → ยอดค้างชำระ → ข้อมูลแขก → ข้อมูลการจอง → ใบกำกับภาษี */
+/* หน้ารายละเอียดการจอง — ลำดับแบบระบบโรงแรมระดับสูง (OPERA / Mews):
+   หัว (เลขยืนยัน · แขก · สถานะ) → ข้อควรรู้ → ช่วงเข้าพัก → แขก + รายละเอียดการจอง | บัญชีค่าใช้จ่าย + ใบกำกับภาษี */
+const BKI={
+ phone:'<path d="M5 4h4l2 5-2.5 1.5a11 11 0 0 0 5 5L15 13l5 2v4a2 2 0 0 1-2 2A16 16 0 0 1 3 6a2 2 0 0 1 2-2"/>',
+ line:'<path d="M12 4c5 0 9 3.1 9 7s-4 7-9 7c-.7 0-1.4-.1-2-.2L6 20v-3.5C4.2 15.2 3 13.2 3 11c0-3.9 4-7 9-7z"/>',
+ mail:'<rect x="3" y="5" width="18" height="14" rx="2.5"/><path d="M3.5 6.5 12 13l8.5-6.5"/>',
+ co:'<path d="M4 21V5.5A1.5 1.5 0 0 1 5.5 4h8A1.5 1.5 0 0 1 15 5.5V21M15 10h3.5A1.5 1.5 0 0 1 20 11.5V21M3 21h18M8 8h3M8 12h3M8 16h3"/>',
+ bed:'<path d="M3 18V7M3 14h18v4M21 14v-2.5A2.5 2.5 0 0 0 18.5 9H11v5"/><circle cx="7" cy="11" r="2"/>',
+ user:'<circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 3.6-6.2 8-6.2s8 2.2 8 6.2"/>',
+ flag:'<path d="M5 21V4M5 4h11l-2 4 2 4H5"/>'};
+const bki=k=>`<svg class="bki" viewBox="0 0 24 24" aria-hidden="true">${BKI[k]}</svg>`;
 function bkPage(b,v,H,co,X){
   const {esc,fmt}=H,P=$('pList');let pg=$('bkpg');
   if(!pg){pg=document.createElement('div');pg.id='bkpg';pg.setAttribute('data-keep','');P.prepend(pg)}
   P.classList.add('pg');
   const tmp=document.createElement('div');tmp.innerHTML=bkBody(v,H);const secs=[...tmp.querySelectorAll('.sec')];
-  const secOf=t=>secs.find(x=>(x.querySelector('h3')||{}).textContent&&x.querySelector('h3').textContent.includes(t));
+  const secOf=t=>secs.find(x=>{const h=x.querySelector('h3');return h&&h.textContent.includes(t)});
   const paySec=secOf('การชำระเงิน'),orgSec=secOf('ในนามบริษัท');
   if(paySec)paySec.querySelector('h3').remove();if(orgSec)orgSec.querySelector('h3').remove();
   const n=v.visits||1,TY=n>=3?['มาบ่อย','often']:n===2?['มาซ้ำ','rep']:['ลูกค้าใหม่','new'];
   const nm=v.org?(v.gname||'ยังไม่แจ้งชื่อ'):v.guest;
   const TH=['ม.ค.','ก.พ.','มี.ค.','เม.ย.','พ.ค.','มิ.ย.','ก.ค.','ส.ค.','ก.ย.','ต.ค.','พ.ย.','ธ.ค.'];
-  const thD=(s,y)=>{const [Y,M,D]=String(s).split('-').map(Number);return D+' '+TH[M-1]+(y?' '+(Y+543):'')};
-  const bdTxt=/^\d{4}-\d\d-\d\d$/.test(b.gbday||'')?thD(b.gbday,true):'';
-  const notes=[...(b.bdayIn?[['วันเกิดของแขกตรงกับ '+thD(b.bdayIn)+' ระหว่างเข้าพัก · อวยพรวันเกิดแขกด้วยนะคะ','🎂 วันเกิดระหว่างเข้าพัก']]:[]),[b.note,'หมายเหตุการจอง'],[b.bspec,'คำขอในการจองนี้'],[b.gpref,'ความต้องการประจำของลูกค้า']].filter(x=>x[0]&&String(x[0]).trim());
+  const thD=s=>{const [Y,M,D]=String(s).split('-').map(Number);return D+' '+TH[M-1]};
+  const notes=[...(b.bdayIn?[['วันเกิดของแขกตรงกับ '+thD(b.bdayIn)+' ระหว่างเข้าพัก · อวยพรวันเกิดแขกด้วยนะคะ','🎂 วันเกิดระหว่างเข้าพัก']]:[]),
+    [b.note,'หมายเหตุการจอง'],[b.bspec,'คำขอในการจองนี้'],[b.gpref,'ความต้องการประจำของลูกค้า']].filter(x=>x[0]&&String(x[0]).trim());
   const row=(k,val)=>`<div class="kr"><span>${k}</span><div>${val}</div></div>`;
+  const ct=(ic,val)=>`<div class="ctl">${bki(ic)}<div>${val}</div></div>`;
   const pv=v.pay,X0=X||{};
   const due=(b.paid||b.cancelled||b.noshow?0:(X0.net||0))+(X0.dep==='unpaid'?pv.dep:0)+(pv.svcRemain||0);
   const tx=b.tax&&typeof b.tax==='object'?b.tax:null;
   const ini=String(nm).replace(/^คุณ\s*/,'').replace(/^[เแโใไ]/,'').slice(0,1);
+  const [ciD,ciM]=String(v.ci).split(' '),[coD,coM]=String(v.co).split(' ');
   pg.innerHTML=`<button type="button" class="back" data-bkback>${ico('left')}กลับรายการจอง</button>
-  <div class="bkpv">
-   <header class="bkhd"><div class="bkpt"><div class="bkno">${v.no}</div><div class="bkwho">${esc(v.title)} · ห้อง ${v.room}</div>
+  <article class="bkpv" aria-label="รายละเอียดการจอง ${v.no}">
+   <header class="bkhd">
+    <div class="bkpt"><div class="lbl">หมายเลขการจอง</div><div class="bkno">${v.no}</div>
+     <div class="bkwho">${esc(v.title)}<span class="dot">·</span>ห้อง ${v.room}</div>
      <div class="bkind"><span class="hi ty-${TY[1]}">${TY[0]}</span>${v.mem?'<span class="hi ty-mem">สมาชิก</span>':''}${v.org||b.gco?'<span class="hi ty-co">ลูกค้าบริษัท</span>':''}${b.bdayIn?'<span class="hi ty-bd">🎂 วันเกิดระหว่างเข้าพัก</span>':''}</div></div>
     <div class="bkst">${v.badges}</div></header>
-   ${notes.length?`<section class="bkalert" role="note"><div class="at">ข้อควรรู้ก่อนรับแขก · หมายเหตุ / ความต้องการพิเศษ</div>${notes.map(([t,l])=>`<div class="nt"><small>${l}</small><p>${esc(t)}</p></div>`).join('')}</section>`
+   ${notes.length?`<section class="bkalert" role="note"><div class="at">ข้อควรรู้ก่อนรับแขก</div>${notes.map(([t,l])=>`<div class="nt"><small>${l}</small><p>${esc(t)}</p></div>`).join('')}</section>`
      :'<div class="bknone">ไม่มีหมายเหตุหรือคำขอพิเศษ</div>'}
-   <section class="bkstay">
-    <div class="sd"><span>เช็คอิน</span><b>${v.ci}</b><small>${esc(v.ciTxt)}</small></div>
+   <section class="bkstay" aria-label="ช่วงเข้าพัก">
+    <div class="sd"><span class="lbl">เช็คอิน</span><b><em>${ciD}</em> ${esc(String(v.ci).slice(ciD.length+1))}</b><small>${esc(v.ciTxt)}</small></div>
     <div class="sn"><i>${v.nights} คืน</i></div>
-    <div class="sd"><span>เช็คเอาท์</span><b>${v.co}</b></div>
-    <div class="sx"><div><span>ห้อง</span><b>${esc(v.roomHTML)}</b><small>${esc(v.roomType)}</small></div>
-     <div><span>ผู้เข้าพัก</span><b>${v.pax} ท่าน</b><small>${v.adults!=null?`ผู้ใหญ่ ${v.adults} · เด็ก ${v.kids||0}`:''}</small></div>
-     <div><span>วัตถุประสงค์</span><b>${esc(v.purpose||'ไม่ระบุ')}</b><small>${b.worksite?esc(b.worksite):''}</small></div></div>
+    <div class="sd r"><span class="lbl">เช็คเอาท์</span><b><em>${coD}</em> ${esc(String(v.co).slice(coD.length+1))}</b><small>&nbsp;</small></div>
+    <div class="sx">
+     <div>${bki('bed')}<span class="lbl">ห้อง</span><b>${esc(v.roomHTML)}</b></div>
+     <div>${bki('user')}<span class="lbl">ผู้เข้าพัก</span><b>${v.pax} ท่าน</b><small>${v.adults!=null?`ผู้ใหญ่ ${v.adults} · เด็ก ${v.kids||0}`:''}</small></div>
+     <div>${bki('flag')}<span class="lbl">วัตถุประสงค์</span><b>${esc(v.purpose||'ไม่ระบุ')}</b><small>${b.worksite?esc(b.worksite):''}</small></div></div>
    </section>
    <div class="bkgrid">
     <div class="bkcol">
-     <section class="bkc"><h3 class="ch">ข้อมูลแขก</h3>
+     <section class="bkc"><div class="hd"><h3>ข้อมูลแขก</h3>${b.cid?`<button type="button" class="more" data-gmore="${esc(b.cid)}">ดูเพิ่ม ›</button>`:''}</div>
       <div class="gh2"><div class="gav" aria-hidden="true">${esc(ini)}</div><div class="gnm"><h4>${esc(nm)}</h4><small>เข้าพักมาแล้ว ${n} ครั้ง${v.mem?' · สมาชิก':''}</small></div></div>
-      ${v.org&&v.org.contact?row('ผู้ติดต่อ',esc(v.org.contact)+(v.org.cphone?' · '+esc(v.org.cphone):'')):''}
-      ${row('เบอร์โทร',esc(v.phone||'-'))}${row('LINE',v.lineOn&&v.line?esc(v.line)+' <span class="badge b3">ผูกแล้ว</span>':'<span class="badge b6">ยังไม่ผูก</span>')}
-      ${v.email?row('อีเมล',esc(v.email)):''}${row('วันเกิด',bdTxt?bdTxt+(b.bdayIn?' <span class="badge b2">🎂 ระหว่างเข้าพัก</span>':''):'<span class="muted">ยังไม่มีข้อมูล</span>')}${row(b.gdoc?b.gdoc.t:'เลขบัตรประชาชน',b.gdoc?esc(b.gdoc.no):'<span class="muted">ยังไม่มีข้อมูล</span>')}${row('ที่อยู่',b.gaddr?esc(b.gaddr):'<span class="muted">ยังไม่มีข้อมูล</span>')}
-      ${row('บริษัท',b.gco?esc(b.gco):'<span class="muted">ไม่มี</span>')}</section>
-     <section class="bkc"><h3 class="ch">ข้อมูลการจอง</h3>
-      ${row('ช่องทางจอง',esc(v.ch))}${v.madeAt?row('จองเมื่อ',v.madeAt)+row('จองล่วงหน้า',v.lead+' วัน'):''}${row('การเช็คอิน',esc(v.ciTxt))}
-      ${row('วัตถุประสงค์',esc(v.purpose||'ไม่ระบุ'))}</section>
-    </div>
-    <div class="bkcol">
-     <section class="bkc bkpay"><h3 class="ch">การชำระเงิน</h3>
-      <div class="due ${due>0?'open':'ok'}"><span>${due>0?'ยอดค้างชำระ':'ชำระครบแล้ว'}</span><b>${fmt(due)} บาท</b></div>
-      ${paySec?paySec.innerHTML:''}</section>
-     <section class="bkc"><h3 class="ch">ห้องพักและบริการเสริม</h3>
-      ${row('ห้อง',esc(v.roomHTML))}${row('ประเภทห้อง',esc(v.roomType))}${row('ราคาห้อง',fmt(pv.rate)+' บาท / คืน · '+v.nights+' คืน')}
+      ${v.org&&v.org.contact?ct('user','ผู้ติดต่อ: '+esc(v.org.contact)+(v.org.cphone?' · '+esc(v.org.cphone):'')):''}
+      ${ct('phone',esc(v.phone||'-'))}${ct('line',v.lineOn&&v.line?esc(v.line)+' <span class="badge b3">ผูกแล้ว</span>':'<span class="muted">ยังไม่ผูก LINE</span>')}
+      ${v.email?ct('mail',esc(v.email)):''}${b.gco?ct('co',esc(b.gco)):''}</section>
+     <section class="bkc"><div class="hd"><h3>รายละเอียดการจอง</h3></div>
+      <div class="sub">ห้องพักและแพ็กเกจ</div>
+      ${row('ประเภทห้อง',esc(v.roomType))}${row('ราคาห้อง',fmt(pv.rate)+' บาท / คืน')}
       ${row('อาหารเช้า',pv.bf?'รับ · '+fmt(pv.bf)+' บาท':'<span class="muted">ไม่รับ</span>')}
       ${row('บริการเพิ่มเติม',pv.svc&&pv.svc.length?pv.svc.map(x=>esc(x.name)+' '+x.qty+' '+esc(x.unit||'')+' · '+fmt(x.qty*x.price)+' บาท').join('<br>'):'<span class="muted">ไม่มี</span>')}
-      ${pv.disc?row('ส่วนลด',(pv.code?esc(pv.code)+' · ':'')+'−'+fmt(pv.disc)+' บาท'):''}</section>
-     <section class="bkc"><h3 class="ch">ใบกำกับภาษี</h3>
-      ${tx?row('สถานะ','<span class="badge b3">ต้องการ</span>')+row('ประเภท',esc(tx.type||'-'))+row('ออกในนาม',esc(tx.name||'-'))+row('เลขผู้เสียภาษี',esc(tx.id||'-'))+(tx.branch||tx.hq?row('สาขา',esc(tx.branch||tx.hq)):'')+row('ที่อยู่ออกใบกำกับ',esc(tx.addr||'-'))
-        :row('สถานะ','<span class="badge b6">ไม่ขอใบกำกับภาษี</span>')+row('เอกสารที่ออกให้','ใบเสร็จรับเงิน ในนาม '+esc(nm))}</section>
-     ${orgSec?`<section class="bkc"><h3 class="ch">ในนามบริษัท</h3>${orgSec.innerHTML}</section>`:''}
+      ${pv.disc?row('ส่วนลด',(pv.code?esc(pv.code)+' · ':'')+'−'+fmt(pv.disc)+' บาท'):''}
+      <div class="sub">ที่มาของการจอง</div>
+      ${row('ช่องทางจอง',esc(v.ch))}${v.madeAt?row('จองเมื่อ',v.madeAt)+row('จองล่วงหน้า',v.lead+' วัน'):''}${row('การเช็คอิน',esc(v.ciTxt))}</section>
+    </div>
+    <div class="bkcol">
+     <section class="bkc bkpay"><div class="hd"><h3>บัญชีค่าใช้จ่าย</h3></div>
+      <div class="due ${due>0?'open':'ok'}"><span>${due>0?'ยอดค้างชำระ':'ชำระครบแล้ว'}</span><b>${fmt(due)}<small> บาท</small></b></div>
+      ${paySec?paySec.innerHTML:''}</section>
+     <section class="bkc"><div class="hd"><h3>ใบกำกับภาษี</h3>${tx?'<span class="badge b3">ต้องการ</span>':'<span class="badge b6">ไม่ขอ</span>'}</div>
+      ${tx?row('ประเภท',esc(tx.type||'-'))+row('ออกในนาม',esc(tx.name||'-'))+row('เลขผู้เสียภาษี',esc(tx.id||'-'))+(tx.branch||tx.hq?row('สาขา',esc(tx.branch||tx.hq)):'')+row('ที่อยู่',esc(tx.addr||'-'))
+        :row('เอกสารที่ออกให้','ใบเสร็จรับเงิน')+row('ในนาม',esc(nm))}</section>
+     ${orgSec?`<section class="bkc"><div class="hd"><h3>ในนามบริษัท</h3></div>${orgSec.innerHTML}</section>`:''}
     </div>
    </div>
-  </div>`;
+  </article>`;
   pg.querySelectorAll('[data-bkback]').forEach(x=>x.onclick=bkBack);
+  const gm=pg.querySelector('[data-gmore]');if(gm)gm.onclick=()=>{try{parent.postMessage({pbr:'custpage',gid:gm.dataset.gmore},'*')}catch(_){}};
   try{scrollTo(0,0)}catch(_){}
 }
 function bkBack(){const P=$('pList'),pg=$('bkpg');if(pg)pg.remove();if(P)P.classList.remove('pg')}
@@ -879,54 +901,68 @@ function detail(id,ctx){"""
 
 BKPAGE_CSS = """
 #pList.pg>*:not(#bkpg){display:none!important}
-#bkpg{display:block}
+#bkpg{display:block;--hair:#EADFD6;--gold:#B08A3E}
 #bkpg .back{border:0;background:none;display:inline-flex;align-items:center;gap:.4rem;font:inherit;font-weight:600;color:var(--purple);padding:.3rem .2rem;min-height:2.6rem;margin-bottom:.3rem;cursor:pointer}
 #bkpg .back .ic,#bkpg .back svg{width:1.2rem;height:1.2rem}
-.bkpv{display:grid;gap:.85rem}
-.bkhd{background:var(--grad);color:#fff;border-radius:24px;padding:.9rem 1.3rem;display:flex;align-items:center;justify-content:space-between;gap:1rem;flex-wrap:wrap}
-.bkno{font-family:var(--serif);font-size:1.6rem;font-weight:700;line-height:1.25}
-.bkwho{font-size:1.02rem;font-weight:600;opacity:.95;line-height:1.5}
-.bkind{display:flex;gap:.35rem;flex-wrap:wrap;margin-top:.35rem}
-.bkind .hi{font-size:.78rem;font-weight:700;padding:.15rem .65rem;border-radius:99px;background:rgba(255,255,255,.92)}
-.bkst{display:flex;gap:.5rem;flex-wrap:wrap;justify-content:flex-end;background:none!important;border:0!important;padding:0!important;box-shadow:none!important}
-.bkst .badge{font-size:1rem;padding:.4rem 1rem;font-weight:700;box-shadow:0 2px 8px rgba(40,10,40,.18)}
+.bkpv{display:grid;gap:1rem;max-width:72rem}
+.bkpv .lbl{display:block;font-size:.76rem;letter-spacing:.06em;color:var(--soft);font-weight:600}
+.bkhd{background:var(--grad);color:#fff;border-radius:26px;padding:1.05rem 1.5rem 1.1rem;display:flex;align-items:center;justify-content:space-between;gap:1rem;flex-wrap:wrap;box-shadow:0 14px 30px -20px rgba(80,20,70,.6)}
+.bkhd .lbl{color:rgba(255,255,255,.78)}
+.bkno{font-family:var(--serif);font-size:1.75rem;font-weight:700;line-height:1.2;letter-spacing:.02em}
+.bkwho{font-size:1.05rem;font-weight:600;line-height:1.55;opacity:.97}.bkwho .dot{margin:0 .45rem;opacity:.7}
+.bkind{display:flex;gap:.35rem;flex-wrap:wrap;margin-top:.45rem}
+.bkind .hi{font-size:.76rem;font-weight:700;padding:.16rem .7rem;border-radius:99px;background:rgba(255,255,255,.94)}
+.bkst{display:flex;gap:.5rem;flex-wrap:wrap;justify-content:flex-end;align-self:center;background:none!important;border:0!important;padding:0!important;box-shadow:none!important}
+.bkst .badge{font-size:1rem;padding:.42rem 1.05rem;font-weight:700;box-shadow:0 3px 10px rgba(40,10,40,.2)}
 .ty-new{background:#E0F2E3!important;color:#1F6B2B}.ty-rep{background:#FFF0CF!important;color:#7A4A00}.ty-often{background:#F4E2F6!important;color:#7B2A8E}
-.ty-mem{background:#EAE0F8!important;color:#51308C}.ty-bd{background:#FFE7EF!important;color:#B0244F}
-.txn{margin:.45rem 0 0;font-size:.82rem;color:var(--soft)}.ty-co{background:#E3EEFB!important;color:#1D4E89}
-.bkalert{background:#FFF8E8;border:1.5px solid #F1DDAE;border-left:6px solid #E2A72E;border-radius:18px;padding:.75rem 1.1rem;text-align:left}
-.bkalert .at{font-weight:700;color:#8A6200;margin-bottom:.2rem}
-.bkalert .nt{padding:.3rem 0}.bkalert .nt+.nt{border-top:1px dashed #EBD5A3}
-.bkalert .nt small{display:block;font-size:.78rem;color:#8A6200;font-weight:700}
-.bkalert .nt p{margin:.05rem 0 0;font-weight:600;line-height:1.55}
-.bknone{color:var(--soft);font-size:.9rem;padding:0 .3rem}
-.bkstay{background:var(--card);border:1.5px solid var(--line);border-radius:20px;padding:1rem 1.2rem;display:grid;grid-template-columns:auto 1fr auto;gap:.6rem 1rem;align-items:center}
-.bkstay .sd{display:flex;flex-direction:column}.bkstay .sd:nth-of-type(3){text-align:right}
-.bkstay span{font-size:.82rem;color:var(--soft);font-weight:600}
-.bkstay .sd b{font-size:1.45rem;line-height:1.35}
-.bkstay small{font-size:.82rem;color:var(--soft)}
+.ty-mem{background:#EAE0F8!important;color:#51308C}.ty-co{background:#E3EEFB!important;color:#1D4E89}.ty-bd{background:#FFE7EF!important;color:#B0244F}
+.bkalert{background:#FFFAF0;border:1px solid #EFD9A8;border-left:4px solid var(--gold);border-radius:16px;padding:.8rem 1.2rem;text-align:left}
+.bkalert .at{font-size:.8rem;letter-spacing:.06em;font-weight:700;color:var(--gold);margin-bottom:.15rem}
+.bkalert .nt{padding:.35rem 0}.bkalert .nt+.nt{border-top:1px solid #F1E3C4}
+.bkalert .nt small{display:block;font-size:.76rem;color:#8A6A2A;font-weight:700}
+.bkalert .nt p{margin:.08rem 0 0;font-weight:600;line-height:1.6}
+.bknone{color:var(--soft);font-size:.88rem;padding:0 .4rem}
+.bkc,.bkstay{background:#FFFDFB;border:1px solid var(--hair);border-radius:22px;box-shadow:0 1px 0 rgba(255,255,255,.8) inset,0 10px 26px -22px rgba(60,20,50,.35)}
+.bkstay{padding:1.1rem 1.4rem 1rem;display:grid;grid-template-columns:auto 1fr auto;gap:.5rem 1.2rem;align-items:center}
+.bkstay .sd{display:flex;flex-direction:column}.bkstay .sd.r{text-align:right}
+.bkstay .sd b{font-size:1.3rem;font-weight:600;line-height:1.3}
+.bkstay .sd b em{font-family:var(--serif);font-style:normal;font-size:2.3rem;font-weight:700;margin-right:.15rem;line-height:1.1}
+.bkstay small{font-size:.8rem;color:var(--soft)}
 .bkstay .sn{position:relative;height:2rem;display:grid;place-items:center}
-.bkstay .sn::before{content:'';position:absolute;left:0;right:0;top:50%;border-top:2px dashed #D7C4EA}
-.bkstay .sn i{position:relative;font-style:normal;font-weight:700;color:var(--purple);background:#F3EEF9;border:1.5px solid #D7C4EA;border-radius:99px;padding:.15rem .9rem}
-.bkstay .sx{grid-column:1/-1;display:grid;grid-template-columns:repeat(3,1fr);gap:.6rem;border-top:1.5px dashed var(--line);padding-top:.75rem}
-.bkstay .sx>div{display:flex;flex-direction:column;min-width:0}.bkstay .sx b{font-size:1.05rem;line-height:1.45}
-.bkgrid{display:grid;grid-template-columns:1fr 1fr;gap:.85rem;align-items:start}
-.bkcol{display:grid;gap:.85rem;min-width:0}
-.bkc{background:var(--card);border:1.5px solid var(--line);border-radius:20px;padding:.95rem 1.15rem}
-.bkc .ch{font-size:1rem;margin:0 0 .4rem;color:var(--purple);font-weight:700}
-.gh2{display:flex;gap:.8rem;align-items:center;padding:.2rem 0 .6rem;border-bottom:1.5px dashed var(--line);margin-bottom:.2rem}
-.gav{width:2.9rem;height:2.9rem;border-radius:50%;background:var(--grad);color:#fff;display:grid;place-items:center;font-size:1.25rem;font-weight:700;flex:none}
-.gnm{min-width:0}.gnm h4{font-size:1.2rem;margin:0;line-height:1.45}.gnm small{color:var(--soft)}
-.kr{display:grid;grid-template-columns:8.6rem 1fr;gap:.6rem;padding:.4rem 0;border-bottom:1px dotted var(--line);font-size:.95rem}
+.bkstay .sn::before{content:'';position:absolute;left:.4rem;right:.4rem;top:50%;border-top:1px solid #D7C4EA}
+.bkstay .sn::after{content:'';position:absolute;right:.2rem;top:calc(50% - 4px);border:4px solid transparent;border-left:7px solid #C9B3E2}
+.bkstay .sn i{position:relative;font-style:normal;font-weight:700;color:var(--purple);background:#FFFDFB;border:1px solid #D7C4EA;border-radius:99px;padding:.2rem 1rem;font-size:.95rem}
+.bkstay .sx{grid-column:1/-1;display:grid;grid-template-columns:repeat(3,1fr);border-top:1px solid var(--hair);margin-top:.4rem;padding-top:.85rem}
+.bkstay .sx>div{display:grid;grid-template-columns:auto 1fr;column-gap:.6rem;align-content:start;padding:0 1rem;min-width:0}
+.bkstay .sx>div:first-child{padding-left:0}.bkstay .sx>div+div{border-left:1px solid var(--hair)}
+.bkstay .sx .bki{grid-row:1/4;margin-top:.15rem}
+.bkstay .sx b{font-size:1.05rem;line-height:1.45;font-weight:600}.bkstay .sx small{grid-column:2}
+.bki{width:1.2rem;height:1.2rem;fill:none;stroke:var(--purple);stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round;flex:none;opacity:.85}
+.bkgrid{display:grid;grid-template-columns:1.15fr 1fr;gap:1rem;align-items:start}
+.bkcol{display:grid;gap:1rem;min-width:0}
+.bkc{padding:1.05rem 1.3rem 1.1rem}
+.bkc .hd{display:flex;align-items:center;justify-content:space-between;gap:.6rem;margin-bottom:.55rem;padding-bottom:.55rem;border-bottom:1px solid var(--hair)}
+.bkc .hd h3{margin:0;font-size:1.02rem;font-weight:700;color:var(--ink);letter-spacing:.01em;display:flex;align-items:center;gap:.5rem}
+.bkc .hd h3::before{content:'';width:.32rem;height:1.05rem;border-radius:3px;background:var(--grad)}
+.bkc .more{border:0;background:none;font:inherit;font-weight:700;font-size:.92rem;color:var(--purple);cursor:pointer;padding:.3rem .2rem;min-height:2.4rem}
+.bkc .sub{font-size:.76rem;letter-spacing:.06em;color:var(--gold);font-weight:700;margin:.7rem 0 .1rem}
+.bkc .sub:first-of-type{margin-top:.1rem}
+.gh2{display:flex;gap:.85rem;align-items:center;padding:.15rem 0 .7rem}
+.gav{width:3rem;height:3rem;border-radius:50%;background:var(--grad);color:#fff;display:grid;place-items:center;font-size:1.25rem;font-weight:700;flex:none;box-shadow:0 0 0 3px #fff,0 0 0 4px #E4D3EE}
+.gnm{min-width:0}.gnm h4{font-size:1.25rem;margin:0;line-height:1.45}.gnm small{color:var(--soft)}
+.ctl{display:flex;align-items:center;gap:.7rem;padding:.45rem 0;border-top:1px dotted var(--hair);font-weight:600;font-size:.97rem}
+.ctl>div{min-width:0;overflow-wrap:anywhere}
+.kr{display:grid;grid-template-columns:8rem 1fr;gap:.6rem;padding:.42rem 0;border-bottom:1px dotted var(--hair);font-size:.96rem}
 .kr:last-child{border-bottom:0}.kr>span{color:var(--soft)}.kr>div{font-weight:600;min-width:0;overflow-wrap:anywhere}
 .muted{color:var(--soft);font-weight:500}
-.bkpay .due{display:flex;justify-content:space-between;align-items:baseline;border-radius:14px;padding:.6rem .9rem;margin-bottom:.4rem}
-.bkpay .due.open{background:#FDECEE;color:#A3152D}.bkpay .due.ok{background:#EAF6EF;color:#2E7D5B}
-.bkpay .due span{font-weight:700}.bkpay .due b{font-size:1.4rem}
-.bkpay .prow{display:flex;align-items:center;gap:.5rem;padding:.4rem 0;border-bottom:1px dotted var(--line)}
-.bkpay .prow>span:first-child{flex:1}.bkpay .prow .badge{flex:none}
-.bkpay .prow.t{border-bottom:0;border-top:1.5px solid var(--line);margin-top:.2rem;font-weight:700}
-.bkc .kv{display:grid;grid-template-columns:7.5rem 1fr;gap:.6rem;padding:.4rem 0;border-bottom:1px dotted var(--line)}
-@media (max-width:900px){.bkgrid{grid-template-columns:1fr}.bkstay .sx{grid-template-columns:1fr 1fr}}
+.bkpay .due{display:flex;justify-content:space-between;align-items:center;border-radius:16px;padding:.75rem 1rem;margin-bottom:.5rem}
+.bkpay .due.open{background:linear-gradient(135deg,#FFF1F3,#FDE6EA);color:#A3152D}.bkpay .due.ok{background:linear-gradient(135deg,#F1FAF4,#E6F4EC);color:#2E7D5B}
+.bkpay .due span{font-weight:700;font-size:.92rem}.bkpay .due b{font-family:var(--serif);font-size:1.8rem;line-height:1.2}.bkpay .due b small{font-family:inherit;font-size:.95rem;font-weight:600}
+.bkpay .prow{display:flex;align-items:center;gap:.5rem;padding:.42rem 0;border-bottom:1px dotted var(--hair);font-size:.96rem}
+.bkpay .prow>span:first-child{flex:1;color:var(--soft)}.bkpay .prow .badge{flex:none}
+.bkpay .prow.t{border-bottom:0;border-top:1px solid var(--hair);margin-top:.25rem;padding-top:.6rem;font-weight:700}.bkpay .prow.t>span:first-child{color:var(--ink)}
+.bkc .kv{display:grid;grid-template-columns:8rem 1fr;gap:.6rem;padding:.42rem 0;border-bottom:1px dotted var(--hair)}
+@media (max-width:900px){.bkgrid{grid-template-columns:1fr}.bkstay .sx{grid-template-columns:1fr}.bkstay .sx>div{padding:.4rem 0;border-left:0!important}}
 """
 
 
