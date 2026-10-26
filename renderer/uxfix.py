@@ -1447,7 +1447,7 @@ var _rf0=renderFeed;renderFeed=function(){_rf0();ideaHead();
  document.querySelectorAll('#ideas .icard[data-card]').forEach(c=>{c.onclick=()=>openDetail(c.dataset.card);c.onkeydown=e=>{if(e.target===c&&(e.key==='Enter'||e.key===' ')){e.preventDefault();openDetail(c.dataset.card)}}})};
 function aliasOf(x,kind){if(kind==='insight')return x.src==='company'?'h2':/ห้องว่าง|อาทิตย์|สุดสัปดาห์/.test(x.cat+x.t)?'h5':'';
  return /บุญ|กฐิน|เทศกาล|ประเพณี|ท่องเที่ยว/.test(x.cat+x.t)?'l3':/โรงงาน|ซ่อม|ก่อสร้าง|บริษัท|อบรม|ราชการ/.test(x.cat+x.t)?'l1':''}
-function niceErr(e){e=String(e||'');if(/pp_feed|pp_insight|ai_feed|schema cache/.test(e))return 'ยังไม่ได้รัน supabase/17_insight.sql';if(/ANTHROPIC_API_KEY/.test(e))return 'ยังไม่ได้ตั้งคีย์ Claude';if(/web_search|not enabled|permission/i.test(e))return 'ยังไม่ได้เปิดสิทธิ์ค้นเว็บใน Claude Console';if(/Claude API/.test(e))return 'Claude ไม่ตอบ ลองใหม่ภายหลัง';return e.slice(0,80)}
+function niceErr(e){e=String(e||'');if(/pp_feed|pp_insight|ai_feed|schema cache/.test(e))return 'ยังไม่ได้รัน supabase/17_insight.sql';if(/ANTHROPIC_API_KEY/.test(e))return 'ยังไม่ได้ตั้งคีย์ Claude';if(/web_search|not enabled|permission/i.test(e))return 'ยังไม่ได้เปิดสิทธิ์ค้นเว็บใน Claude Console';{const m=e.match(/Claude API (\d+)/);if(m){const t=(e.match(/"message":\s*"([^"]+)"/)||[])[1]||'';return 'Claude ตอบกลับรหัส '+m[1]+(t?': '+t.slice(0,140):'')}}return e.slice(0,80)}
 function applyAI(kind,d){AISTAT[kind]=d||{};if(d&&d.error)d.error=niceErr(d.error);
  if(kind==='insight'&&d&&d.items&&d.items.length)feeds.hotel.items=d.items.map(x=>({...x,tags:[],alias:aliasOf(x,'insight')}));
  if(kind==='news'&&d&&d.at){feeds.local.items=(d.news||[]).map(x=>({...x,tags:[],alias:aliasOf(x,'news')}));feeds.local.src='';
