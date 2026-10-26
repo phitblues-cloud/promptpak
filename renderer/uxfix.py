@@ -826,10 +826,9 @@ const BKI={
  user:'<circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 3.6-6.2 8-6.2s8 2.2 8 6.2"/>',
  flag:'<path d="M5 21V4M5 4h11l-2 4 2 4H5"/>'};
 const bki=k=>`<svg class="bki" viewBox="0 0 24 24" aria-hidden="true">${BKI[k]}</svg>`;
-function bkPage(b,v,H,co,X){
-  const {esc,fmt}=H,P=$('pList');let pg=$('bkpg');
-  if(!pg){pg=document.createElement('div');pg.id='bkpg';pg.setAttribute('data-keep','');P.prepend(pg)}
-  P.classList.add('pg');
+/* เนื้อหารายละเอียดการจอง (ใช้ทั้งหน้าเต็มและป๊อปอัปจากหน้าแรก/ปฏิทิน) */
+function bkHTML(b,v,H,co,X,modal){
+  const {esc,fmt}=H;
   const tmp=document.createElement('div');tmp.innerHTML=bkBody(v,H);const secs=[...tmp.querySelectorAll('.sec')];
   const secOf=t=>secs.find(x=>{const h=x.querySelector('h3');return h&&h.textContent.includes(t)});
   const paySec=secOf('การชำระเงิน'),orgSec=secOf('ในนามบริษัท');
@@ -844,27 +843,24 @@ function bkPage(b,v,H,co,X){
   const due=(b.paid||b.cancelled||b.noshow?0:(X0.net||0))+(X0.dep==='unpaid'?pv.dep:0)+(pv.svcRemain||0);
   const tx=b.tax&&typeof b.tax==='object'?b.tax:null;
   const ini=String(nm).replace(/^คุณ\s*/,'').replace(/^[เแโใไ]/,'').slice(0,1);
-  const [ciD,ciM]=String(v.ci).split(' '),[coD,coM]=String(v.co).split(' ');
-  pg.innerHTML=`<button type="button" class="back" data-bkback>${ico('left')}กลับรายการจอง</button>
-  <article class="bkpv" aria-label="รายละเอียดการจอง ${v.no}">
+  const dd=s=>{const t=String(s),k=t.indexOf(' ');return `<em>${t.slice(0,k)}</em> ${esc(t.slice(k+1))}`};
+  return `<article class="bkpv${modal?' inm':''}" aria-label="รายละเอียดการจอง ${v.no}">
    <header class="bkhd">
     <div class="bkpt"><div class="lbl">หมายเลขการจอง</div><div class="bkno">${v.no}</div>
-     <div class="bkwho">${esc(v.title)}<span class="dot">·</span>ห้อง ${v.room}</div>
-     <div class="bkind"><span class="hi ty-${TY[1]}">${TY[0]}</span>${v.mem?'<span class="hi ty-mem">สมาชิก</span>':''}${v.org||b.gco?'<span class="hi ty-co">ลูกค้าบริษัท</span>':''}${b.bdayIn?'<span class="hi ty-bd">🎂 วันเกิดระหว่างเข้าพัก</span>':''}</div></div>
-    <div class="bkst">${v.badges}</div></header>
+     <div class="bkwho">${esc(v.title)}<span class="dot">·</span>ห้อง ${v.room}</div></div>
+    <div class="bkst">${v.badges}${modal?`<button type="button" class="x bkx" data-close aria-label="ปิด">${ico('x')}</button>`:''}</div></header>
    <section class="bkstay" aria-label="ช่วงเข้าพัก">
-    <div class="sd"><span class="lbl">เช็คอิน</span><b><em>${ciD}</em> ${esc(String(v.ci).slice(ciD.length+1))}</b><small>${esc(v.ciTxt)}</small></div>
+    <div class="sd"><span class="lbl">เช็คอิน</span><b>${dd(v.ci)}</b><small>${esc(v.ciTxt)}</small></div>
     <div class="sn"><i>${v.nights} คืน</i></div>
-    <div class="sd r"><span class="lbl">เช็คเอาท์</span><b><em>${coD}</em> ${esc(String(v.co).slice(coD.length+1))}</b><small>&nbsp;</small></div>
-    <div class="sx">
-     <div>${bki('bed')}<span class="lbl">ห้อง</span><b>${esc(v.roomHTML)}</b></div>
-     <div>${bki('user')}<span class="lbl">ผู้เข้าพัก</span><b>${v.pax} ท่าน</b><small>${v.adults!=null?`ผู้ใหญ่ ${v.adults} · เด็ก ${v.kids||0}`:''}</small></div>
-     <div>${bki('flag')}<span class="lbl">วัตถุประสงค์</span><b>${esc(v.purpose||'ไม่ระบุ')}</b><small>${b.worksite?esc(b.worksite):''}</small></div></div>
+    <div class="sd"><span class="lbl">เช็คเอาท์</span><b>${dd(v.co)}</b><small>&nbsp;</small></div>
+    <div class="sx">${bki('bed')}<div><span class="lbl">ห้อง</span><b>${esc(v.roomHTML)}</b><small>${esc(v.roomType)}</small></div></div>
+    <div class="sx">${bki('user')}<div><span class="lbl">ผู้เข้าพัก</span><b>${v.pax} ท่าน</b><small>${v.adults!=null?`ผู้ใหญ่ ${v.adults} · เด็ก ${v.kids||0}`:''}</small></div></div>
+    <div class="sx">${bki('flag')}<div><span class="lbl">วัตถุประสงค์</span><b>${esc(v.purpose||'ไม่ระบุ')}</b><small>${b.worksite?esc(b.worksite):'&nbsp;'}</small></div></div>
    </section>
    <div class="bkgrid">
-    <div class="bkcol">
      <section class="bkc"><div class="hd"><h3>ข้อมูลแขก</h3>${b.cid?`<button type="button" class="more" data-gmore="${esc(b.cid)}">ดูเพิ่ม ›</button>`:''}</div>
-      <div class="gh2"><div class="gav" aria-hidden="true">${esc(ini)}</div><div class="gnm"><h4>${esc(nm)}</h4><small>เข้าพักมาแล้ว ${n} ครั้ง${v.mem?' · สมาชิก':''}</small></div></div>
+      <div class="gh2"><div class="gav" aria-hidden="true">${esc(ini)}</div><div class="gnm"><h4>${esc(nm)}</h4><small>เข้าพักมาแล้ว ${n} ครั้ง</small></div></div>
+      <div class="gchips"><span class="hi ty-${TY[1]}">${TY[0]}</span><span class="hi ${v.mem?'ty-mem':'ty-no'}">${v.mem?'เป็นสมาชิก':'ไม่เป็นสมาชิก'}</span>${v.org||b.gco?'<span class="hi ty-co">ลูกค้าบริษัท</span>':'<span class="hi ty-no">ลูกค้าทั่วไป</span>'}${b.bdayIn?`<span class="hi ty-bd">🎂 วันเกิด ${thD(b.bdayIn)}</span>`:''}</div>
       ${v.org&&v.org.contact?ct('user','ผู้ติดต่อ: '+esc(v.org.contact)+(v.org.cphone?' · '+esc(v.org.cphone):'')):''}
       ${ct('phone',esc(v.phone||'-'))}${ct('line',v.lineOn&&v.line?esc(v.line)+' <span class="badge b3">ผูกแล้ว</span>':'<span class="muted">ยังไม่ผูก LINE</span>')}
       ${v.email?ct('mail',esc(v.email)):''}${b.gco?ct('co',esc(b.gco)):''}</section>
@@ -875,28 +871,50 @@ function bkPage(b,v,H,co,X){
       ${row('บริการเพิ่มเติม',pv.svc&&pv.svc.length?pv.svc.map(x=>esc(x.name)+' '+x.qty+' '+esc(x.unit||'')+' · '+fmt(x.qty*x.price)+' บาท').join('<br>'):'<span class="muted">ไม่มี</span>')}
       ${pv.disc?row('ส่วนลด',(pv.code?esc(pv.code)+' · ':'')+'−'+fmt(pv.disc)+' บาท'):''}
       <div class="sub">ที่มาของการจอง</div>
-      ${row('ช่องทางจอง',esc(v.ch))}${v.madeAt?row('จองเมื่อ',v.madeAt)+row('จองล่วงหน้า',v.lead+' วัน'):''}${row('การเช็คอิน',esc(v.ciTxt))}${b.note?row('หมายเหตุ',esc(b.note)):''}</section>
-    </div>
-    <div class="bkcol">
-     <section class="bkc bkpay"><div class="hd"><h3>บัญชีค่าใช้จ่าย</h3></div>
-      <div class="due ${due>0?'open':'ok'}"><span>${due>0?'ยอดค้างชำระ':'ชำระครบแล้ว'}</span><b>${fmt(due)}<small> บาท</small></b></div>
-      ${paySec?paySec.innerHTML:''}
-      <div class="docbtns"><button type="button" class="btn ghost" data-pdoc="rc" ${b.paid?'':'disabled'}>${PRI}พิมพ์ใบเสร็จ</button><button type="button" class="btn ghost" data-pdoc="tx" ${tx&&b.paid?'':'disabled'}>${PRI}พิมพ์ใบกำกับภาษี</button></div>${!b.paid?'<p class="dochint">ยังไม่ได้รับชำระค่าห้อง จึงยังออกใบเสร็จไม่ได้</p>':!tx?'<p class="dochint">แขกไม่ได้ขอใบกำกับภาษี</p>':''}</section>
-     <section class="bkc"><div class="hd"><h3>ใบกำกับภาษี</h3>${tx?'<span class="badge b3">ต้องการ</span>':'<span class="badge b6">ไม่ขอ</span>'}</div>
-      ${tx?row('ประเภท',esc(tx.type||'-'))+row('ออกในนาม',esc(tx.name||'-'))+row('เลขผู้เสียภาษี',esc(tx.id||'-'))+(tx.branch||tx.hq?row('สาขา',esc(tx.branch||tx.hq)):'')+row('ที่อยู่',esc(tx.addr||'-'))
-        :row('เอกสารที่ออกให้','ใบเสร็จรับเงิน')+row('ในนาม',esc(nm))}</section>
-     ${orgSec?`<section class="bkc"><div class="hd"><h3>ในนามบริษัท</h3></div>${orgSec.innerHTML}</section>`:''}
-    </div>
+      ${row('ช่องทางจอง',esc(v.ch))}${v.madeAt?row('จองเมื่อ',v.madeAt)+row('จองล่วงหน้า',v.lead+' วัน'):''}${row('การเช็คอิน',esc(v.ciTxt))}${b.note?row('หมายเหตุ',esc(b.note)):''}
+      ${orgSec?`<div class="sub">ในนามบริษัท</div>${orgSec.innerHTML}`:''}</section>
+     <div class="bkcol">
+      <section class="bkc bkpay"><div class="hd"><h3>บัญชีค่าใช้จ่าย</h3></div>
+       <div class="due ${due>0?'open':'ok'}"><span>${due>0?'ยอดค้างชำระ':'ชำระครบแล้ว'}</span><b>${fmt(due)}<small> บาท</small></b></div>
+       ${paySec?paySec.innerHTML:''}
+       <div class="docbtns"><button type="button" class="btn ghost" data-pdoc="rc" ${b.paid?'':'disabled'}>${PRI}พิมพ์ใบเสร็จ</button><button type="button" class="btn ghost" data-pdoc="tx" ${tx&&b.paid?'':'disabled'}>${PRI}พิมพ์ใบกำกับภาษี</button></div>
+       ${!b.paid?'<p class="dochint">ยังไม่ได้รับชำระค่าห้อง จึงยังออกใบเสร็จไม่ได้</p>':!tx?'<p class="dochint">แขกไม่ได้ขอใบกำกับภาษี</p>':''}</section>
+      <section class="bkc"><div class="hd"><h3>ใบกำกับภาษี</h3>${tx?'<span class="badge b3">ต้องการ</span>':'<span class="badge b6">ไม่ขอ</span>'}</div>
+       ${tx?row('ประเภท',esc(tx.type||'-'))+row('ออกในนาม',esc(tx.name||'-'))+row('เลขผู้เสียภาษี',esc(tx.id||'-'))+(tx.branch||tx.hq?row('สาขา',esc(tx.branch||tx.hq)):'')+row('ที่อยู่',esc(tx.addr||'-'))
+         :row('เอกสาร','ใบเสร็จรับเงิน')+row('ในนาม',esc(nm))}</section>
+     </div>
    </div>
   </article>`;
+}
+function bkWire(root,b,v,H,co,X,ret){
+  const nm=v.org?(v.gname||'ยังไม่แจ้งชื่อ'):v.guest,tx=b.tax&&typeof b.tax==='object'?b.tax:null;
+  root.querySelectorAll('[data-pdoc]').forEach(x=>x.onclick=()=>bkDoc(x.dataset.pdoc,b,v,H,nm,tx,ret));
+  const gm=root.querySelector('[data-gmore]');if(gm)gm.onclick=()=>{try{parent.postMessage({pbr:'custpage',gid:gm.dataset.gmore},'*')}catch(_){}};
+}
+function bkPage(b,v,H,co,X){
+  const P=$('pList');let pg=$('bkpg');
+  if(!pg){pg=document.createElement('div');pg.id='bkpg';pg.setAttribute('data-keep','');P.prepend(pg)}
+  P.classList.add('pg');
+  pg.innerHTML=`<button type="button" class="back" data-bkback>${ico('left')}กลับรายการจอง</button>${bkHTML(b,v,H,co,X,false)}`;
   pg.querySelectorAll('[data-bkback]').forEach(x=>x.onclick=bkBack);
-  pg.querySelectorAll('[data-pdoc]').forEach(x=>x.onclick=()=>bkDoc(x.dataset.pdoc,b,v,H,nm,tx));
-  const gm=pg.querySelector('[data-gmore]');if(gm)gm.onclick=()=>{try{parent.postMessage({pbr:'custpage',gid:gm.dataset.gmore},'*')}catch(_){}};
+  bkWire(pg,b,v,H,co,X,null);
   try{scrollTo(0,0)}catch(_){}
+}
+/* ป๊อปอัป (หน้าแรก/ปฏิทิน/โมดูลอื่น): รูปแบบเดียวกับหน้าเต็ม + ปุ่มดำเนินการของหน้านั้นด้านล่าง */
+function bkModal(b,v,H,co,X,ctx){
+  const acts=ctx&&ctx.actions&&ctx.actions.length?ctx.actions.map(a=>`<button class="btn ${a.pri?'pri':'ghost'}" data-act="${a.id}">${H.esc(a.label)}</button>`).join(''):'';
+  const coBtns=co?'<button class="btn ghost" id="dQt">ใบเสนอราคา</button><button class="btn ghost" id="dIv">ใบแจ้งหนี้รวม</button>':'';
+  const reopen=()=>bkModal(b,v,H,co,X,ctx);
+  openModal(`<div class="sb bkmsb">${bkHTML(b,v,H,co,X,true)}</div><div class="sf">${acts}${coBtns}<button class="btn ${acts?'ghost':'pri'}" data-close>ปิด</button></div>`,()=>{
+    const m=$('msheet');m.classList.add('xl','bkm');
+    m.querySelectorAll('[data-close]').forEach(x=>x.onclick=closeModal);
+    m.querySelectorAll('[data-act]').forEach(x=>x.onclick=()=>{try{parent.postMessage({pbr:'bkaction',id:x.dataset.act,no:b.no},'*')}catch(e){}closeModal()});
+    if($('dQt')){$('dQt').onclick=()=>docModal('quote',B.filter(x=>x.no===b.no));$('dIv').onclick=()=>docModal('invoice',B.filter(x=>x.no===b.no))}
+    bkWire(m,b,v,H,co,X,reopen)},false);
 }
 const PRI='<svg class="bki" viewBox="0 0 24 24" aria-hidden="true"><path d="M7 9V4h10v5M7 17H5a2 2 0 0 1-2-2v-4a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v4a2 2 0 0 1-2 2h-2"/><rect x="7" y="14" width="10" height="7" rx="1"/></svg>';
 /* ใบเสร็จรับเงิน / ใบกำกับภาษีเต็มรูป — แสดงตัวอย่างแล้วสั่งพิมพ์ (หรือบันทึกเป็น PDF จากหน้าพิมพ์) */
-function bkDoc(k,b,v,H,nm,tx){
+function bkDoc(k,b,v,H,nm,tx,ret){
   const {esc,fmt}=H,pv=v.pay,isT=k==='tx',D=n=>fD(n,{day:'numeric',month:'short',year:'numeric'});
   const items=[[`ค่าห้องพัก ${v.roomType} ห้อง ${b.room} · ${D(b.start)} – ${D(b.start+b.nights)} (${b.nights} คืน × ${fmt(pv.rate)})`,pv.base]];
   if(pv.bf)items.push(['อาหารเช้า',pv.bf]);
@@ -917,7 +935,7 @@ function bkDoc(k,b,v,H,nm,tx){
     <div class="dsig"><div><span></span><small>ผู้รับเงิน</small></div></div>
     <div class="dnote">ต้นแบบ: ตรวจรูปแบบและเลขผู้เสียภาษีของโรงแรมก่อนใช้จริง</div></div></div></div>
    <div class="sf"><button class="btn pri" id="docPrint">${PRI}พิมพ์ / บันทึก PDF</button></div>`,()=>{
-    const m=$('msheet');m.classList.add('xl');m.querySelectorAll('[data-close]').forEach(x=>x.onclick=closeModal);
+    const m=$('msheet');m.classList.add('xl');m.querySelectorAll('[data-close]').forEach(x=>x.onclick=ret||closeModal);
     $('docPrint').onclick=()=>{try{window.print()}catch(e){toast('พิมพ์ไม่ได้ในหน้านี้')}}},false);
 }
 function bkBack(){const P=$('pList'),pg=$('bkpg');if(pg)pg.remove();if(P)P.classList.remove('pg')}
@@ -925,73 +943,73 @@ function detail(id,ctx){"""
 
 BKPAGE_CSS = """
 #pList.pg>*:not(#bkpg){display:none!important}
-#bkpg{display:block;--hair:#EADFD6;--gold:#B08A3E}
-#bkpg .back{border:0;background:none;display:inline-flex;align-items:center;gap:.4rem;font:inherit;font-weight:600;color:var(--purple);padding:.3rem .2rem;min-height:2.6rem;margin-bottom:.3rem;cursor:pointer}
-#bkpg .back .ic,#bkpg .back svg{width:1.2rem;height:1.2rem}
-.bkpv{display:grid;gap:1rem;max-width:72rem}
-.bkpv .lbl{display:block;font-size:.76rem;letter-spacing:.06em;color:var(--soft);font-weight:600}
-.bkhd{background:var(--grad);color:#fff;border-radius:26px;padding:1.05rem 1.5rem 1.1rem;display:flex;align-items:center;justify-content:space-between;gap:1rem;flex-wrap:wrap;box-shadow:0 14px 30px -20px rgba(80,20,70,.6)}
+#bkpg{display:block}
+.bkpv{--hair:#EADFD6;--gold:#A9843A;display:grid;gap:.7rem;font-size:.92rem}
+#bkpg .back{border:0;background:none;display:inline-flex;align-items:center;gap:.35rem;font:inherit;font-weight:600;font-size:.92rem;color:var(--purple);padding:.2rem .1rem;min-height:2.3rem;margin-bottom:.15rem;cursor:pointer}
+#bkpg .back .ic,#bkpg .back svg{width:1.1rem;height:1.1rem}
+.bkpv .lbl{display:block;font-size:.7rem;letter-spacing:.05em;color:var(--soft);font-weight:600;line-height:1.5}
+.bkhd{background:var(--grad);color:#fff;border-radius:20px;padding:.7rem 1.15rem;display:flex;align-items:center;justify-content:space-between;gap:.8rem;flex-wrap:wrap}
 .bkhd .lbl{color:rgba(255,255,255,.78)}
-.bkno{font-family:var(--serif);font-size:1.75rem;font-weight:700;line-height:1.2;letter-spacing:.02em}
-.bkwho{font-size:1.05rem;font-weight:600;line-height:1.55;opacity:.97}.bkwho .dot{margin:0 .45rem;opacity:.7}
-.bkind{display:flex;gap:.35rem;flex-wrap:wrap;margin-top:.45rem}
-.bkind .hi{font-size:.76rem;font-weight:700;padding:.16rem .7rem;border-radius:99px;background:rgba(255,255,255,.94)}
-.bkst{display:flex;gap:.5rem;flex-wrap:wrap;justify-content:flex-end;align-self:center;background:none!important;border:0!important;padding:0!important;box-shadow:none!important}
-.bkst .badge{font-size:1rem;padding:.42rem 1.05rem;font-weight:700;box-shadow:0 3px 10px rgba(40,10,40,.2)}
-.ty-new{background:#E0F2E3!important;color:#1F6B2B}.ty-rep{background:#FFF0CF!important;color:#7A4A00}.ty-often{background:#F4E2F6!important;color:#7B2A8E}
-.ty-mem{background:#EAE0F8!important;color:#51308C}.ty-co{background:#E3EEFB!important;color:#1D4E89}.ty-bd{background:#FFE7EF!important;color:#B0244F}
-.bkalert{background:#FFFAF0;border:1px solid #EFD9A8;border-left:4px solid var(--gold);border-radius:16px;padding:.8rem 1.2rem;text-align:left}
-.bkalert .at{font-size:.8rem;letter-spacing:.06em;font-weight:700;color:var(--gold);margin-bottom:.15rem}
-.bkalert .nt{padding:.35rem 0}.bkalert .nt+.nt{border-top:1px solid #F1E3C4}
-.bkalert .nt small{display:block;font-size:.76rem;color:#8A6A2A;font-weight:700}
-.bkalert .nt p{margin:.08rem 0 0;font-weight:600;line-height:1.6}
-.docbtns{display:grid;grid-template-columns:1fr 1fr;gap:.55rem;margin-top:.8rem}
-.docbtns .btn{display:inline-flex;align-items:center;justify-content:center;gap:.45rem;min-height:2.9rem;font-weight:700}
-.docbtns .btn:disabled{opacity:.45;cursor:not-allowed}
-.dochint{margin:.45rem 0 0;font-size:.82rem;color:var(--soft)}
-.dsig{display:flex;justify-content:flex-end;margin-top:2.2rem}.dsig>div{display:flex;flex-direction:column;align-items:center;gap:.3rem}.dsig span{width:12rem;border-bottom:1px solid #999}.dsig small{color:#666}
-@media print{#bkpg{display:none!important}}
-.bkc,.bkstay{background:#FFFDFB;border:1px solid var(--hair);border-radius:22px;box-shadow:0 1px 0 rgba(255,255,255,.8) inset,0 10px 26px -22px rgba(60,20,50,.35)}
-.bkstay{padding:1.1rem 1.4rem 1rem;display:grid;grid-template-columns:auto 1fr auto;gap:.5rem 1.2rem;align-items:center}
-.bkstay .sd{display:flex;flex-direction:column}.bkstay .sd.r{text-align:right}
-.bkstay .sd b{font-size:1.3rem;font-weight:600;line-height:1.3}
-.bkstay .sd b em{font-family:var(--serif);font-style:normal;font-size:2.3rem;font-weight:700;margin-right:.15rem;line-height:1.1}
-.bkstay small{font-size:.8rem;color:var(--soft)}
-.bkstay .sn{position:relative;height:2rem;display:grid;place-items:center}
-.bkstay .sn::before{content:'';position:absolute;left:.4rem;right:.4rem;top:50%;border-top:1px solid #D7C4EA}
-.bkstay .sn::after{content:'';position:absolute;right:.2rem;top:calc(50% - 4px);border:4px solid transparent;border-left:7px solid #C9B3E2}
-.bkstay .sn i{position:relative;font-style:normal;font-weight:700;color:var(--purple);background:#FFFDFB;border:1px solid #D7C4EA;border-radius:99px;padding:.2rem 1rem;font-size:.95rem}
-.bkstay .sx{grid-column:1/-1;display:grid;grid-template-columns:repeat(3,1fr);border-top:1px solid var(--hair);margin-top:.4rem;padding-top:.85rem}
-.bkstay .sx>div{display:grid;grid-template-columns:auto 1fr;column-gap:.6rem;align-content:start;padding:0 1rem;min-width:0}
-.bkstay .sx>div:first-child{padding-left:0}.bkstay .sx>div+div{border-left:1px solid var(--hair)}
-.bkstay .sx .bki{grid-row:1/4;margin-top:.15rem}
-.bkstay .sx b{font-size:1.05rem;line-height:1.45;font-weight:600}.bkstay .sx small{grid-column:2}
-.bki{width:1.2rem;height:1.2rem;fill:none;stroke:var(--purple);stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round;flex:none;opacity:.85}
-.bkgrid{display:grid;grid-template-columns:1.15fr 1fr;gap:1rem;align-items:start}
-.bkcol{display:grid;gap:1rem;min-width:0}
-.bkc{padding:1.05rem 1.3rem 1.1rem}
-.bkc .hd{display:flex;align-items:center;justify-content:space-between;gap:.6rem;margin-bottom:.55rem;padding-bottom:.55rem;border-bottom:1px solid var(--hair)}
-.bkc .hd h3{margin:0;font-size:1.02rem;font-weight:700;color:var(--ink);letter-spacing:.01em;display:flex;align-items:center;gap:.5rem}
-.bkc .hd h3::before{content:'';width:.32rem;height:1.05rem;border-radius:3px;background:var(--grad)}
-.bkc .more{border:0;background:none;font:inherit;font-weight:700;font-size:.92rem;color:var(--purple);cursor:pointer;padding:.3rem .2rem;min-height:2.4rem}
-.bkc .sub{font-size:.76rem;letter-spacing:.06em;color:var(--gold);font-weight:700;margin:.7rem 0 .1rem}
-.bkc .sub:first-of-type{margin-top:.1rem}
-.gh2{display:flex;gap:.85rem;align-items:center;padding:.15rem 0 .7rem}
-.gav{width:3rem;height:3rem;border-radius:50%;background:var(--grad);color:#fff;display:grid;place-items:center;font-size:1.25rem;font-weight:700;flex:none;box-shadow:0 0 0 3px #fff,0 0 0 4px #E4D3EE}
-.gnm{min-width:0}.gnm h4{font-size:1.25rem;margin:0;line-height:1.45}.gnm small{color:var(--soft)}
-.ctl{display:flex;align-items:center;gap:.7rem;padding:.45rem 0;border-top:1px dotted var(--hair);font-weight:600;font-size:.97rem}
-.ctl>div{min-width:0;overflow-wrap:anywhere}
-.kr{display:grid;grid-template-columns:8rem 1fr;gap:.6rem;padding:.42rem 0;border-bottom:1px dotted var(--hair);font-size:.96rem}
-.kr:last-child{border-bottom:0}.kr>span{color:var(--soft)}.kr>div{font-weight:600;min-width:0;overflow-wrap:anywhere}
+.bkno{font-family:var(--serif);font-size:1.4rem;font-weight:700;line-height:1.2;letter-spacing:.02em}
+.bkwho{font-size:.95rem;font-weight:600;line-height:1.5}.bkwho .dot{margin:0 .4rem;opacity:.7}
+.bkst{display:flex;gap:.45rem;flex-wrap:wrap;align-items:center;justify-content:flex-end;background:none!important;border:0!important;padding:0!important;box-shadow:none!important}
+.bkst .badge{font-size:.9rem;padding:.32rem .9rem;font-weight:700;box-shadow:0 3px 10px rgba(40,10,40,.2)}
+.bkst .bkx{position:static;margin-left:.3rem}
+.hi{font-size:.74rem;font-weight:700;padding:.14rem .62rem;border-radius:99px;white-space:nowrap}
+.ty-new{background:#E0F2E3;color:#1F6B2B}.ty-rep{background:#FFF0CF;color:#7A4A00}.ty-often{background:#F4E2F6;color:#7B2A8E}
+.ty-mem{background:#EAE0F8;color:#51308C}.ty-co{background:#E3EEFB;color:#1D4E89}.ty-bd{background:#FFE7EF;color:#B0244F}.ty-no{background:#EFEAE5;color:#6E5A68}
+.bkc,.bkstay{background:#FFFDFB;border:1px solid var(--hair);border-radius:18px;box-shadow:0 8px 22px -20px rgba(60,20,50,.35)}
+.bkstay{padding:.7rem 1.1rem;display:grid;grid-template-columns:auto minmax(4rem,1fr) auto repeat(3,auto);gap:0 1rem;align-items:center}
+.bkstay .sd{display:flex;flex-direction:column}
+.bkstay .sd b{font-size:1rem;font-weight:600;line-height:1.3;white-space:nowrap}
+.bkstay .sd b em{font-family:var(--serif);font-style:normal;font-size:1.7rem;font-weight:700;line-height:1.1}
+.bkstay small{font-size:.74rem;color:var(--soft);white-space:nowrap}
+.bkstay .sn{position:relative;height:1.8rem;display:grid;place-items:center}
+.bkstay .sn::before{content:'';position:absolute;left:0;right:.2rem;top:50%;border-top:1px solid #D7C4EA}
+.bkstay .sn::after{content:'';position:absolute;right:0;top:calc(50% - 4px);border:4px solid transparent;border-left:7px solid #C9B3E2}
+.bkstay .sn i{position:relative;font-style:normal;font-weight:700;color:var(--purple);background:#FFFDFB;border:1px solid #D7C4EA;border-radius:99px;padding:.1rem .75rem;font-size:.85rem}
+.bkstay .sx{display:flex;gap:.5rem;align-items:flex-start;padding-left:1rem;border-left:1px solid var(--hair);min-width:0}
+.bkstay .sx b{display:block;font-size:.95rem;line-height:1.4;font-weight:600;white-space:nowrap}
+.bki{width:1.05rem;height:1.05rem;fill:none;stroke:var(--purple);stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round;flex:none;opacity:.85;margin-top:.15rem}
+.bkgrid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:.7rem;align-items:start}
+.bkcol{display:grid;gap:.7rem;min-width:0}
+.bkc{padding:.75rem 1rem .8rem;min-width:0}
+.bkc .hd{display:flex;align-items:center;justify-content:space-between;gap:.5rem;margin-bottom:.35rem;padding-bottom:.4rem;border-bottom:1px solid var(--hair);min-height:2rem}
+.bkc .hd h3{margin:0;font-size:.95rem;font-weight:700;color:var(--ink);display:flex;align-items:center;gap:.45rem}
+.bkc .hd h3::before{content:'';width:.28rem;height:.95rem;border-radius:3px;background:var(--grad)}
+.bkc .hd .badge{font-size:.72rem}
+.bkc .more{border:0;background:none;font:inherit;font-weight:700;font-size:.86rem;color:var(--purple);cursor:pointer;padding:.2rem;min-height:2rem}
+.bkc .sub{font-size:.7rem;letter-spacing:.05em;color:var(--gold);font-weight:700;margin:.5rem 0 0}
+.bkc .sub:first-of-type{margin-top:0}
+.gh2{display:flex;gap:.65rem;align-items:center;padding:.1rem 0 .45rem}
+.gav{width:2.4rem;height:2.4rem;border-radius:50%;background:var(--grad);color:#fff;display:grid;place-items:center;font-size:1.05rem;font-weight:700;flex:none;box-shadow:0 0 0 2px #fff,0 0 0 3px #E4D3EE}
+.gnm{min-width:0}.gnm h4{font-size:1.05rem;margin:0;line-height:1.45}.gnm small{color:var(--soft);font-size:.78rem}
+.gchips{display:flex;flex-wrap:wrap;gap:.3rem;padding-bottom:.45rem}
+.ctl{display:flex;align-items:flex-start;gap:.55rem;padding:.32rem 0;border-top:1px dotted var(--hair);font-weight:600;font-size:.88rem;line-height:1.5}
+.ctl>div{min-width:0;overflow-wrap:anywhere}.ctl .badge{font-size:.7rem}
+.kr,.bkc .kv{display:grid;grid-template-columns:6.4rem 1fr;gap:.5rem;padding:.3rem 0;border-bottom:1px dotted var(--hair);font-size:.86rem;line-height:1.5}
+.kr:last-child{border-bottom:0}.kr>span,.bkc .kv>span{color:var(--soft)}.kr>div{font-weight:600;min-width:0;overflow-wrap:anywhere}
 .muted{color:var(--soft);font-weight:500}
-.bkpay .due{display:flex;justify-content:space-between;align-items:center;border-radius:16px;padding:.75rem 1rem;margin-bottom:.5rem}
+.bkpay .due{display:flex;justify-content:space-between;align-items:center;border-radius:13px;padding:.5rem .8rem;margin-bottom:.3rem}
 .bkpay .due.open{background:linear-gradient(135deg,#FFF1F3,#FDE6EA);color:#A3152D}.bkpay .due.ok{background:linear-gradient(135deg,#F1FAF4,#E6F4EC);color:#2E7D5B}
-.bkpay .due span{font-weight:700;font-size:.92rem}.bkpay .due b{font-family:var(--serif);font-size:1.8rem;line-height:1.2}.bkpay .due b small{font-family:inherit;font-size:.95rem;font-weight:600}
-.bkpay .prow{display:flex;align-items:center;gap:.5rem;padding:.42rem 0;border-bottom:1px dotted var(--hair);font-size:.96rem}
-.bkpay .prow>span:first-child{flex:1;color:var(--soft)}.bkpay .prow .badge{flex:none}
-.bkpay .prow.t{border-bottom:0;border-top:1px solid var(--hair);margin-top:.25rem;padding-top:.6rem;font-weight:700}.bkpay .prow.t>span:first-child{color:var(--ink)}
-.bkc .kv{display:grid;grid-template-columns:8rem 1fr;gap:.6rem;padding:.42rem 0;border-bottom:1px dotted var(--hair)}
-@media (max-width:900px){.bkgrid{grid-template-columns:1fr}.bkstay .sx{grid-template-columns:1fr}.bkstay .sx>div{padding:.4rem 0;border-left:0!important}}
+.bkpay .due span{font-weight:700;font-size:.82rem}.bkpay .due b{font-family:var(--serif);font-size:1.4rem;line-height:1.2}.bkpay .due b small{font-family:inherit;font-size:.8rem;font-weight:600}
+.bkpay .prow{display:flex;align-items:center;gap:.4rem;padding:.3rem 0;border-bottom:1px dotted var(--hair);font-size:.86rem}
+.bkpay .prow>span:first-child{flex:1;color:var(--soft)}.bkpay .prow .badge{flex:none;font-size:.68rem}
+.bkpay .prow.t{border-bottom:0;border-top:1px solid var(--hair);margin-top:.15rem;padding-top:.45rem;font-weight:700}.bkpay .prow.t>span:first-child{color:var(--ink)}
+.docbtns{display:grid;grid-template-columns:1fr 1fr;gap:.45rem;margin-top:.55rem}
+.docbtns .btn{display:inline-flex;align-items:center;justify-content:center;gap:.35rem;min-height:2.5rem;font-weight:700;font-size:.82rem;padding:0 .4rem}
+.docbtns .btn:disabled{opacity:.45;cursor:not-allowed}
+.dochint{margin:.35rem 0 0;font-size:.76rem;color:var(--soft)}
+.dsig{display:flex;justify-content:flex-end;margin-top:2.2rem}.dsig>div{display:flex;flex-direction:column;align-items:center;gap:.3rem}.dsig span{width:12rem;border-bottom:1px solid #999}.dsig small{color:#666}
+.sheet.bkm{width:min(68rem,100%)!important;display:flex!important;flex-direction:column!important;overflow:hidden!important}
+.bkmsb{padding:.8rem!important;display:block!important;background:var(--paper);flex:1 1 auto;min-height:0;overflow:auto!important}
+.sheet.bkm .sf{flex:none}
+.bkpv.inm .bkhd{border-radius:16px}
+.bkpv.inm .bkst .bkx{width:2.3rem;height:2.3rem;border-radius:50%;border:0;background:rgba(255,255,255,.25);color:#fff;display:grid;place-items:center;cursor:pointer}
+@media print{#bkpg{display:none!important}}
+@media (max-width:1050px){.bkgrid{grid-template-columns:1fr 1fr}.bkgrid>.bkcol{grid-column:1/-1;grid-template-columns:1fr 1fr}
+ .bkstay{grid-template-columns:auto 1fr auto;row-gap:.6rem}.bkstay .sx{grid-row:2}.bkstay .sx:nth-of-type(4){padding-left:0;border-left:0}}
+@media (max-width:700px){.bkgrid,.bkgrid>.bkcol{grid-template-columns:1fr}}
 """
 
 
@@ -999,7 +1017,7 @@ def bkpage(h):
     h = _r(h, [
         ("function detail(id,ctx){", BKPAGE_JS),
         ("  openModal(`<div class=\"sh\"><button class=\"x\" data-close aria-label=\"ปิด\">${ico('x')}</button>${bkHead(v,H)}</div>",
-         "  if(!ctx&&S.view==='list'){bkPage(b,v,H,co,{dep,net});return}\n  openModal(`<div class=\"sh\"><button class=\"x\" data-close aria-label=\"ปิด\">${ico('x')}</button>${bkHead(v,H)}</div>"),
+         "  if(!ctx&&S.view==='list'){bkPage(b,v,H,co,{dep,net});return}\n  if(window.bkModal){bkModal(b,v,H,co,{dep,net},ctx);return}\n  openModal(`<div class=\"sh\"><button class=\"x\" data-close aria-label=\"ปิด\">${ico('x')}</button>${bkHead(v,H)}</div>"),
         ("if(a=t.closest('[data-view]')){S.view=a.dataset.view;renderAll();return}",
          "if(a=t.closest('[data-view]')){bkBack();S.view=a.dataset.view;renderAll();return}"),
     ], 'book')
