@@ -436,6 +436,16 @@ ok('AI สรุปกล่อง CRM: กันโค้ดแปลกปล�
   ok('เมนูการเงิน: บันทึกสถานะแล้วโหลดกลับมาได้');
 }
 
+// 11l) เมนูอื่นๆ: แม่บ้าน (ของที่พบ) บันทึกแล้วโหลดกลับมาได้ · เมนูที่ไม่รู้จักถูกปฏิเสธ
+{
+  const mod = d => call('/api/app?part=mod', { method: 'POST', body: JSON.stringify(d) });
+  assert.equal((await mod({ k: 'hk', data: { found: [{ id: 7, room: 'A01', name: 'ร่มทดสอบระบบ', st: 1 }], lost: [], repairs: [] } })).body.ok, true);
+  assert.equal((await mod({ k: 'xx', data: {} })).status, 500);
+  const H = (await call('/api/app?part=mods&since=x')).body.mods.hk;
+  assert.ok(H.includes('PPM_STATE=') && H.includes('ร่มทดสอบระบบ'));
+  ok('เมนูอื่นๆ: บันทึกสถานะแล้วโหลดกลับมาได้');
+}
+
 // 12) กันเดา PIN
 for (let i = 0; i < 8; i++) await call('/api/app?part=pin', { method: 'POST', body: JSON.stringify({ role: 'owner', pin: '000000' }) });
 assert.equal((await call('/api/app?part=pin', { method: 'POST', body: JSON.stringify({ role: 'owner', pin: '246810' }) })).status, 429);

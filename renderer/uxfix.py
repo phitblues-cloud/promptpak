@@ -204,6 +204,9 @@ def apply(M):
         M['home'] = homepop(M['home'])
     if 'fin' in M:
         M['fin'] = finsave(M['fin'])
+    for k in ('hk', 'crmtool', 'cust', 'crm', 'mkt'):
+        if k in M:
+            M[k] = modsave(M[k], k)
     return M
 
 
@@ -1259,3 +1262,72 @@ def finsave(h):
          "  if(b.room&&roomPay>0) ppFinRoomPay(b.no,PY.m,roomPay);\n  if(b.room&&roomPay>0) try{parent.postMessage({pbr:'finpay',"),
     ], 'fin-save')
     return h
+
+
+# ---------- เมนูที่เหลือบันทึกจริง (ต้องรัน 16_modstate.sql) ----------
+# แต่ละเมนูเก็บ "ส่วนที่ผู้ใช้แก้" เป็นสถานะชุดเดียว · บันทึกอัตโนมัติทุกครั้งที่หน้าจอเปลี่ยน · โหลดกลับตอนเปิดหน้า
+PPM_HELPER = r"""
+const PPM_BIG=(k,v)=>typeof v==='string'&&v.length>350000?'':v;
+function ppmSaver(k,snap){let last=null,t=null,busy=false;
+  try{last=JSON.stringify(snap(),PPM_BIG)}catch(_){}
+  return ()=>{clearTimeout(t);t=setTimeout(()=>{let j;try{j=JSON.stringify(snap(),PPM_BIG)}catch(_){return}
+    if(j===last||busy)return;busy=true;
+    fetch(top.location.origin+'/api/app?part=mod',{method:'POST',credentials:'same-origin',headers:{'Content-Type':'application/json'},body:'{"k":'+JSON.stringify(k)+',"data":'+j+'}'})
+     .then(r=>r.json().catch(()=>({})).then(x=>{if(!r.ok)throw new Error(x.error||('รหัส '+r.status));last=j;try{parent.postMessage({pbr:'pp-saved'},'*')}catch(_){}}))
+     .catch(e=>{try{toast('⚠️ บันทึกไม่สำเร็จ: '+e.message)}catch(_){}}).finally(()=>{busy=false})},700)}}
+const ppArr=(a,v)=>{if(Array.isArray(v))a.splice(0,a.length,...v)};
+const ppObj=(o,v)=>{if(v&&typeof v==='object')Object.assign(o,v)};
+"""
+
+MODSPEC = {
+    'hk': dict(funcs=['render', 'renderRepair'], js=r"""
+const __st=PPM_STATE.hk;
+if(__st){ppArr(FOUND,__st.found);ppArr(LOST,__st.lost);if(Array.isArray(__st.repairs))REPAIRS=__st.repairs;
+  try{fid=Math.max(fid,...FOUND.map(x=>+x.id||0));lid=Math.max(lid,...LOST.map(x=>+x.id||0));rid=Math.max(rid,...REPAIRS.map(x=>+String(x.id).replace(/\D/g,'')||0))}catch(_){}
+  try{render()}catch(e){console.error(e)}}
+window.__ppm=ppmSaver('hk',()=>({found:FOUND,lost:LOST,repairs:REPAIRS}));
+"""),
+    'crmtool': dict(funcs=['render', 'renderLb'], js=r"""
+const __st=PPM_STATE.crmtool||{},__lb0=LB.map(x=>x.id),__ln0=LN.map(x=>x.id);
+let __lbGone=__st.lbGone||[],__lnGone=__st.lnGone||[];
+if(PPM_STATE.crmtool){ppObj(LS,__st.ls);ppArr(MS,__st.ms);ppArr(GONE,__st.gone);ppArr(CAMPS,__st.camps);ppArr(EXTRA_CO,__st.extra);
+  (__st.ds||[]).forEach(d=>{const i=DS.findIndex(x=>x.id===d.id);if(i>=0)DS[i]=d;else DS.push(d)});
+  LB=LB.filter(x=>!__lbGone.includes(x.id));LN=LN.filter(x=>!__lnGone.includes(x.id));
+  CL.forEach(c=>{const p=(__st.clp||{})[c.id];if(Array.isArray(p))c.promos=p});
+  try{render()}catch(e){console.error(e)}}
+window.__ppm=ppmSaver('crmtool',()=>{__lbGone=[...new Set(__lbGone.concat(__lb0.filter(id=>!LB.some(x=>x.id===id))))];
+  __lnGone=[...new Set(__lnGone.concat(__ln0.filter(id=>!LN.some(x=>x.id===id))))];
+  return {ls:LS,ms:MS,ds:DS,lbGone:__lbGone,lnGone:__lnGone,gone:GONE,camps:CAMPS,extra:EXTRA_CO,clp:Object.fromEntries(CL.filter(c=>c.promos&&c.promos.length).map(c=>[c.id,c.promos]))}});
+"""),
+    'cust': dict(funcs=['render', 'renderSTP'], js=r"""
+const __st=PPM_STATE.cust;
+if(__st){CO.forEach(k=>{const p=(__st.cop||{})[k.id];if(Array.isArray(p))k.promos=p})}
+if(PPM_STATE.stp)STP.confirmed=!!PPM_STATE.stp.confirmed;
+if(__st||PPM_STATE.stp){try{render()}catch(e){console.error(e)}}
+const __a=ppmSaver('cust',()=>({cop:Object.fromEntries(CO.filter(k=>k.promos&&k.promos.length).map(k=>[k.id,k.promos]))})),__b=ppmSaver('stp',()=>({confirmed:!!STP.confirmed}));
+window.__ppm=()=>{__a();__b()};
+"""),
+    'crm': dict(funcs=['renderSTP'], js=r"""
+if(PPM_STATE.stp){STP.confirmed=!!PPM_STATE.stp.confirmed;try{renderSTP()}catch(_){}}
+window.__ppm=ppmSaver('stp',()=>({confirmed:!!STP.confirmed}));
+"""),
+    'mkt': dict(funcs=['renderResults', 'renderGV', 'renderKitchen', 'renderDetail', 'updateKBadge'], js=r"""
+const __st=PPM_STATE.mkt;
+if(__st){if(Array.isArray(__st.campaigns))campaigns=__st.campaigns;if(Array.isArray(__st.plans))plans=__st.plans;ppObj(GV,__st.gv);
+  (__st.segs||[]).forEach(g=>{if(!segments.some(x=>x.id===g.id))segments.push(g)});
+  [renderResults,renderGV,renderFeed,updateKBadge].forEach(f=>{try{f()}catch(_){}})}
+if(PPM_STATE.stp&&typeof STP==='object')STP.confirmed=!!PPM_STATE.stp.confirmed;
+window.__ppm=ppmSaver('mkt',()=>({campaigns,plans,gv:GV,segs:segments.filter(x=>x.custom)}));
+"""),
+}
+
+
+def modsave(h, key):
+    import ctx, json as _j
+    sp = MODSPEC[key]
+    st = (ctx.MOCK or {}).get('mod_state') or {}
+    for f in sp['funcs']:
+        h = _r(h, [('function %s(){' % f, 'function %s(){try{window.__ppm&&window.__ppm()}catch(_){}' % f)], 'mod-' + key)
+    data = _j.dumps(st, ensure_ascii=False).replace('</', '<\\/')
+    k = h.rindex('</script>')
+    return h[:k] + '\n/* ---- บันทึกจริง ---- */\nconst PPM_STATE=' + data + ';\n' + PPM_HELPER + '\ntry{\n' + sp['js'] + '\n}catch(e){console.error(e)}\n' + h[k:]
