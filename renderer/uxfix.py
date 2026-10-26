@@ -838,8 +838,6 @@ function bkPage(b,v,H,co,X){
   const nm=v.org?(v.gname||'ยังไม่แจ้งชื่อ'):v.guest;
   const TH=['ม.ค.','ก.พ.','มี.ค.','เม.ย.','พ.ค.','มิ.ย.','ก.ค.','ส.ค.','ก.ย.','ต.ค.','พ.ย.','ธ.ค.'];
   const thD=s=>{const [Y,M,D]=String(s).split('-').map(Number);return D+' '+TH[M-1]};
-  const notes=[...(b.bdayIn?[['วันเกิดของแขกตรงกับ '+thD(b.bdayIn)+' ระหว่างเข้าพัก · อวยพรวันเกิดแขกด้วยนะคะ','🎂 วันเกิดระหว่างเข้าพัก']]:[]),
-    [b.note,'หมายเหตุการจอง'],[b.bspec,'คำขอในการจองนี้'],[b.gpref,'ความต้องการประจำของลูกค้า']].filter(x=>x[0]&&String(x[0]).trim());
   const row=(k,val)=>`<div class="kr"><span>${k}</span><div>${val}</div></div>`;
   const ct=(ic,val)=>`<div class="ctl">${bki(ic)}<div>${val}</div></div>`;
   const pv=v.pay,X0=X||{};
@@ -854,8 +852,6 @@ function bkPage(b,v,H,co,X){
      <div class="bkwho">${esc(v.title)}<span class="dot">·</span>ห้อง ${v.room}</div>
      <div class="bkind"><span class="hi ty-${TY[1]}">${TY[0]}</span>${v.mem?'<span class="hi ty-mem">สมาชิก</span>':''}${v.org||b.gco?'<span class="hi ty-co">ลูกค้าบริษัท</span>':''}${b.bdayIn?'<span class="hi ty-bd">🎂 วันเกิดระหว่างเข้าพัก</span>':''}</div></div>
     <div class="bkst">${v.badges}</div></header>
-   ${notes.length?`<section class="bkalert" role="note"><div class="at">ข้อควรรู้ก่อนรับแขก</div>${notes.map(([t,l])=>`<div class="nt"><small>${l}</small><p>${esc(t)}</p></div>`).join('')}</section>`
-     :'<div class="bknone">ไม่มีหมายเหตุหรือคำขอพิเศษ</div>'}
    <section class="bkstay" aria-label="ช่วงเข้าพัก">
     <div class="sd"><span class="lbl">เช็คอิน</span><b><em>${ciD}</em> ${esc(String(v.ci).slice(ciD.length+1))}</b><small>${esc(v.ciTxt)}</small></div>
     <div class="sn"><i>${v.nights} คืน</i></div>
@@ -879,12 +875,13 @@ function bkPage(b,v,H,co,X){
       ${row('บริการเพิ่มเติม',pv.svc&&pv.svc.length?pv.svc.map(x=>esc(x.name)+' '+x.qty+' '+esc(x.unit||'')+' · '+fmt(x.qty*x.price)+' บาท').join('<br>'):'<span class="muted">ไม่มี</span>')}
       ${pv.disc?row('ส่วนลด',(pv.code?esc(pv.code)+' · ':'')+'−'+fmt(pv.disc)+' บาท'):''}
       <div class="sub">ที่มาของการจอง</div>
-      ${row('ช่องทางจอง',esc(v.ch))}${v.madeAt?row('จองเมื่อ',v.madeAt)+row('จองล่วงหน้า',v.lead+' วัน'):''}${row('การเช็คอิน',esc(v.ciTxt))}</section>
+      ${row('ช่องทางจอง',esc(v.ch))}${v.madeAt?row('จองเมื่อ',v.madeAt)+row('จองล่วงหน้า',v.lead+' วัน'):''}${row('การเช็คอิน',esc(v.ciTxt))}${b.note?row('หมายเหตุ',esc(b.note)):''}</section>
     </div>
     <div class="bkcol">
      <section class="bkc bkpay"><div class="hd"><h3>บัญชีค่าใช้จ่าย</h3></div>
       <div class="due ${due>0?'open':'ok'}"><span>${due>0?'ยอดค้างชำระ':'ชำระครบแล้ว'}</span><b>${fmt(due)}<small> บาท</small></b></div>
-      ${paySec?paySec.innerHTML:''}</section>
+      ${paySec?paySec.innerHTML:''}
+      <div class="docbtns"><button type="button" class="btn ghost" data-pdoc="rc" ${b.paid?'':'disabled'}>${PRI}พิมพ์ใบเสร็จ</button><button type="button" class="btn ghost" data-pdoc="tx" ${tx&&b.paid?'':'disabled'}>${PRI}พิมพ์ใบกำกับภาษี</button></div>${!b.paid?'<p class="dochint">ยังไม่ได้รับชำระค่าห้อง จึงยังออกใบเสร็จไม่ได้</p>':!tx?'<p class="dochint">แขกไม่ได้ขอใบกำกับภาษี</p>':''}</section>
      <section class="bkc"><div class="hd"><h3>ใบกำกับภาษี</h3>${tx?'<span class="badge b3">ต้องการ</span>':'<span class="badge b6">ไม่ขอ</span>'}</div>
       ${tx?row('ประเภท',esc(tx.type||'-'))+row('ออกในนาม',esc(tx.name||'-'))+row('เลขผู้เสียภาษี',esc(tx.id||'-'))+(tx.branch||tx.hq?row('สาขา',esc(tx.branch||tx.hq)):'')+row('ที่อยู่',esc(tx.addr||'-'))
         :row('เอกสารที่ออกให้','ใบเสร็จรับเงิน')+row('ในนาม',esc(nm))}</section>
@@ -893,8 +890,35 @@ function bkPage(b,v,H,co,X){
    </div>
   </article>`;
   pg.querySelectorAll('[data-bkback]').forEach(x=>x.onclick=bkBack);
+  pg.querySelectorAll('[data-pdoc]').forEach(x=>x.onclick=()=>bkDoc(x.dataset.pdoc,b,v,H,nm,tx));
   const gm=pg.querySelector('[data-gmore]');if(gm)gm.onclick=()=>{try{parent.postMessage({pbr:'custpage',gid:gm.dataset.gmore},'*')}catch(_){}};
   try{scrollTo(0,0)}catch(_){}
+}
+const PRI='<svg class="bki" viewBox="0 0 24 24" aria-hidden="true"><path d="M7 9V4h10v5M7 17H5a2 2 0 0 1-2-2v-4a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v4a2 2 0 0 1-2 2h-2"/><rect x="7" y="14" width="10" height="7" rx="1"/></svg>';
+/* ใบเสร็จรับเงิน / ใบกำกับภาษีเต็มรูป — แสดงตัวอย่างแล้วสั่งพิมพ์ (หรือบันทึกเป็น PDF จากหน้าพิมพ์) */
+function bkDoc(k,b,v,H,nm,tx){
+  const {esc,fmt}=H,pv=v.pay,isT=k==='tx',D=n=>fD(n,{day:'numeric',month:'short',year:'numeric'});
+  const items=[[`ค่าห้องพัก ${v.roomType} ห้อง ${b.room} · ${D(b.start)} – ${D(b.start+b.nights)} (${b.nights} คืน × ${fmt(pv.rate)})`,pv.base]];
+  if(pv.bf)items.push(['อาหารเช้า',pv.bf]);
+  (pv.svc||[]).forEach(x=>items.push([`${x.name} ${x.qty} ${x.unit||''} × ${fmt(x.price)}`,x.qty*x.price]));
+  if(pv.disc)items.push([`ส่วนลด${pv.code?' ('+pv.code+')':''}`,-pv.disc]);
+  const tot=items.reduce((a,x)=>a+x[1],0),net=tot*100/107,vat=tot-net,no=(isT?'TX-':'RC-')+b.no;
+  const to=isT?`<small>ผู้ซื้อ / ผู้รับบริการ</small><b>${esc(tx.name||nm)}</b><small>เลขประจำตัวผู้เสียภาษี ${esc(tx.id||'-')}${tx.branch||tx.hq?' · '+esc(tx.branch||tx.hq):''}</small><small>${esc(tx.addr||'')}</small>`
+                :`<small>ได้รับเงินจาก</small><b>${esc(nm)}</b>${v.phone?`<small>โทร ${esc(v.phone)}</small>`:''}`;
+  openModal(`<div class="sh"><button class="x" data-close aria-label="ปิด">${ico('x')}</button><div class="rn">${isT?'ใบกำกับภาษี':'ใบเสร็จรับเงิน'}</div><div class="bkn">${no} · ${esc(isT?tx.name||nm:nm)}</div></div>
+   <div class="sb"><div class="sb2"><div class="docp" id="docp">
+    <div class="dtop"><div><b class="dh">พบรักรีสอร์ท</b><small>อ.อุบลรัตน์ จ.ขอนแก่น</small>${isT?'<small>เลขประจำตัวผู้เสียภาษี (รอใส่เลขของโรงแรม) · สำนักงานใหญ่</small>':''}</div>
+     <div class="dno"><b>${isT?'ใบกำกับภาษี / ใบเสร็จรับเงิน':'ใบเสร็จรับเงิน'}</b><small>เลขที่ ${no}</small><small>วันที่ ${D(TODAY)}</small><small>อ้างอิงการจอง ${b.no}</small></div></div>
+    <div class="dto">${to}</div>
+    <table class="dt"><thead><tr><th>รายการ</th><th style="text-align:right">จำนวนเงิน (บาท)</th></tr></thead><tbody>${items.map(([t,a])=>`<tr><td>${esc(t)}</td><td style="text-align:right">${a<0?'−':''}${fmt(Math.abs(a))}</td></tr>`).join('')}</tbody></table>
+    <div class="dsum">${isT?`<div><span>มูลค่าสินค้า/บริการ (ก่อนภาษี)</span><b>${(Math.round(net*100)/100).toLocaleString('th-TH',{minimumFractionDigits:2})}</b></div><div><span>ภาษีมูลค่าเพิ่ม 7%</span><b>${(Math.round(vat*100)/100).toLocaleString('th-TH',{minimumFractionDigits:2})}</b></div>`:''}
+     <div class="g"><span>${isT?'รวมทั้งสิ้น (รวมภาษีแล้ว)':'รับชำระทั้งสิ้น'}</span><b>${fmt(tot)}</b></div></div>
+    <div class="dnote">ค่าประกันห้อง ${fmt(pv.dep)} บาท เป็นเงินมัดจำคืนได้ ไม่รวมในเอกสารนี้</div>
+    <div class="dsig"><div><span></span><small>ผู้รับเงิน</small></div></div>
+    <div class="dnote">ต้นแบบ: ตรวจรูปแบบและเลขผู้เสียภาษีของโรงแรมก่อนใช้จริง</div></div></div></div>
+   <div class="sf"><button class="btn pri" id="docPrint">${PRI}พิมพ์ / บันทึก PDF</button></div>`,()=>{
+    const m=$('msheet');m.classList.add('xl');m.querySelectorAll('[data-close]').forEach(x=>x.onclick=closeModal);
+    $('docPrint').onclick=()=>{try{window.print()}catch(e){toast('พิมพ์ไม่ได้ในหน้านี้')}}},false);
 }
 function bkBack(){const P=$('pList'),pg=$('bkpg');if(pg)pg.remove();if(P)P.classList.remove('pg')}
 function detail(id,ctx){"""
@@ -921,7 +945,12 @@ BKPAGE_CSS = """
 .bkalert .nt{padding:.35rem 0}.bkalert .nt+.nt{border-top:1px solid #F1E3C4}
 .bkalert .nt small{display:block;font-size:.76rem;color:#8A6A2A;font-weight:700}
 .bkalert .nt p{margin:.08rem 0 0;font-weight:600;line-height:1.6}
-.bknone{color:var(--soft);font-size:.88rem;padding:0 .4rem}
+.docbtns{display:grid;grid-template-columns:1fr 1fr;gap:.55rem;margin-top:.8rem}
+.docbtns .btn{display:inline-flex;align-items:center;justify-content:center;gap:.45rem;min-height:2.9rem;font-weight:700}
+.docbtns .btn:disabled{opacity:.45;cursor:not-allowed}
+.dochint{margin:.45rem 0 0;font-size:.82rem;color:var(--soft)}
+.dsig{display:flex;justify-content:flex-end;margin-top:2.2rem}.dsig>div{display:flex;flex-direction:column;align-items:center;gap:.3rem}.dsig span{width:12rem;border-bottom:1px solid #999}.dsig small{color:#666}
+@media print{#bkpg{display:none!important}}
 .bkc,.bkstay{background:#FFFDFB;border:1px solid var(--hair);border-radius:22px;box-shadow:0 1px 0 rgba(255,255,255,.8) inset,0 10px 26px -22px rgba(60,20,50,.35)}
 .bkstay{padding:1.1rem 1.4rem 1rem;display:grid;grid-template-columns:auto 1fr auto;gap:.5rem 1.2rem;align-items:center}
 .bkstay .sd{display:flex;flex-direction:column}.bkstay .sd.r{text-align:right}
