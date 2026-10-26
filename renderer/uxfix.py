@@ -1360,6 +1360,13 @@ IDEA_CSS = r"""
 #ideas .box{overflow:visible}
 #ideas .cards{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;overflow:visible;padding:2px}
 #ideas .cards>.more{grid-column:1/-1}
+#ideas [data-box="hotel"]{grid-template-columns:none;grid-auto-flow:column;grid-auto-columns:calc((100% - 20px)/3);overflow-x:auto;overflow-y:hidden;scroll-snap-type:x mandatory;scrollbar-width:none;-webkit-overflow-scrolling:touch;overscroll-behavior-x:contain}
+#ideas [data-box="hotel"]::-webkit-scrollbar{display:none}
+#ideas [data-box="hotel"]>*{scroll-snap-align:start}
+#ideas [data-box="hotel"]>.more{display:none}
+.ihr{display:flex;align-items:center;gap:6px}
+.iarr{width:30px;height:30px;border-radius:50%;border:1px solid var(--line);background:#fff;color:var(--plum);font-size:17px;line-height:1;padding:0;display:grid;place-items:center}
+.iarr:disabled{opacity:.35}
 #ideas .basket{position:sticky;top:12px;height:calc(100vh - 170px);min-height:560px}
 .ihd{display:flex;justify-content:space-between;align-items:center;gap:8px}
 .irf{border:1px solid var(--line);background:var(--paper);border-radius:999px;padding:4px 12px;font-size:12.5px;color:var(--muted);white-space:nowrap}
@@ -1384,7 +1391,7 @@ IDEA_CSS = r"""
 .ikick i{width:8px;height:8px;border-radius:50%;background:#2E9C6A}.ikick.hi i{background:#C41E3A}.ikick.mid i{background:#D99A1E}
 .ilink{display:inline-block;margin-top:12px;font-weight:600;color:var(--plum)}
 .icheck{font-size:12px;color:#9C8A95;margin-top:12px}
-@media(max-width:860px){#ideas .cards{grid-template-columns:repeat(2,minmax(0,1fr))}#ideas .basket{position:static;height:auto}}
+@media(max-width:860px){#ideas .cards{grid-template-columns:repeat(2,minmax(0,1fr))}#ideas [data-box="hotel"]{grid-auto-columns:calc((100% - 10px)/2)}#ideas .basket{position:static;height:auto}}
 """
 
 IDEA_JS = r"""
@@ -1430,6 +1437,11 @@ async function loadAI(kind,force){AISTAT[kind]={...(AISTAT[kind]||{}),loading:tr
  if(d.note)toast(d.note);if(force&&d.error)toast('ทำใหม่ไม่สำเร็จ: '+d.error);
  applyAI(kind,d);const b=document.querySelector(`[data-ai="${kind}"]`);if(b)b.disabled=false}
 document.querySelectorAll('[data-ai]').forEach(b=>b.onclick=()=>{b.disabled=true;toast(b.dataset.ai==='insight'?'ให้ Agent วิเคราะห์ใหม่ ใช้เวลาราว 20 วินาที':'ให้ AI ค้นข่าวใหม่ ใช้เวลาราว 1 นาที');loadAI(b.dataset.ai,true)});
+function arrUpd(){const c=$('[data-box="hotel"]');if(!c)return;const l=c.scrollLeft,m=c.scrollWidth-c.clientWidth;
+ document.querySelectorAll('[data-scr]').forEach(b=>{b.disabled=b.dataset.scr<0?l<=2:l>=m-2;b.hidden=m<=2})}
+document.querySelectorAll('[data-scr]').forEach(b=>b.onclick=()=>{const c=$('[data-box="hotel"]');c.scrollBy({left:(c.clientWidth+10)*Number(b.dataset.scr),behavior:'smooth'})});
+(()=>{const c=$('[data-box="hotel"]');if(c){c.addEventListener('scroll',()=>requestAnimationFrame(arrUpd),{passive:true});window.addEventListener('resize',arrUpd)}})();
+var _rf1=renderFeed;renderFeed=function(){_rf1();setTimeout(arrUpd,0)};
 loadAI('insight');loadAI('news');
 """
 
@@ -1438,7 +1450,7 @@ def ideacards(h, owner):
     btn = lambda k, t: ('<button class="irf" data-ai="%s">↻ %s</button>' % (k, t)) if owner else ''
     h = _r(h, [
         ('<div class="box"><h2><span class="dot" style="background:var(--plum)"></span>โอกาสจากข้อมูลโรงแรม</h2>\n    <p class="feedsrc">AI คัดเฉพาะเรื่องที่การตลาดช่วยได้ · อัปเดตเช้านี้</p>',
-         '<div class="box"><div class="ihd"><h2><span class="dot" style="background:var(--plum)"></span>Insight จากข้อมูลโรงแรม</h2>' + btn('insight', 'วิเคราะห์ใหม่') + '</div>\n    <p class="feedsrc"></p>'),
+         '<div class="box"><div class="ihd"><h2><span class="dot" style="background:var(--plum)"></span>Insight จากข้อมูลโรงแรม</h2><div class="ihr">' + btn('insight', 'วิเคราะห์ใหม่') + '<button class="iarr" data-scr="-1" aria-label="เลื่อนซ้าย">‹</button><button class="iarr" data-scr="1" aria-label="เลื่อนขวา">›</button></div></div>\n    <p class="feedsrc"></p>'),
         ('<h2><span class="dot" style="background:var(--red)"></span>ข่าวและเทรนด์</h2>',
          '<h2><span class="dot" style="background:var(--red)"></span>ข่าวและเทรนด์รอบโรงแรม</h2>'),
         ('<div class="minitabs" role="tablist"><button role="tab" data-sub="local">ข่าวรอบโรงแรม <span class="nb"></span></button><button role="tab" data-sub="trend">เทรนด์ <span class="nb"></span></button></div></div>',
