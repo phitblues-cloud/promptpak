@@ -1590,6 +1590,8 @@ BKMULTI_CSS = r"""
 .knm{font-size:1.02rem}.kfc{margin-top:.3rem;line-height:1.5}
 .ksel{margin-right:.15rem}
 .kex{padding:.8rem 1rem .9rem 10.45rem;gap:1.2rem}
+.kzn{display:inline-block;font-weight:700!important;color:#6A3AA2!important;background:#F2EAFA;border-radius:999px;padding:.08rem .6rem;font-size:.78rem!important;margin-left:.35rem;vertical-align:middle}
+.krc.on .ksel{background:#fff!important;color:#C41E3A!important;border:1.5px solid #EBC5CC!important}
 .krm{margin-left:auto;align-self:center;border:0;background:none;color:var(--red,#C41E3A);font:inherit;font-size:.82rem;text-decoration:underline;cursor:pointer}
 .kball{display:flex;gap:.6rem;align-items:center;border:1.5px solid var(--line);border-radius:16px;padding:.75rem 1rem;margin:.2rem 0 .6rem;background:#fff;cursor:pointer}
 .kball small{display:block;color:var(--soft,#6E5A68);font-size:.75rem}
@@ -1626,14 +1628,14 @@ def bkmulti(h):
         ("const roomSum=rs.reduce((a,r)=>a+r.rate*F.nights,0), bf=F.bf?BF_PRICE*people()*F.nights:0;",
          "const roomSum=rs.reduce((a,r)=>a+r.rate*F.nights,0), bf=bfSum();"),
         ("const on=F.sel&&F.key===x.k, full=", "const g=G(x.k),on=!!g, full="),
-        ("${on?'✓ เลือกแล้ว':full?'เต็ม':'เลือก'}</button></div>`;", "${on?'✓ เลือกแล้ว':full?'เต็ม':F.grp.length?'+ เพิ่ม':'เลือก'}</button></div>`;"),
+        ("${on?'✓ เลือกแล้ว':full?'เต็ม':'เลือก'}</button></div>`;", "${on?'ลบ':full?'เต็ม':F.grp.length?'+ เพิ่ม':'เลือก'}</button></div>`;"),
         ("<button type=\"button\" data-cnt=\"-1\" aria-label=\"ลดจำนวนห้อง\">−</button><output>${F.count}</output><button type=\"button\" data-cnt=\"1\" aria-label=\"เพิ่มจำนวนห้อง\">+</button>",
          "<button type=\"button\" data-cnt=\"-1\" data-k=\"${x.k}\" aria-label=\"ลดจำนวนห้อง\">−</button><output>${g.n}</output><button type=\"button\" data-cnt=\"1\" data-k=\"${x.k}\" aria-label=\"เพิ่มจำนวนห้อง\">+</button>"),
         ("<div class=\"lb\">เลือกเลขห้อง (${F.picked.length}/${F.count})</div>",
          "<div class=\"lb\">เลือกเลขห้อง (${F.picked.filter(c=>keyOf(c)===x.k).length}/${g.n})</div>"),
         ("<div><div class=\"lb\">บริการเสริม</div><label class=\"ktg\"><input type=\"checkbox\" id=\"fBf\" ${F.bf?'checked':''}><span>อาหารเช้า<small>${F.bf?`รวม ${fmt(BF_PRICE*people()*F.nights)} ฿ (${people()} ท่าน × ${F.nights} คืน)`:`+${BF_PRICE} ฿/ท่าน/คืน`}</small></span></label></div></div>`;",
          "<div><div class=\"lb\">บริการเสริม</div><label class=\"ktg\"><input type=\"checkbox\" data-bf=\"${x.k}\" ${g.bf?'checked':''}><span>อาหารเช้า<small>${g.bf?`ห้องประเภทนี้ · ${F.nights} คืน`:`+${BF_PRICE} ฿/ท่าน/คืน`}</small></span></label></div>"
-         "<button type=\"button\" class=\"krm\" data-rm=\"${x.k}\">เอาออก</button></div>`;"),
+         "</div>`;"),
         ("      return h+'</div>'}).join('');\n  };",
          "      return h+'</div>'}).join('')+(F.grp.length?`<label class=\"kball\"><input type=\"checkbox\" data-bfall ${F.grp.every(g=>g.bf)?'checked':''}><span><b>อาหารเช้าทุกห้อง</b><small>+${BF_PRICE} ฿/ท่าน/คืน · ติ๊กครั้งเดียวใช้กับทุกประเภทห้องที่เลือก${F.bf?` · รวม ${fmt(bfSum())} ฿`:''}</small></span></label>`:'');\n  };"),
         ("blk('tag',`${esc(typeLabel(F.key))} × ${F.count} (${F.picked.join(', ')})`,`ผู้ใหญ่ ${F.adults} · เด็ก ${F.kids} · ${F.bf?'รวมอาหารเช้า':'ไม่รวมอาหารเช้า'}`)",
@@ -1642,7 +1644,7 @@ def bkmulti(h):
          "h+=`<div class=\"cost\"><span>อาหารเช้า${F.bf?` · ${BF_PRICE} ฿/ท่าน/คืน · ${F.picked.filter(bfOn).length} ห้อง`:''}</span><b>${fmt(c.bf)}</b></div>`;"),
         # คลิก
         ("if(t&&!t.disabled){ if(!F.sel||F.key!==t.dataset.type){F.key=t.dataset.type;F.sel=true;F.picked=[];F.count=1} refresh();return}",
-         "if(t&&!t.disabled){const k=t.dataset.type;if(!G(k)){if(total()>=cap()){toast(`จองได้รวมไม่เกิน ${cap()} ห้องต่อการจอง`);return}"
+         "if(t&&!t.disabled){const k=t.dataset.type;if(G(k)){F.grp=F.grp.filter(g=>g.k!==k);F.picked=F.picked.filter(c=>keyOf(c)!==k);refresh();return}{if(total()>=cap()){toast(`จองได้รวมไม่เกิน ${cap()} ห้องต่อการจอง`);return}"
          "F.grp.push({k,n:1,bf:F.grp.length>0&&F.grp.every(g=>g.bf)})}refresh();return}\n"
          "      const rm=e.target.closest('[data-rm]');if(rm){const k=rm.dataset.rm;F.grp=F.grp.filter(g=>g.k!==k);F.picked=F.picked.filter(c=>keyOf(c)!==k);refresh();return}"),
         ("if(c){F.count=Math.max(1,Math.min(F.mode==='co'?10:5,F.count+(+c.dataset.cnt)));F.picked=F.picked.slice(0,F.count);refresh();return}",
@@ -1656,6 +1658,13 @@ def bkmulti(h):
         ("`${typeLabel(F.key)} × ${F.count} (${F.picked.join(', ')})`,`ผู้ใหญ่ ${F.adults} เด็ก ${F.kids}`", "grpTxt(),`ผู้ใหญ่ ${F.adults} เด็ก ${F.kids}`"),
         # บันทึก: อาหารเช้ารายห้อง
         ("purpose:F.purpose,bf:F.bf?BF_PRICE*share*F.nights:0,", "purpose:F.purpose,bf:bfOn(code)?BF_PRICE*Math.max(1,share)*F.nights:0,"),
+        # วัตถุประสงค์ไม่บังคับ: แตะซ้ำเพื่อยกเลิก
+        ("<span class=\"lb\">วัตถุประสงค์การเข้าพัก *</span>", "<span class=\"lb\">วัตถุประสงค์การเข้าพัก <small style=\"font-weight:400\">(ไม่บังคับ · แตะซ้ำเพื่อยกเลิก)</small></span>"),
+        ("m.querySelectorAll('input[name=purp]').forEach(r=>r.onchange=()=>{F.purpose=r.value;refresh()});",
+         "m.querySelectorAll('input[name=purp]').forEach(r=>{r.onchange=()=>{F.purpose=r.value;refresh()};"
+         "r.onclick=e=>{if(r.dataset.was==='1'){r.checked=false;F.purpose='';r.dataset.was='0';refresh()}else{m.querySelectorAll('input[name=purp]').forEach(x=>x.dataset.was='0');r.dataset.was='1'}};"
+         "if(r.checked)r.dataset.was='1'});"),
+        ("<span class=\"kzn\">· ${esc(ZN(x.z))}", "<span class=\"kzn\">${esc(ZN(x.z))}"),
         # รูปห้องจริง
         ("<div class=\"kth\">${bedSVG(two)}</div>",
          "${ROOM_PHOTO[x.z+'|'+x.t]?`<div class=\"kth ph\"><img src=\"/rooms/${ROOM_PHOTO[x.z+'|'+x.t]}-1.jpg\" alt=\"${esc(x.t)}\" loading=\"lazy\"></div>`:`<div class=\"kth\">${bedSVG(two)}</div>`}"),
