@@ -97,4 +97,12 @@ def patch(h):
     h = R(h, "left=tasks.filter(k=>!k.done).length+nrl;", "left=tasks.filter(k=>!k.done).length+nrl+nc;", 1, 'home-nc2')
     h = R(h, "(tasks.length||nr) ? `เหลือ ${left} จาก ${tasks.length+nr} งาน${nr?` · ซ่อม ${nr}`:''}` : ''", "(tasks.length||nr||nc) ? `เหลือ ${left} จาก ${tasks.length+nr+nc} งาน${nr?` · ซ่อม ${nr}`:''}${nc?` · CRM ${nc}`:''}` : ''", 1, 'home-nc3')
     h = R(h, "function onPub(k,v){\n", "function onPub(k,v){\n if(k==='crmnew'){CRMN={leads:v.leads||[],cos:v.cos||[]};try{renderTasks()}catch(e){console.error(e)}}\n", 1, 'home-crmpub')
+    # ป๊อปอัปการจอง: วันเกิดระหว่างเข้าพัก + บริษัทของลูกค้า (คำนวณแบบเดียวกับหน้ารายละเอียดการจอง)
+    from p_book import book_item
+    bkx = {}
+    for b in BK:
+        o = book_item(b)
+        if o.get('bdayIn') or o.get('gco'):
+            bkx[b['no']] = {'bd': o.get('bdayIn') or '', 'co': o.get('gco') or ''}
+    h = h.replace('function renderSheet(){', 'const BKX=' + J(bkx) + ';\nfunction renderSheet(){', 1)
     return h

@@ -200,6 +200,8 @@ def apply(M):
         M['hk'] = hk(M['hk'])
     if 'book' in M:
         M['book'] = bkback(bkpage(M['book']))
+    if 'home' in M:
+        M['home'] = homepop(M['home'])
     return M
 
 
@@ -937,7 +939,10 @@ function bkDoc(k,b,v,H,nm,tx,ret){
     const m=$('msheet');m.classList.add('xl');m.querySelectorAll('[data-close]').forEach(x=>x.onclick=ret||closeModal);
     $('docPrint').onclick=()=>{try{window.print()}catch(e){toast('พิมพ์ไม่ได้ในหน้านี้')}}},false);
 }
-function bkBack(){const P=$('pList'),pg=$('bkpg');if(pg)pg.remove();if(P)P.classList.remove('pg')}
+function bkBack(){const P=$('pList'),pg=$('bkpg');if(pg)pg.remove();if(P)P.classList.remove('pg');if(window.__bkFromHome){window.__bkFromHome=false;try{parent.postMessage({pbr:'bkfullback'},'*')}catch(_){}}}
+window.addEventListener('message',e=>{const d=e.data||{};if(d.pbr!=='bkfull')return;const b=B.find(x=>x.no===d.no)||BC.find(x=>x.no===d.no);if(!b)return;
+  try{closeModal()}catch(_){}S.view='list';renderAll();window.__bkFromHome=true;detail(b.id);
+  const bk=document.querySelector('#bkpg .back');if(bk)bk.lastChild.textContent='กลับหน้าแรก'});
 function detail(id,ctx){"""
 
 BKPAGE_CSS = """
@@ -1051,3 +1056,137 @@ def bkback(h):
 .kback input{width:1.3rem;height:1.3rem;margin-top:.15rem;accent-color:#B08A3E;flex:none}
 .kback b{display:block;color:#6E4F12}.kback small{display:block;color:#8A6A2A;font-size:.8rem;line-height:1.5}
 """)
+
+
+# ---------- ป๊อปอัปการจองในหน้าแรก: ย่อจากหน้ารายละเอียดการจอง (ข้อมูลหลัก) ให้ดูได้ในจอเดียว ----------
+HOMEPOP_JS = r"""
+const HPI={phone:'<path d="M5 4h4l2 5-2.5 1.5a11 11 0 0 0 5 5L15 13l5 2v4a2 2 0 0 1-2 2A16 16 0 0 1 3 6a2 2 0 0 1 2-2"/>',
+ line:'<path d="M12 4c5 0 9 3.1 9 7s-4 7-9 7c-.7 0-1.4-.1-2-.2L6 20v-3.5C4.2 15.2 3 13.2 3 11c0-3.9 4-7 9-7z"/>',
+ mail:'<rect x="3" y="5" width="18" height="14" rx="2.5"/><path d="M3.5 6.5 12 13l8.5-6.5"/>',
+ co:'<path d="M4 21V5.5A1.5 1.5 0 0 1 5.5 4h8A1.5 1.5 0 0 1 15 5.5V21M15 10h3.5A1.5 1.5 0 0 1 20 11.5V21M3 21h18M8 8h3M8 12h3M8 16h3"/>',
+ bed:'<path d="M3 18V7M3 14h18v4M21 14v-2.5A2.5 2.5 0 0 0 18.5 9H11v5"/><circle cx="7" cy="11" r="2"/>',
+ user:'<circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 3.6-6.2 8-6.2s8 2.2 8 6.2"/>',
+ flag:'<path d="M5 21V4M5 4h11l-2 4 2 4H5"/>'};
+const hpi=k=>`<svg class="bki" viewBox="0 0 24 24" aria-hidden="true">${HPI[k]}</svg>`;
+function homePopHTML(v,H,b,due){
+  const {esc,fmt}=H,pv=v.pay;
+  const tmp=document.createElement('div');tmp.innerHTML=bkBody(v,H);
+  const paySec=[...tmp.querySelectorAll('.sec')].find(x=>{const h=x.querySelector('h3');return h&&h.textContent.includes('การชำระเงิน')});
+  if(paySec)paySec.querySelector('h3').remove();
+  const n=v.visits||1,TY=n>=3?['มาบ่อย','often']:n===2?['มาซ้ำ','rep']:['ลูกค้าใหม่','new'];
+  const nm=v.org?(v.gname||'ยังไม่แจ้งชื่อ'):v.guest;
+  const row=(k,val)=>`<div class="kr"><span>${k}</span><div>${val}</div></div>`;
+  const ct=(ic,val)=>`<div class="ctl">${hpi(ic)}<div>${val}</div></div>`;
+  const dd=s=>{const t=String(s),k=t.indexOf(' ');return `<em>${t.slice(0,k)}</em> ${esc(t.slice(k+1))}`};
+  const taxOn=v.tax&&v.tax!=='ไม่ต้องการ',X=(typeof BKX!=='undefined'&&BKX[v.no])||{},coName=(v.org&&v.org.name)||X.co||'';
+  const TH=['ม.ค.','ก.พ.','มี.ค.','เม.ย.','พ.ค.','มิ.ย.','ก.ค.','ส.ค.','ก.ย.','ต.ค.','พ.ย.','ธ.ค.'],bd=X.bd?(+X.bd.slice(8,10))+' '+TH[+X.bd.slice(5,7)-1]:'';
+  return `<article class="bkpv hpv">
+   <header class="bkhd"><div class="bkpt"><div class="lbl">หมายเลขการจอง</div><div class="bkno">${v.no}</div>
+     <div class="bkwho">${esc(v.title)}<span class="dot">·</span>ห้อง <span id="mRoom">${v.room}</span></div></div>
+    <div class="bkst">${bd?`<span class="badge hbd" title="วันเกิดของผู้เข้าพักอยู่ในช่วงเข้าพัก">🎂 วันเกิด ${bd}</span>`:''}${v.badges}<button type="button" class="x bkx" id="closeX" aria-label="ปิด">${ico('x')}</button></div></header>
+   <div class="hmrow"><button type="button" class="hmore" data-bkfull="${esc(v.no)}">ดูเพิ่มเติม ›</button></div>
+   <section class="bkstay">
+    <div class="sd"><span class="lbl">เช็คอิน</span><b>${dd(v.ci)}</b><small>${esc(v.ciTxt)}</small></div>
+    <div class="sn"><i>${v.nights} คืน</i></div>
+    <div class="sd"><span class="lbl">เช็คเอาท์</span><b>${dd(v.co)}</b><small>&nbsp;</small></div>
+    <div class="sx">${hpi('bed')}<div><span class="lbl">ห้อง</span><b>${v.roomHTML}</b><small>${esc(v.roomType)}</small></div></div>
+    <div class="sx">${hpi('user')}<div><span class="lbl">ผู้เข้าพัก</span><b>${v.pax} ท่าน</b><small>${v.adults!=null?`ผู้ใหญ่ ${v.adults} · เด็ก ${v.kids||0}`:''}</small></div></div>
+    <div class="sx">${hpi('flag')}<div><span class="lbl">วัตถุประสงค์</span><b>${esc(v.purpose||'ไม่ระบุ')}</b><small>&nbsp;</small></div></div>
+   </section>
+   <div class="hgrid">
+    <section class="bkc bkguest"><div class="hd"><h3>ข้อมูลผู้เข้าพัก</h3>${v.regBtn?'<button type="button" class="more" id="mReg">สมัครสมาชิก ›</button>':''}</div>
+     <div class="gnm"><h4>${esc(nm)}</h4><small>เข้าพักมาแล้ว ${n} ครั้ง</small></div>
+     <div class="gchips"><span class="hi ty-${TY[1]}">${TY[0]}</span><span class="hi ${v.mem?'ty-mem':'ty-no'}">${v.mem?'เป็นสมาชิก':'ไม่เป็นสมาชิก'}</span><span class="hi ${coName||v.grp==='ลูกค้าบริษัท'?'ty-co':'ty-no'}">${coName||v.grp==='ลูกค้าบริษัท'?'ลูกค้าบริษัท':'ลูกค้าทั่วไป'}</span></div>
+     ${v.org&&v.org.contact?ct('user','ผู้ติดต่อ: '+esc(v.org.contact)):''}
+     ${ct('phone',esc(v.phone||'-'))}${ct('line',v.lineOn&&v.line?esc(v.line)+' <span class="badge b3">ผูกแล้ว</span>':'<span class="muted">ยังไม่ผูก LINE</span>')}
+     ${coName?ct('co',esc(coName)):''}</section>
+    <section class="bkc"><div class="hd"><h3>รายละเอียดการจอง</h3></div>
+     ${row('ประเภทห้อง',esc(v.roomType))}${row('ราคาห้อง',fmt(pv.rate)+' บาท / คืน')}
+     ${row('อาหารเช้า',pv.bf?'รับ · '+fmt(pv.bf)+' บาท':'<span class="muted">ไม่รับ</span>')}
+     ${row('บริการเพิ่มเติม',pv.svc&&pv.svc.length?pv.svc.map(x=>esc(x.name)+' '+x.qty+' '+esc(x.unit||'')).join(', '):'<span class="muted">ไม่มี</span>')}
+     ${row('ช่องทางจอง',esc(v.ch))}${row('ใบกำกับภาษี',taxOn?'<span class="badge b3">ต้องการ</span>':'<span class="muted">ไม่ขอ</span>')}
+     ${v.note?row('หมายเหตุ',esc(v.note)):''}</section>
+    <section class="bkc bkpay"><div class="hd"><h3>บัญชีค่าใช้จ่าย</h3></div>
+     <div class="due ${due>0?'open':'ok'}"><span>${due>0?'ยอดค้างชำระ':'ชำระครบแล้ว'}</span><b>${fmt(due)}<small> บาท</small></b></div>
+     ${paySec?paySec.innerHTML:''}</section>
+   </div>
+  </article>`;
+}
+"""
+
+HOMEPOP_CSS = """
+.sheet.hpop{width:min(68rem,100%)!important;display:flex!important;flex-direction:column!important;overflow:hidden!important}
+.sheet.hpop .sb{padding:.8rem!important;display:block!important;overflow:auto;flex:1 1 auto;min-height:0;background:var(--paper)}
+.sheet.hpop .sf{flex:none}
+.hpv{--hair:#EADFD6;--gold:#A9843A;display:grid;gap:.6rem;font-size:.9rem;text-align:left}
+.hpv .lbl{display:block;font-size:.68rem;letter-spacing:.05em;color:var(--soft);font-weight:600;line-height:1.5}
+.hpv .bkhd{background:var(--grad);color:#fff;border-radius:16px;padding:.6rem 1rem;display:flex;align-items:center;justify-content:space-between;gap:.8rem;flex-wrap:wrap}
+.hpv .bkhd .lbl{color:rgba(255,255,255,.78)}
+.hpv .bkno{font-family:var(--serif);font-size:1.3rem;font-weight:700;line-height:1.2}
+.hpv .bkwho{font-size:.92rem;font-weight:600;line-height:1.5}.hpv .bkwho .dot{margin:0 .4rem;opacity:.7}
+.hpv .bkst{display:flex;gap:.4rem;flex-wrap:wrap;align-items:center;justify-content:flex-end}
+.hpv .bkst .badge{font-size:.86rem;padding:.3rem .85rem;font-weight:700;box-shadow:0 3px 10px rgba(40,10,40,.2)}
+.hpv .bkx{position:static!important;width:2.2rem;height:2.2rem;border-radius:50%;border:0;background:rgba(255,255,255,.25);color:#fff;display:grid;place-items:center;cursor:pointer;margin-left:.2rem}
+.hpv .bkc,.hpv .bkstay{background:#FFFDFB;border:1px solid var(--hair);border-radius:16px}
+.hpv .bkstay{position:relative;padding:.6rem 1rem .55rem;display:grid;grid-template-columns:auto minmax(3.5rem,8rem) auto repeat(3,minmax(0,1fr));gap:0 .9rem;align-items:center}
+.hpv .hmrow{display:flex;justify-content:flex-end;margin:-.35rem 0 -.45rem}
+.hpv .hmore{border:0;background:none;font:inherit;font-size:.8rem;font-weight:700;color:var(--purple);cursor:pointer;padding:.15rem .2rem;min-height:1.6rem}
+.hpv .hbd{background:#FFE7EF!important;color:#B0244F!important}
+.hpv .sd{display:flex;flex-direction:column}.hpv .sd.r{text-align:right}
+.hpv .sd b{font-size:.95rem;font-weight:600;line-height:1.3;white-space:nowrap}
+.hpv .sd b em{font-family:var(--serif);font-style:normal;font-size:1.5rem;font-weight:700;line-height:1.1}
+.hpv .bkstay small{font-size:.72rem;color:var(--soft)}
+.hpv .sn{position:relative;height:1.7rem;display:grid;place-items:center}
+.hpv .sn::before{content:'';position:absolute;left:0;right:.2rem;top:50%;border-top:1px solid #D7C4EA}
+.hpv .sn::after{content:'';position:absolute;right:0;top:calc(50% - 4px);border:4px solid transparent;border-left:7px solid #C9B3E2}
+.hpv .sn i{position:relative;font-style:normal;font-weight:700;color:var(--purple);background:#FFFDFB;border:1px solid #D7C4EA;border-radius:99px;padding:.08rem .7rem;font-size:.82rem}
+.hpv .sxr{grid-column:1/-1;display:grid;grid-template-columns:repeat(3,1fr);border-top:1px solid var(--hair);margin-top:.45rem;padding-top:.45rem}
+.hpv .sx{display:flex;gap:.45rem;align-items:flex-start;padding-left:.9rem;border-left:1px solid var(--hair);min-width:0}
+.hpv .sx b{display:block;font-size:.9rem;line-height:1.4;font-weight:600}
+.hpv .bki{width:1rem;height:1rem;fill:none;stroke:var(--purple);stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round;flex:none;opacity:.85;margin-top:.15rem}
+.hgrid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:.6rem;align-items:stretch}
+.hpv .bkc{padding:.65rem .9rem .7rem;min-width:0}
+.hpv .hd{display:flex;align-items:center;justify-content:space-between;gap:.5rem;margin-bottom:.3rem;padding-bottom:.35rem;border-bottom:1px solid var(--hair);min-height:1.9rem}
+.hpv .hd h3{margin:0;font-size:.9rem;font-weight:700;color:var(--ink);display:flex;align-items:center;gap:.4rem}
+.hpv .hd h3::before{content:'';width:.26rem;height:.9rem;border-radius:3px;background:var(--grad)}
+.hpv .more{border:0;background:none;font:inherit;font-weight:700;font-size:.8rem;color:var(--purple);cursor:pointer;padding:.15rem;min-height:1.9rem}
+.hpv .gnm h4{font-size:1rem;margin:.1rem 0 0;line-height:1.45}.hpv .gnm small{color:var(--soft);font-size:.75rem}
+.hpv .gchips{display:flex;flex-wrap:wrap;gap:.3rem;padding:.35rem 0 .4rem}
+.hpv .hi{font-size:.7rem;font-weight:700;padding:.12rem .55rem;border-radius:99px;white-space:nowrap}
+.hpv .ty-new{background:#E0F2E3;color:#1F6B2B}.hpv .ty-rep{background:#FFF0CF;color:#7A4A00}.hpv .ty-often{background:#F4E2F6;color:#7B2A8E}
+.hpv .ty-mem{background:#EAE0F8;color:#51308C}.hpv .ty-co{background:#E3EEFB;color:#1D4E89}.hpv .ty-no{background:#EFEAE5;color:#6E5A68}
+.hpv .ctl{display:flex;align-items:flex-start;gap:.5rem;padding:.38rem 0;border-top:1px dotted var(--hair);font-weight:600;font-size:.86rem;line-height:1.5}
+.hpv .ctl>div{min-width:0;overflow-wrap:anywhere}.hpv .ctl .badge{font-size:.68rem}
+.hpv .kr{display:grid;grid-template-columns:6.2rem 1fr;gap:.45rem;padding:.27rem 0;border-bottom:1px dotted var(--hair);font-size:.84rem;line-height:1.5}
+.hpv .kr:last-child{border-bottom:0}.hpv .kr>span{color:var(--soft)}.hpv .kr>div{font-weight:600;min-width:0;overflow-wrap:anywhere}
+.hpv .kr .badge{font-size:.68rem}
+.hpv .muted{color:var(--soft);font-weight:500}
+.hpv .bkpay .due{display:flex;justify-content:space-between;align-items:center;border-radius:12px;padding:.45rem .75rem;margin-bottom:.25rem}
+.hpv .bkpay .due.open{background:linear-gradient(135deg,#FFF1F3,#FDE6EA);color:#A3152D}.hpv .bkpay .due.ok{background:linear-gradient(135deg,#F1FAF4,#E6F4EC);color:#2E7D5B}
+.hpv .bkpay .due span{font-weight:700;font-size:.8rem}.hpv .bkpay .due b{font-family:var(--serif);font-size:1.3rem;line-height:1.2}.hpv .bkpay .due b small{font-family:inherit;font-size:.78rem;font-weight:600}
+.hpv .bkpay .prow{display:flex;align-items:center;gap:.35rem;padding:.27rem 0;border-bottom:1px dotted var(--hair);font-size:.82rem;flex-wrap:wrap}
+.hpv .bkpay .prow>span:first-child{flex:1;color:var(--soft)}.hpv .bkpay .prow .badge{flex:none;font-size:.66rem}
+.hpv .bkpay .prow.t{border-bottom:0;border-top:1px solid var(--hair);margin-top:.15rem;padding-top:.4rem;font-weight:700}.hpv .bkpay .prow.t>span:first-child{color:var(--ink)}
+@media (max-width:900px){.hgrid{grid-template-columns:1fr 1fr}.hgrid>.bkpay{grid-column:1/-1}}
+"""
+
+
+def homepop(h):
+    i = h.index("function renderSheet(){")
+    h = h[:i] + HOMEPOP_JS + h[i:]
+    h = _r(h, [
+        ("""  $('sheet').innerHTML=`
+    <div class="sh">
+      <button class="x" id="closeX" aria-label="ปิด">${ico('x')}</button>
+      ${bkHead(vv,HH)}
+    </div>
+    <div class="sb"><div class="sb2">${bkBody(vv,HH)}
+    </div></div>
+    <div class="sf">${foot}</div>`;
+  $('sheet').className='sheet xl';""",
+         """  $('sheet').innerHTML=`<div class="sb">${homePopHTML(vv,HH,b,outTot)}</div>
+    <div class="sf">${foot}</div>`;
+  $('sheet').className='sheet xl hpop';
+  {const bf=$('sheet').querySelector('[data-bkfull]');if(bf)bf.onclick=()=>{try{parent.postMessage({pbr:'bkfull',no:bf.dataset.bkfull},'*')}catch(_){}}}"""),
+    ], 'home-pop')
+    return _css(h, HOMEPOP_CSS)
