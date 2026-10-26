@@ -859,7 +859,7 @@ function bkHTML(b,v,H,co,X,modal){
      <div class="sx">${bki('flag')}<div><span class="lbl">วัตถุประสงค์</span><b>${esc(v.purpose||'ไม่ระบุ')}</b><small>${b.worksite?esc(b.worksite):'&nbsp;'}</small></div></div></div>
    </section>
    <div class="bkgrid">
-     <section class="bkc"><div class="hd"><h3>ข้อมูลแขก</h3>${b.cid?`<button type="button" class="more" data-gmore="${esc(b.cid)}">ดูเพิ่ม ›</button>`:''}</div>
+     <section class="bkc bkguest"><div class="hd"><h3>ข้อมูลผู้เข้าพัก</h3>${b.cid?`<button type="button" class="more" data-gmore="${esc(b.cid)}">ดูเพิ่ม ›</button>`:''}</div>
       <div class="gh2"><div class="gav" aria-hidden="true">${esc(ini)}</div><div class="gnm"><h4>${esc(nm)}</h4><small>เข้าพักมาแล้ว ${n} ครั้ง</small></div></div>
       <div class="gchips"><span class="hi ty-${TY[1]}">${TY[0]}</span><span class="hi ${v.mem?'ty-mem':'ty-no'}">${v.mem?'เป็นสมาชิก':'ไม่เป็นสมาชิก'}</span>${v.org||b.gco?'<span class="hi ty-co">ลูกค้าบริษัท</span>':'<span class="hi ty-no">ลูกค้าทั่วไป</span>'}${b.bdayIn?`<span class="hi ty-bd">🎂 วันเกิด ${thD(b.bdayIn)}</span>`:''}</div>
       ${v.org&&v.org.contact?ct('user','ผู้ติดต่อ: '+esc(v.org.contact)+(v.org.cphone?' · '+esc(v.org.cphone):'')):''}
@@ -874,14 +874,14 @@ function bkHTML(b,v,H,co,X,modal){
       <div class="sub">ที่มาของการจอง</div>
       ${row('ช่องทางจอง',esc(v.ch))}${v.madeAt?row('จองเมื่อ',v.madeAt)+row('จองล่วงหน้า',v.lead+' วัน'):''}${row('การเช็คอิน',esc(v.ciTxt))}${b.note?row('หมายเหตุ',esc(b.note)):''}
       ${orgSec?`<div class="sub">ในนามบริษัท</div>${orgSec.innerHTML}`:''}</section>
+      <section class="bkc"><div class="hd"><h3>ใบกำกับภาษี</h3>${tx?'<span class="badge b3">ต้องการ</span>':'<span class="badge b6">ไม่ขอ</span>'}</div>
+       ${tx?row('ประเภท',esc(tx.type||'-'))+row('ออกในนาม',esc(tx.name||'-'))+row('เลขผู้เสียภาษี',esc(tx.id||'-'))+(tx.branch||tx.hq?row('สาขา',esc(tx.branch||tx.hq)):'')+row('ที่อยู่',esc(tx.addr||'-'))
+         :row('เอกสาร','ใบเสร็จรับเงิน')+row('ในนาม',esc(nm))}</section>
       <section class="bkc bkpay"><div class="hd"><h3>บัญชีค่าใช้จ่าย</h3></div>
        <div class="due ${due>0?'open':'ok'}"><span>${due>0?'ยอดค้างชำระ':'ชำระครบแล้ว'}</span><b>${fmt(due)}<small> บาท</small></b></div>
        ${paySec?paySec.innerHTML:''}
        <div class="docbtns"><button type="button" class="btn ghost" data-pdoc="rc" ${b.paid?'':'disabled'}>${PRI}พิมพ์ใบเสร็จ</button><button type="button" class="btn ghost" data-pdoc="tx" ${tx&&b.paid?'':'disabled'}>${PRI}พิมพ์ใบกำกับภาษี</button></div>
        ${!b.paid?'<p class="dochint">ยังไม่ได้รับชำระค่าห้อง จึงยังออกใบเสร็จไม่ได้</p>':!tx?'<p class="dochint">แขกไม่ได้ขอใบกำกับภาษี</p>':''}</section>
-      <section class="bkc"><div class="hd"><h3>ใบกำกับภาษี</h3>${tx?'<span class="badge b3">ต้องการ</span>':'<span class="badge b6">ไม่ขอ</span>'}</div>
-       ${tx?row('ประเภท',esc(tx.type||'-'))+row('ออกในนาม',esc(tx.name||'-'))+row('เลขผู้เสียภาษี',esc(tx.id||'-'))+(tx.branch||tx.hq?row('สาขา',esc(tx.branch||tx.hq)):'')+row('ที่อยู่',esc(tx.addr||'-'))
-         :row('เอกสาร','ใบเสร็จรับเงิน')+row('ในนาม',esc(nm))}</section>
    </div>
   </article>`;
 }
@@ -987,6 +987,8 @@ BKPAGE_CSS = """
 .gav{width:2.4rem;height:2.4rem;border-radius:50%;background:var(--grad);color:#fff;display:grid;place-items:center;font-size:1.05rem;font-weight:700;flex:none;box-shadow:0 0 0 2px #fff,0 0 0 3px #E4D3EE}
 .gnm{min-width:0}.gnm h4{font-size:1.05rem;margin:0;line-height:1.45}.gnm small{color:var(--soft);font-size:.78rem}
 .gchips{display:flex;flex-wrap:wrap;gap:.3rem;padding-bottom:.45rem}
+.bkguest .gh2{padding:.35rem 0 .7rem}.bkguest .gchips{padding-bottom:.75rem;gap:.4rem}
+.bkguest .ctl{padding:.68rem 0;font-size:.92rem}.bkguest .ctl .bki{margin-top:.2rem}
 .ctl{display:flex;align-items:flex-start;gap:.55rem;padding:.32rem 0;border-top:1px dotted var(--hair);font-weight:600;font-size:.88rem;line-height:1.5}
 .ctl>div{min-width:0;overflow-wrap:anywhere}.ctl .badge{font-size:.7rem}
 .kr,.bkc .kv{display:grid;grid-template-columns:6.4rem 1fr;gap:.5rem;padding:.3rem 0;border-bottom:1px dotted var(--hair);font-size:.86rem;line-height:1.5}
