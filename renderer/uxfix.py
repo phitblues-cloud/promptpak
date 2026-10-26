@@ -205,7 +205,8 @@ def apply(M):
     if 'fin' in M:
         M['fin'] = finsave(M['fin'])
     if 'mkt' in M:
-        M['mkt'] = mktsend(M['mkt'])
+        import ctx
+        M['mkt'] = ideacards(mktsend(M['mkt']), (ctx.MOCK or {}).get('_role', 'owner') == 'owner')
     for k in ('hk', 'crmtool', 'cust', 'crm', 'mkt'):
         if k in M:
             M[k] = modsave(M[k], k)
@@ -1350,3 +1351,111 @@ def mktsend(h):
          "if(q('#kmic')){const i=$('#kaiIn');if(!i||!i.value.trim()){i&&i.focus();toast('พิมพ์สิ่งที่อยากให้ AI ปรับก่อน แล้วกดส่ง');return}i.dispatchEvent(new KeyboardEvent('keydown',{key:'Enter',bubbles:true}));return}"),
     ], 'mkt-send')
     return _css(h, ".mic{display:grid;place-items:center;cursor:pointer;transition:transform .15s}.mic:active{transform:scale(.92)}")
+
+
+# ---------- ศูนย์ไอเดีย: การ์ดแนวตั้ง + ป๊อปอัปรายละเอียด + Agent Insight / ข่าว AI ค้นเว็บ (ต้องรัน supabase/17_insight.sql) ----------
+IDEA_CSS = r"""
+#ideas .ideas.fill{height:auto;min-height:0;align-items:start}
+#ideas .leftcol{display:flex;flex-direction:column;gap:16px}
+#ideas .box{overflow:visible}
+#ideas .cards{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;overflow:visible;padding:2px}
+#ideas .cards>.more{grid-column:1/-1}
+#ideas .basket{position:sticky;top:12px;height:calc(100vh - 170px);min-height:560px}
+.ihd{display:flex;justify-content:space-between;align-items:center;gap:8px}
+.irf{border:1px solid var(--line);background:var(--paper);border-radius:999px;padding:4px 12px;font-size:12.5px;color:var(--muted);white-space:nowrap}
+.irf:disabled{opacity:.55}
+.feedsrc b{color:var(--plum);font-weight:600}
+.icard.pt{display:flex;flex-direction:column;aspect-ratio:4/5;padding:12px 12px 10px;border-radius:16px;min-width:0}
+#ideas [data-box="news"] .icard.pt{aspect-ratio:4/4.4}
+.icard.pt .k{display:flex;align-items:center;gap:6px;font-size:11.5px;font-weight:600;color:var(--muted);padding-right:30px;line-height:1.3}
+.icard.pt .k i{width:8px;height:8px;border-radius:50%;flex:none;background:#2E9C6A}
+.icard.pt .k.hi i{background:#C41E3A}.icard.pt .k.mid i{background:#D99A1E}
+.icard.pt .n{font-family:var(--serif);font-size:30px;font-weight:700;line-height:1.05;margin:auto 0 6px;word-break:break-word}
+.icard.pt .n small{font-family:var(--sans);font-size:12.5px;font-weight:500;color:var(--muted);margin-left:4px}
+.icard.pt h3{font-size:14px;line-height:1.4;padding:0;margin:0;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
+#ideas [data-box="news"] .icard.pt h3{margin-top:10px;-webkit-line-clamp:4}
+.icard.pt .ft{margin-top:auto;padding-top:6px;font-size:11.5px;color:#9C8A95;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.icard.pt .check{top:9px;right:9px;width:22px;height:22px;font-size:12px}
+.idt{display:grid;grid-template-columns:7.5rem 1fr;gap:8px 14px;margin-top:12px;font-size:15px}
+.idt dt{color:var(--muted);font-weight:600;font-size:13.5px;padding-top:2px}.idt dd{margin:0}
+.inums{display:flex;flex-wrap:wrap;gap:6px}.inums span{background:var(--paper);border:1px solid var(--line);border-radius:10px;padding:3px 9px;font-size:13px}
+.inums b{font-family:var(--serif);font-size:15px;margin-left:4px}
+.ikick{display:flex;align-items:center;gap:6px;font-size:12.5px;font-weight:600;color:var(--muted);margin-bottom:2px}
+.ikick i{width:8px;height:8px;border-radius:50%;background:#2E9C6A}.ikick.hi i{background:#C41E3A}.ikick.mid i{background:#D99A1E}
+.ilink{display:inline-block;margin-top:12px;font-weight:600;color:var(--plum)}
+.icheck{font-size:12px;color:#9C8A95;margin-top:12px}
+@media(max-width:860px){#ideas .cards{grid-template-columns:repeat(2,minmax(0,1fr))}#ideas .basket{position:static;height:auto}}
+"""
+
+IDEA_JS = r"""
+/* ---------- ศูนย์ไอเดีย: การ์ดแนวตั้ง ---------- */
+function TNOF(i){return i.tn||((i.tags||[]).some(t=>t[1]==='bad')?'hi':(i.tags||[]).some(t=>t[1]==='warn')?'mid':'lo')}
+function TNL(k){return {hi:'ผลต่อรายได้สูง',mid:'ผลปานกลาง',lo:'ข้อมูลประกอบ'}[k]}
+function CATOF(i,k){return i.cat||(k==='hotel'?({h1:'ห้องว่าง',h2:'ลูกค้าองค์กร',h3:'ที่มาลูกค้า',h4:'ช่องทาง',h5:'ห้องว่าง'}[i.id]||'ข้อมูลโรงแรม'):((i.tags||[])[0]||[''])[0])}
+function bigOf(t){const m=String(t||'').match(/฿?\d[\d,.]*%?/);return m?m[0]:''}
+function SRCL(k){return {booking:'จากข้อมูลการจอง',company:'จากข้อมูลบริษัท',guest:'จากข้อมูลลูกค้า',line:'จากแชท LINE'}[k]}
+function cardHTML(i){const on=selected.has(i.id),k=boxOf(i.id),tn=TNOF(i),cat=CATOF(i,k);
+ const ck=`<button class="check" data-check="${i.id}" aria-label="${on?'เอาออก':'เลือก'}">${on?'✓':''}</button>`;
+ if(k==='hotel'){const n=i.n!=null&&i.n!==''?i.n:bigOf(i.t);
+  return `<article class="icard pt ${on?'on':''}" data-card="${i.id}" tabindex="0" aria-pressed="${on}">${ck}<span class="k ${tn}"><i></i>${cat}</span>
+  <div class="n">${n}${i.u?`<small>${i.u}</small>`:''}</div><h3>${i.t}</h3><div class="ft">${SRCL(i.src)||i.src||''}</div></article>`}
+ return `<article class="icard pt ${on?'on':''}" data-card="${i.id}" tabindex="0" aria-pressed="${on}">${ck}<span class="k ${tn}"><i></i>${cat}</span>
+  <h3>${i.t}</h3><div class="ft">${i.url?`${i.src||''}${i.date?' · '+i.date:''}`:(i.src||'')}</div></article>`}
+var AISTAT=window.AISTAT||{insight:null,news:null};
+function thTime(s){try{const d=new Date(s),M=['ม.ค.','ก.พ.','มี.ค.','เม.ย.','พ.ค.','มิ.ย.','ก.ค.','ส.ค.','ก.ย.','ต.ค.','พ.ย.','ธ.ค.'];
+ return `${d.getDate()} ${M[d.getMonth()]} ${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')} น.`}catch(_){return ''}}
+function ideaHead(){const a=AISTAT.insight,b=AISTAT.news,hs=$('[data-box="hotel"]'),ns=$('[data-src="news"]');
+ const hp=hs&&hs.parentElement.querySelector('.feedsrc');
+ if(hp){if(a&&a.items&&a.items.length){const s=a.basis||{};hp.innerHTML=`Agent Insight วิเคราะห์เมื่อ ${thTime(a.at)} · จากข้อมูลในระบบ <b>${s.bookings} การจอง · ${s.guests} ลูกค้า · ${s.companies} บริษัท</b>${s.sample?` (เป็นข้อมูลตัวอย่าง ${s.sample} การจอง)`:''}`}
+  else hp.textContent=a&&a.loading?'Agent Insight กำลังวิเคราะห์ข้อมูลจริง… (ระหว่างนี้แสดงตัวเลขที่ระบบคำนวณ)':'ตัวเลขที่ระบบคำนวณจากข้อมูลการจอง'+(a&&a.error?' · Agent Insight ยังไม่พร้อม: '+a.error:'')}
+ if(ns){if(b&&(b.news||[]).length+(b.trends||[]).length)ns.textContent=`AI ค้นจากเว็บข่าวสาธารณะ สัปดาห์ละครั้ง (วันจันทร์) · ล่าสุด ${thTime(b.at)} · กดการ์ดเพื่ออ่านสรุปและลิงก์ข่าวต้นฉบับ`;
+  else if(b&&b.loading)ns.textContent='AI กำลังค้นข่าวรอบโรงแรมจากเว็บ… (ใช้เวลาราว 1 นาที)';
+  else if(b&&b.at)ns.textContent='AI ค้นเว็บรอบล่าสุดยังไม่พบข่าวที่เกี่ยวกับโรงแรม'+(b.error?' · '+b.error:'');
+  else ns.textContent='ตัวอย่างหน้าตา (ยังไม่ได้ค้นข่าวจริง)'+(b&&b.error?' · '+b.error:'')}}
+var _rf0=renderFeed;renderFeed=function(){_rf0();ideaHead();
+ document.querySelectorAll('#ideas .icard[data-card]').forEach(c=>{c.onclick=()=>openDetail(c.dataset.card);c.onkeydown=e=>{if(e.target===c&&(e.key==='Enter'||e.key===' ')){e.preventDefault();openDetail(c.dataset.card)}}})};
+function aliasOf(x,kind){if(kind==='insight')return x.src==='company'?'h2':/ห้องว่าง|อาทิตย์|สุดสัปดาห์/.test(x.cat+x.t)?'h5':'';
+ return /บุญ|กฐิน|เทศกาล|ประเพณี|ท่องเที่ยว/.test(x.cat+x.t)?'l3':/โรงงาน|ซ่อม|ก่อสร้าง|บริษัท|อบรม|ราชการ/.test(x.cat+x.t)?'l1':''}
+function applyAI(kind,d){AISTAT[kind]=d||{};
+ if(kind==='insight'&&d&&d.items&&d.items.length)feeds.hotel.items=d.items.map(x=>({...x,tags:[],alias:aliasOf(x,'insight')}));
+ if(kind==='news'&&d&&d.at){feeds.local.items=(d.news||[]).map(x=>({...x,tags:[],alias:aliasOf(x,'news')}));feeds.local.src='';
+  feeds.trend.items=(d.trends||[]).map(x=>({...x,tags:[],alias:aliasOf(x,'news')}));feeds.trend.src=''}
+ try{renderFeed()}catch(_){}}
+async function loadAI(kind,force){AISTAT[kind]={...(AISTAT[kind]||{}),loading:true,error:''};ideaHead();
+ const top=window.parent!==window?window.parent:window;let d;
+ try{const r=await fetch(top.location.origin+'/api/'+kind,{method:force?'POST':'GET',credentials:'same-origin',headers:{'Content-Type':'application/json'},body:force?'{"force":true}':undefined});
+  d=await r.json().catch(()=>({error:'ระบบตอบกลับผิดรูปแบบ'}));if(!r.ok&&!d.error)d.error='รหัส '+r.status}
+ catch(_){d={error:'เชื่อมต่อไม่ได้'}}
+ if(d.busy&&!force){AISTAT[kind]={...d,loading:true};ideaHead();setTimeout(()=>loadAI(kind),25000);return}
+ if(d.note)toast(d.note);if(force&&d.error)toast('ทำใหม่ไม่สำเร็จ: '+d.error);
+ applyAI(kind,d);const b=document.querySelector(`[data-ai="${kind}"]`);if(b)b.disabled=false}
+document.querySelectorAll('[data-ai]').forEach(b=>b.onclick=()=>{b.disabled=true;toast(b.dataset.ai==='insight'?'ให้ Agent วิเคราะห์ใหม่ ใช้เวลาราว 20 วินาที':'ให้ AI ค้นข่าวใหม่ ใช้เวลาราว 1 นาที');loadAI(b.dataset.ai,true)});
+loadAI('insight');loadAI('news');
+"""
+
+
+def ideacards(h, owner):
+    btn = lambda k, t: ('<button class="irf" data-ai="%s">↻ %s</button>' % (k, t)) if owner else ''
+    h = _r(h, [
+        ('<div class="box"><h2><span class="dot" style="background:var(--plum)"></span>โอกาสจากข้อมูลโรงแรม</h2>\n    <p class="feedsrc">AI คัดเฉพาะเรื่องที่การตลาดช่วยได้ · อัปเดตเช้านี้</p>',
+         '<div class="box"><div class="ihd"><h2><span class="dot" style="background:var(--plum)"></span>Insight จากข้อมูลโรงแรม</h2>' + btn('insight', 'วิเคราะห์ใหม่') + '</div>\n    <p class="feedsrc"></p>'),
+        ('<h2><span class="dot" style="background:var(--red)"></span>ข่าวและเทรนด์</h2>',
+         '<h2><span class="dot" style="background:var(--red)"></span>ข่าวและเทรนด์รอบโรงแรม</h2>'),
+        ('<div class="minitabs" role="tablist"><button role="tab" data-sub="local">ข่าวรอบโรงแรม <span class="nb"></span></button><button role="tab" data-sub="trend">เทรนด์ <span class="nb"></span></button></div></div>',
+         '<div class="ihd">' + btn('news', 'ค้นข่าวใหม่') + '<div class="minitabs" role="tablist"><button role="tab" data-sub="local">ข่าว <span class="nb"></span></button><button role="tab" data-sub="trend">เทรนด์ <span class="nb"></span></button></div></div></div>'),
+        ('const LIMIT=5;', 'const LIMIT=6;'),
+        ("function buildMenus(){const ids=[...selected.keys()];", "function buildMenus(){const ids=[...selected.keys()].map(k=>{const v=selected.get(k);return v&&v.alias||k});"),
+        ("if(k==='hotel')h+=`<div class=\"sub\">${i.from||''}</div>",
+         "if(k==='hotel'&&i.found)h+=`<div class=\"sub\">Agent Insight · วิเคราะห์ ${thTime(AISTAT.insight&&AISTAT.insight.at)}</div>"
+         "<dl class=\"idt\"><dt>สิ่งที่พบ</dt><dd>${i.found}</dd>${i.nums&&i.nums.length?`<dt>ตัวเลขที่ใช้</dt><dd class=\"inums\">${i.nums.map(x=>`<span>${x.l}<b>${x.v}</b></span>`).join('')}</dd>`:''}"
+         "<dt>ทำไมสำคัญ</dt><dd>${i.why}</dd><dt>ควรทำอะไร</dt><dd>${i.act}</dd></dl>"
+         "<p class=\"icheck\">ตัวเลขมาจาก${SRCL(i.src)?SRCL(i.src).replace('จาก',''):'ข้อมูลในระบบ'} · ตรวจย้อนได้ที่เมนูรายงานและรายการจอง</p>`;\n else if(k==='hotel')h+=`<div class=\"sub\">${i.from||''}</div>"),
+        ("if(k==='trend')h+=`", "if((k==='trend'||k==='local')&&i.url)h+=`<div class=\"sub\">${i.src||''}${i.date?' · '+i.date:''}${i.when?' · '+i.when:''}</div>"
+         "<dl class=\"idt\"><dt>สรุปข่าว</dt><dd>${i.sum}</dd><dt>เกี่ยวกับโรงแรม</dt><dd>${i.why}</dd></dl>"
+         "<a class=\"ilink\" href=\"${i.url}\" target=\"_blank\" rel=\"noopener noreferrer\">อ่านข่าวต้นฉบับ ↗</a><p class=\"icheck\">AI ค้นจากเว็บสาธารณะ · โปรดอ่านต้นฉบับก่อนใช้ตัดสินใจ</p>`;\n else if(k==='trend')h+=`"),
+        ("if(k==='local')h+=`", "if(k==='local'&&!i.url)h+=`"),
+        ("let h=`<h2>${i.t}</h2>`;", "let h=`<div class=\"ikick ${TNOF(i)}\"><i></i>${CATOF(i,k)} · ${TNL(TNOF(i))}</div><h2>${i.t}</h2>`;"),
+    ], 'ideacards')
+    k = h.rindex('</script>')
+    h = h[:k] + IDEA_JS + h[k:]
+    return _css(h, IDEA_CSS)
