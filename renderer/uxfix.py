@@ -199,7 +199,7 @@ def apply(M):
     if 'hk' in M:
         M['hk'] = hk(M['hk'])
     if 'book' in M:
-        M['book'] = bkpage(M['book'])
+        M['book'] = bkback(bkpage(M['book']))
     return M
 
 
@@ -1022,3 +1022,30 @@ def bkpage(h):
          "if(a=t.closest('[data-view]')){bkBack();S.view=a.dataset.view;renderAll();return}"),
     ], 'book')
     return _css(h, BKPAGE_CSS)
+
+
+# ---------- บันทึกการจองย้อนหลัง (เจ้าของเท่านั้น · ต้องรัน 14_backdate.sql) ----------
+def bkback(h):
+    h = _r(h, [
+        ("    if(F.start<TODAY)p.push('วันเข้าพักเป็นวันที่ผ่านมาแล้ว');",
+         "    if(F.back){if(F.start+F.nights>TODAY)p.push('บันทึกย้อนหลัง: วันเช็คเอาท์ต้องไม่เกินวันนี้')}else if(F.start<TODAY)p.push('วันเข้าพักเป็นวันที่ผ่านมาแล้ว');"),
+        ("const t0=dt(TODAY), canPrev=CAL.y", "const t0=dt(TODAY), canPrev=F.back||CAL.y"),
+        ("const day=first+d, past=day<TODAY,", "const day=first+d, past=F.back?day>TODAY:day<TODAY,"),
+        ("     <div class=\"kbar\"><button type=\"button\" class=\"kctl\" id=\"ctlDate\"",
+         "     ${PP_OWNER?`<label class=\"kback ${F.back?'on':''}\"><input type=\"checkbox\" id=\"fBack\" ${F.back?'checked':''}><span><b>บันทึกการจองย้อนหลัง</b><small>สำหรับใส่ข้อมูลลูกค้าเก่า · บันทึกเป็นเข้าพักและเช็คเอาท์แล้ว จ่ายครบ (เลือกเงินสด/โอนในขั้นชำระเงิน) · ไม่เก็บค่าประกันห้อง · เจ้าของเท่านั้น</small></span></label>`:''}\n"
+         "     <div class=\"kbar\"><button type=\"button\" class=\"kctl\" id=\"ctlDate\""),
+        ("    $('roomList').onchange=e=>{if(e.target.id==='fBf'){F.bf=e.target.checked;refresh()}};",
+         "    $('roomList').onchange=e=>{if(e.target.id==='fBf'){F.bf=e.target.checked;refresh()}};\n"
+         "    if($('fBack'))$('fBack').onchange=e=>{F.back=e.target.checked;e.target.closest('.kback').classList.toggle('on',F.back);"
+         "if(F.back){if(F.start+F.nights>TODAY){F.start=TODAY-1;F.nights=1}F.pay='now'}else if(F.start<TODAY){F.start=TODAY;F.nights=1}"
+         "try{const d=dt(F.start);CAL.y=d.getUTCFullYear();CAL.m=d.getUTCMonth();CAL.pending=false}catch(_){}F.checked=true;recheck();refresh();"
+         "toast(F.back?'โหมดบันทึกย้อนหลัง: เลือกวันเข้าพักที่ผ่านมาแล้วได้':'ปิดโหมดบันทึกย้อนหลัง')};"),
+        ("ppSave('book',{guest:", "ppSave('book',{backdate:!!F.back,guest:"),
+        ("pay:F.mode==='co'?(F.payer==='self'?'later':F.pay):F.pay,", "pay:F.back?'now':(F.mode==='co'?(F.payer==='self'?'later':F.pay):F.pay),"),
+    ], 'book-back')
+    return _css(h, """
+.kback{display:flex;gap:.7rem;align-items:flex-start;border:1.5px dashed #D9C6A0;background:#FFFBF2;border-radius:14px;padding:.6rem .85rem;margin-bottom:.7rem;cursor:pointer}
+.kback.on{border-style:solid;border-color:#B08A3E;background:#FFF4DC}
+.kback input{width:1.3rem;height:1.3rem;margin-top:.15rem;accent-color:#B08A3E;flex:none}
+.kback b{display:block;color:#6E4F12}.kback small{display:block;color:#8A6A2A;font-size:.8rem;line-height:1.5}
+""")

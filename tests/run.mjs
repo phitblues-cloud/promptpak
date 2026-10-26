@@ -406,6 +406,27 @@ ok('AI สรุปกล่อง CRM: กันโค้ดแปลกปล�
   ok('แม่บ้าน: วันทำงานประจำสัปดาห์ + สวิตช์ทำงาน/หยุดเฉพาะวันนี้');
 }
 
+// 11j) บันทึกการจองย้อนหลัง (เจ้าของ) → เข้าพัก+เช็คเอาท์+จ่ายครบในครั้งเดียว · ไม่ถูกยกเลิกอัตโนมัติ · พนักงานจองย้อนหลังไม่ได้
+{
+  const act = d => call('/api/app?part=act', { method: 'POST', body: JSON.stringify(d) });
+  const ci = plus(-40), co = plus(-38);
+  const room = psql('-c', `select id from rooms r where not exists (select 1 from bookings b where b.room_id = r.id and b.status <> 'ยกเลิก' and daterange(b.check_in, b.check_out) && daterange('${ci}'::date, '${co}'::date)) order by id limit 1`);
+  let a = (await act({ k: 'book', guest: 'คุณลูกค้าเก่า ทดสอบ', phone: '0899999999', check_in: ci, check_out: co, rooms: [{ room }], channel: 'โทรศัพท์', pay: 'later', m: 'transfer' })).body;
+  assert.ok(String(a.error || '').includes('ผ่านมาแล้ว'));                                     // ไม่ติ๊กย้อนหลัง → ไม่ให้จอง
+  a = (await act({ k: 'book', backdate: true, guest: 'คุณลูกค้าเก่า ทดสอบ', phone: '0899999999', check_in: ci, check_out: plus(1), rooms: [{ room }], pay: 'now', m: 'transfer' })).body;
+  assert.ok(String(a.error || '').includes('ไม่เกินวันนี้'));
+  a = (await act({ k: 'book', backdate: true, guest: 'คุณลูกค้าเก่า ทดสอบ', phone: '0899999999', check_in: ci, check_out: co, rooms: [{ room }], channel: 'โทรศัพท์', pay: 'now', m: 'transfer' })).body;
+  assert.equal(a.ok, true); const no = a.nos[0];
+  assert.equal(psql('-c', `select string_agg(kind, ',' order by id) from ops where booking_no='${no}'`), 'checkin,pay,checkout,book');
+  rpc('pp_noshow()');
+  assert.equal(psql('-c', `select status from bookings where booking_no='${no}'`), 'ยืนยันแล้ว');
+  const M = (await call('/api/app?part=mods&since=x')).body.mods;
+  const i = M.fin.indexOf('let BILLS='); const fb = JSON.parse(M.fin.slice(i + 10, M.fin.indexOf(';\n', i))).find(x => x.no === no);
+  assert.ok(fb && fb.paid > 0 && fb.paid === fb.total);
+  assert.ok(M.book.includes('"no":"' + no + '"') && M.book.includes('fBack'));
+  ok('บันทึกการจองย้อนหลัง: เข้าพัก/เช็คเอาท์/จ่ายครบในครั้งเดียว · ไม่ถูกยกเลิกอัตโนมัติ · ต้องติ๊กย้อนหลังเท่านั้น');
+}
+
 // 12) กันเดา PIN
 for (let i = 0; i < 8; i++) await call('/api/app?part=pin', { method: 'POST', body: JSON.stringify({ role: 'owner', pin: '000000' }) });
 assert.equal((await call('/api/app?part=pin', { method: 'POST', body: JSON.stringify({ role: 'owner', pin: '246810' }) })).status, 429);

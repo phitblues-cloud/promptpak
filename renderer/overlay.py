@@ -170,6 +170,9 @@ def _apply_details(b, g, row, m):
     """รายละเอียดที่พนักงานกรอกตอนจอง (คน อาหารเช้า ส่วนลด บริษัท ใบกำกับภาษี เครดิต)"""
     d = row.get('details') or {}
     b['_staff'] = row.get('created_by') == 'staff'
+    if (row.get('details') or {}).get('backdate'):
+        b['deposit_status'] = 'ไม่ได้เก็บ (บันทึกย้อนหลัง)'
+        b['note'] = ('บันทึกย้อนหลัง' + (' · ' + b['note'] if b.get('note') else ''))
     if b['_staff'] and not g.get('line_user_id'):
         g['line_display_name'] = ''
     if not d:
@@ -206,7 +209,8 @@ def apply_ops(m, ops, by_no, status_only=False):
         b = by_no.get(o.get('no') or '')
         if not b:
             continue
-        k, d, at = o['kind'], o.get('data') or {}, _bkk(o['at'])
+        k, d = o['kind'], o.get('data') or {}
+        at = _bkk(d.get('at') or o['at'])   # บันทึกย้อนหลัง: ใช้เวลาตามวันเข้าพักจริง
         if k == 'checkin':
             b['booking_status'] = 'กำลังพัก'
             b['checkin_actual'] = b.get('checkin_actual') or at

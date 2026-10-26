@@ -91,6 +91,8 @@ def dep_of(b):
     s = b['deposit_status']
     if b['booking_status'] in ('ยกเลิก', 'ไม่มาตามนัด'):
         return 'none'
+    if s.startswith('ไม่ได้เก็บ'):
+        return 'none'
     if s.startswith('คืน'):
         return 'refunded'
     if s.startswith('ถือ') or s.startswith('ใช้มัดจำ'):
