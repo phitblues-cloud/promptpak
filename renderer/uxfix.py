@@ -852,13 +852,14 @@ function bkHTML(b,v,H,co,X,modal){
    <section class="bkstay" aria-label="ช่วงเข้าพัก">
     <div class="sd"><span class="lbl">เช็คอิน</span><b>${dd(v.ci)}</b><small>${esc(v.ciTxt)}</small></div>
     <div class="sn"><i>${v.nights} คืน</i></div>
-    <div class="sd"><span class="lbl">เช็คเอาท์</span><b>${dd(v.co)}</b><small>&nbsp;</small></div>
-    <div class="sx">${bki('bed')}<div><span class="lbl">ห้อง</span><b>${esc(v.roomHTML)}</b><small>${esc(v.roomType)}</small></div></div>
-    <div class="sx">${bki('user')}<div><span class="lbl">ผู้เข้าพัก</span><b>${v.pax} ท่าน</b><small>${v.adults!=null?`ผู้ใหญ่ ${v.adults} · เด็ก ${v.kids||0}`:''}</small></div></div>
-    <div class="sx">${bki('flag')}<div><span class="lbl">วัตถุประสงค์</span><b>${esc(v.purpose||'ไม่ระบุ')}</b><small>${b.worksite?esc(b.worksite):'&nbsp;'}</small></div></div>
+    <div class="sd r"><span class="lbl">เช็คเอาท์</span><b>${dd(v.co)}</b><small>&nbsp;</small></div>
+    <div class="sxr">
+     <div class="sx">${bki('bed')}<div><span class="lbl">ห้อง</span><b>${esc(v.roomHTML)}</b><small>${esc(v.roomType)}</small></div></div>
+     <div class="sx">${bki('user')}<div><span class="lbl">ผู้เข้าพัก</span><b>${v.pax} ท่าน</b><small>${v.adults!=null?`ผู้ใหญ่ ${v.adults} · เด็ก ${v.kids||0}`:''}</small></div></div>
+     <div class="sx">${bki('flag')}<div><span class="lbl">วัตถุประสงค์</span><b>${esc(v.purpose||'ไม่ระบุ')}</b><small>${b.worksite?esc(b.worksite):'&nbsp;'}</small></div></div></div>
    </section>
    <div class="bkgrid">
-     <section class="bkc"><div class="hd"><h3>ข้อมูลแขก</h3>${b.cid?`<button type="button" class="more" data-gmore="${esc(b.cid)}">ดูเพิ่ม ›</button>`:''}</div>
+     <section class="bkc bkguest"><div class="hd"><h3>ข้อมูลผู้เข้าพัก</h3>${b.cid?`<button type="button" class="more" data-gmore="${esc(b.cid)}">ดูเพิ่ม ›</button>`:''}</div>
       <div class="gh2"><div class="gav" aria-hidden="true">${esc(ini)}</div><div class="gnm"><h4>${esc(nm)}</h4><small>เข้าพักมาแล้ว ${n} ครั้ง</small></div></div>
       <div class="gchips"><span class="hi ty-${TY[1]}">${TY[0]}</span><span class="hi ${v.mem?'ty-mem':'ty-no'}">${v.mem?'เป็นสมาชิก':'ไม่เป็นสมาชิก'}</span>${v.org||b.gco?'<span class="hi ty-co">ลูกค้าบริษัท</span>':'<span class="hi ty-no">ลูกค้าทั่วไป</span>'}${b.bdayIn?`<span class="hi ty-bd">🎂 วันเกิด ${thD(b.bdayIn)}</span>`:''}</div>
       ${v.org&&v.org.contact?ct('user','ผู้ติดต่อ: '+esc(v.org.contact)+(v.org.cphone?' · '+esc(v.org.cphone):'')):''}
@@ -873,16 +874,14 @@ function bkHTML(b,v,H,co,X,modal){
       <div class="sub">ที่มาของการจอง</div>
       ${row('ช่องทางจอง',esc(v.ch))}${v.madeAt?row('จองเมื่อ',v.madeAt)+row('จองล่วงหน้า',v.lead+' วัน'):''}${row('การเช็คอิน',esc(v.ciTxt))}${b.note?row('หมายเหตุ',esc(b.note)):''}
       ${orgSec?`<div class="sub">ในนามบริษัท</div>${orgSec.innerHTML}`:''}</section>
-     <div class="bkcol">
+      <section class="bkc"><div class="hd"><h3>ใบกำกับภาษี</h3>${tx?'<span class="badge b3">ต้องการ</span>':'<span class="badge b6">ไม่ขอ</span>'}</div>
+       ${tx?row('ประเภท',esc(tx.type||'-'))+row('ออกในนาม',esc(tx.name||'-'))+row('เลขผู้เสียภาษี',esc(tx.id||'-'))+(tx.branch||tx.hq?row('สาขา',esc(tx.branch||tx.hq)):'')+row('ที่อยู่',esc(tx.addr||'-'))
+         :row('เอกสาร','ใบเสร็จรับเงิน')+row('ในนาม',esc(nm))}</section>
       <section class="bkc bkpay"><div class="hd"><h3>บัญชีค่าใช้จ่าย</h3></div>
        <div class="due ${due>0?'open':'ok'}"><span>${due>0?'ยอดค้างชำระ':'ชำระครบแล้ว'}</span><b>${fmt(due)}<small> บาท</small></b></div>
        ${paySec?paySec.innerHTML:''}
        <div class="docbtns"><button type="button" class="btn ghost" data-pdoc="rc" ${b.paid?'':'disabled'}>${PRI}พิมพ์ใบเสร็จ</button><button type="button" class="btn ghost" data-pdoc="tx" ${tx&&b.paid?'':'disabled'}>${PRI}พิมพ์ใบกำกับภาษี</button></div>
        ${!b.paid?'<p class="dochint">ยังไม่ได้รับชำระค่าห้อง จึงยังออกใบเสร็จไม่ได้</p>':!tx?'<p class="dochint">แขกไม่ได้ขอใบกำกับภาษี</p>':''}</section>
-      <section class="bkc"><div class="hd"><h3>ใบกำกับภาษี</h3>${tx?'<span class="badge b3">ต้องการ</span>':'<span class="badge b6">ไม่ขอ</span>'}</div>
-       ${tx?row('ประเภท',esc(tx.type||'-'))+row('ออกในนาม',esc(tx.name||'-'))+row('เลขผู้เสียภาษี',esc(tx.id||'-'))+(tx.branch||tx.hq?row('สาขา',esc(tx.branch||tx.hq)):'')+row('ที่อยู่',esc(tx.addr||'-'))
-         :row('เอกสาร','ใบเสร็จรับเงิน')+row('ในนาม',esc(nm))}</section>
-     </div>
    </div>
   </article>`;
 }
@@ -959,7 +958,8 @@ BKPAGE_CSS = """
 .ty-new{background:#E0F2E3;color:#1F6B2B}.ty-rep{background:#FFF0CF;color:#7A4A00}.ty-often{background:#F4E2F6;color:#7B2A8E}
 .ty-mem{background:#EAE0F8;color:#51308C}.ty-co{background:#E3EEFB;color:#1D4E89}.ty-bd{background:#FFE7EF;color:#B0244F}.ty-no{background:#EFEAE5;color:#6E5A68}
 .bkc,.bkstay{background:#FFFDFB;border:1px solid var(--hair);border-radius:18px;box-shadow:0 8px 22px -20px rgba(60,20,50,.35)}
-.bkstay{padding:.7rem 1.1rem;display:grid;grid-template-columns:auto minmax(4rem,1fr) auto repeat(3,auto);gap:0 1rem;align-items:center}
+.bkstay{padding:.75rem 1.2rem .7rem;display:grid;grid-template-columns:auto 1fr auto;gap:0 1.1rem;align-items:center}
+.bkstay .sd.r{text-align:right}
 .bkstay .sd{display:flex;flex-direction:column}
 .bkstay .sd b{font-size:1rem;font-weight:600;line-height:1.3;white-space:nowrap}
 .bkstay .sd b em{font-family:var(--serif);font-style:normal;font-size:1.7rem;font-weight:700;line-height:1.1}
@@ -968,10 +968,12 @@ BKPAGE_CSS = """
 .bkstay .sn::before{content:'';position:absolute;left:0;right:.2rem;top:50%;border-top:1px solid #D7C4EA}
 .bkstay .sn::after{content:'';position:absolute;right:0;top:calc(50% - 4px);border:4px solid transparent;border-left:7px solid #C9B3E2}
 .bkstay .sn i{position:relative;font-style:normal;font-weight:700;color:var(--purple);background:#FFFDFB;border:1px solid #D7C4EA;border-radius:99px;padding:.1rem .75rem;font-size:.85rem}
-.bkstay .sx{display:flex;gap:.5rem;align-items:flex-start;padding-left:1rem;border-left:1px solid var(--hair);min-width:0}
+.bkstay .sxr{grid-column:1/-1;display:grid;grid-template-columns:repeat(3,1fr);border-top:1px solid var(--hair);margin-top:.55rem;padding-top:.6rem}
+.bkstay .sx{display:flex;gap:.5rem;align-items:flex-start;padding:0 1rem;border-left:1px solid var(--hair);min-width:0}.bkstay .sx:first-child{padding-left:0;border-left:0}
 .bkstay .sx b{display:block;font-size:.95rem;line-height:1.4;font-weight:600;white-space:nowrap}
 .bki{width:1.05rem;height:1.05rem;fill:none;stroke:var(--purple);stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round;flex:none;opacity:.85;margin-top:.15rem}
-.bkgrid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:.7rem;align-items:start}
+.bkgrid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));grid-auto-rows:1fr;gap:.7rem;align-items:stretch}
+.bkgrid>.bkc{display:flex;flex-direction:column}
 .bkcol{display:grid;gap:.7rem;min-width:0}
 .bkc{padding:.75rem 1rem .8rem;min-width:0}
 .bkc .hd{display:flex;align-items:center;justify-content:space-between;gap:.5rem;margin-bottom:.35rem;padding-bottom:.4rem;border-bottom:1px solid var(--hair);min-height:2rem}
@@ -985,6 +987,8 @@ BKPAGE_CSS = """
 .gav{width:2.4rem;height:2.4rem;border-radius:50%;background:var(--grad);color:#fff;display:grid;place-items:center;font-size:1.05rem;font-weight:700;flex:none;box-shadow:0 0 0 2px #fff,0 0 0 3px #E4D3EE}
 .gnm{min-width:0}.gnm h4{font-size:1.05rem;margin:0;line-height:1.45}.gnm small{color:var(--soft);font-size:.78rem}
 .gchips{display:flex;flex-wrap:wrap;gap:.3rem;padding-bottom:.45rem}
+.bkguest .gh2{padding:.35rem 0 .7rem}.bkguest .gchips{padding-bottom:.75rem;gap:.4rem}
+.bkguest .ctl{padding:.68rem 0;font-size:.92rem}.bkguest .ctl .bki{margin-top:.2rem}
 .ctl{display:flex;align-items:flex-start;gap:.55rem;padding:.32rem 0;border-top:1px dotted var(--hair);font-weight:600;font-size:.88rem;line-height:1.5}
 .ctl>div{min-width:0;overflow-wrap:anywhere}.ctl .badge{font-size:.7rem}
 .kr,.bkc .kv{display:grid;grid-template-columns:6.4rem 1fr;gap:.5rem;padding:.3rem 0;border-bottom:1px dotted var(--hair);font-size:.86rem;line-height:1.5}
@@ -1007,9 +1011,7 @@ BKPAGE_CSS = """
 .bkpv.inm .bkhd{border-radius:16px}
 .bkpv.inm .bkst .bkx{width:2.3rem;height:2.3rem;border-radius:50%;border:0;background:rgba(255,255,255,.25);color:#fff;display:grid;place-items:center;cursor:pointer}
 @media print{#bkpg{display:none!important}}
-@media (max-width:1050px){.bkgrid{grid-template-columns:1fr 1fr}.bkgrid>.bkcol{grid-column:1/-1;grid-template-columns:1fr 1fr}
- .bkstay{grid-template-columns:auto 1fr auto;row-gap:.6rem}.bkstay .sx{grid-row:2}.bkstay .sx:nth-of-type(4){padding-left:0;border-left:0}}
-@media (max-width:700px){.bkgrid,.bkgrid>.bkcol{grid-template-columns:1fr}}
+@media (max-width:700px){.bkgrid{grid-template-columns:1fr;grid-auto-rows:auto}.bkstay .sxr{grid-template-columns:1fr}.bkstay .sx{border-left:0;padding:.3rem 0}}
 """
 
 
