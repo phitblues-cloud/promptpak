@@ -427,6 +427,15 @@ ok('AI สรุปกล่อง CRM: กันโค้ดแปลกปล�
   ok('บันทึกการจองย้อนหลัง: เข้าพัก/เช็คเอาท์/จ่ายครบในครั้งเดียว · ไม่ถูกยกเลิกอัตโนมัติ · ต้องติ๊กย้อนหลังเท่านั้น');
 }
 
+// 11k) เมนูการเงิน: บันทึกสถานะ (บริการ/รายการรับ-จ่าย/กะ) แล้วโหลดกลับมาได้
+{
+  const st = { v: 1, bills: {}, sv: [], txns: [{ id: 't1_x', time: Date.now(), item: 'ทดสอบรายการ', bk: '', cat: 'อื่นๆ', method: 'เงินสด', type: 'in', amount: 50, who: 'ดวน', auto: false }], shifts: {}, shiftLog: [], vars: [], closed: [], hf: {}, banks: [] };
+  assert.equal((await call('/api/app?part=fin', { method: 'POST', body: JSON.stringify(st) })).body.ok, true);
+  const F = (await call('/api/app?part=mods&since=x')).body.mods.fin;
+  assert.ok(F.includes('const FIN_STATE=') && F.includes('ทดสอบรายการ') && F.includes('ppFinSave'));
+  ok('เมนูการเงิน: บันทึกสถานะแล้วโหลดกลับมาได้');
+}
+
 // 12) กันเดา PIN
 for (let i = 0; i < 8; i++) await call('/api/app?part=pin', { method: 'POST', body: JSON.stringify({ role: 'owner', pin: '000000' }) });
 assert.equal((await call('/api/app?part=pin', { method: 'POST', body: JSON.stringify({ role: 'owner', pin: '246810' }) })).status, 429);

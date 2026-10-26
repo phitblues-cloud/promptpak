@@ -202,6 +202,8 @@ def apply(M):
         M['book'] = bkback(bkpage(M['book']))
     if 'home' in M:
         M['home'] = homepop(M['home'])
+    if 'fin' in M:
+        M['fin'] = finsave(M['fin'])
     return M
 
 
@@ -1190,3 +1192,70 @@ def homepop(h):
   {const bf=$('sheet').querySelector('[data-bkfull]');if(bf)bf.onclick=()=>{try{parent.postMessage({pbr:'bkfull',no:bf.dataset.bkfull},'*')}catch(_){}}}"""),
     ], 'home-pop')
     return _css(h, HOMEPOP_CSS)
+
+
+# ---------- เมนูการเงินบันทึกจริง (ต้องรัน 15_fin.sql) ----------
+# เก็บ "ส่วนที่เมนูการเงินเป็นเจ้าของ" เป็นสถานะชุดเดียว: บริการเพิ่มเติม/รับชำระบริการ/เครดิต/ใบเรียกเก็บอื่นๆ (SV)/
+# รายการรับ-จ่ายที่พนักงานเพิ่ม/ยกเลิกรายการ/เปิด-ปิดกะ/ปิดยอด/บัญชีธนาคาร · ค่าห้องที่รับในเมนูนี้ → pp_act pay (ทุกเมนูเห็น)
+FIN_JS = r"""
+/* ============ บันทึกจริง: สถานะเมนูการเงิน ============ */
+const PPF_SES=Date.now().toString(36);
+const ppfBig=v=>typeof v==='string'&&v.length>350000?'sample':v;
+function ppFinSnap(){
+  const bills={},sv=[];
+  BILLS.forEach(b=>{
+    if(!b.room){sv.push(Object.assign({},b,{fresh:false,pays0:(b.pays0||[]).map(p=>Object.assign({},p,{slip:ppfBig(p.slip)})),pays:undefined}));return}
+    const items=b.items||[], svc=(b.pays0||[]).filter(p=>p.tag==='svc').map(p=>Object.assign({},p,{slip:ppfBig(p.slip)}));
+    if(items.length||svc.length||b.credit||b.qrAcct)bills[b.no+'|'+b.room]={items,svc,credit:b.credit||null,qrAcct:b.qrAcct||null};
+  });
+  return {v:1,bills,sv,
+    txns:TXNS.filter(t=>!t.auto||t.close).map(t=>Object.assign({},t,{photo:ppfBig(t.photo)})),
+    shifts:SHIFTS,shiftLog:SHIFT_LOG,vars:VARS,closed:[...CLOSED_DAYS],
+    hf:{actual:HF.actual,lastDrop:HF.lastDrop,note:HF.note,openCnt:HF.openCnt,openWho:HF.openWho},banks:BANKS};
+}
+let ppfLast='',ppfT=null,ppfBusy=false;
+function ppFinSave(){clearTimeout(ppfT);ppfT=setTimeout(()=>{
+  let j;try{j=JSON.stringify(ppFinSnap())}catch(e){return}
+  if(j===ppfLast||ppfBusy)return; ppfBusy=true;
+  fetch(top.location.origin+'/api/app?part=fin',{method:'POST',credentials:'same-origin',headers:{'Content-Type':'application/json'},body:j})
+   .then(r=>r.json().catch(()=>({})).then(x=>{if(!r.ok)throw new Error(x.error||('รหัส '+r.status));ppfLast=j;try{parent.postMessage({pbr:'pp-saved'},'*')}catch(_){}}))
+   .catch(e=>toast('⚠️ บันทึกเมนูการเงินไม่สำเร็จ: '+e.message)).finally(()=>{ppfBusy=false})},700)}
+function ppFinRestore(st){
+  if(!st||!st.v)return;
+  Object.entries(st.bills||{}).forEach(([k,x])=>{const [no,room]=k.split('|');const b=BILLS.find(y=>y.no===no&&y.room===room);if(!b)return;
+    const have=new Set((b.items||[]).map(i=>i.id)),add=(x.items||[]).filter(i=>!have.has(i.id));
+    b.items=(b.items||[]).concat(add);b.total+=add.reduce((a,i)=>a+i.qty*i.price,0);
+    const ps=new Set((b.pays0||[]).map(p=>p.fid).filter(Boolean)),sp=(x.svc||[]).filter(p=>!p.fid||!ps.has(p.fid));
+    b.pays0=(b.pays0||[]).concat(sp);b.pays=(b.pays||[]).concat(sp);b.paid=Math.min(b.total,b.pays.reduce((a,p)=>a+p.amt,0));
+    if(x.credit)b.credit=x.credit;if(x.qrAcct)b.qrAcct=x.qrAcct;rebuildTxns(b)});
+  (st.sv||[]).forEach(x=>{if(BILLS.some(b=>b.no===x.no&&!b.room))return;const b=Object.assign({},x,{pays:(x.pays0||[]).slice()});BILLS.push(b);rebuildTxns(b);
+    const n=+String(b.no).split('-').pop();if(n>=_sv)_sv=n});
+  (st.txns||[]).forEach(t=>{if(!TXNS.some(y=>y.id===t.id))TXNS.push(t)});
+  Object.assign(SHIFTS,st.shifts||{});(st.shiftLog||[]).forEach(x=>SHIFT_LOG.push(x));(st.vars||[]).forEach(x=>VARS.push(x));
+  (st.closed||[]).forEach(d=>CLOSED_DAYS.add(+d));
+  const hf=st.hf||{};['actual','lastDrop','note','openCnt','openWho'].forEach(k=>Object.assign(HF[k],hf[k]||{}));
+  if(Array.isArray(st.banks)&&st.banks.length)BANKS=st.banks;
+}
+try{ppFinRestore(FIN_STATE)}catch(e){console.error(e)}
+try{ppfLast=JSON.stringify(ppFinSnap())}catch(e){}
+/* ค่าห้องที่รับในเมนูการเงิน → บันทึกลงการจอง (หน้าแรก/การจองเห็นด้วย) */
+function ppFinRoomPay(no,m,amt){return fetch(top.location.origin+'/api/app?part=act',{method:'POST',credentials:'same-origin',headers:{'Content-Type':'application/json'},
+  body:JSON.stringify({k:'pay',no,m,room_amt:amt})}).then(r=>r.json().catch(()=>({})).then(x=>{if(!r.ok)throw new Error(x.error||('รหัส '+r.status))})).catch(e=>toast('⚠️ บันทึกค่าห้องไม่สำเร็จ: '+e.message))}
+"""
+
+
+def finsave(h):
+    h = _r(h, [
+        # id ของรายการที่พนักงานเพิ่มไม่ซ้ำข้ามการโหลด
+        ("function pushTxn(o){const x=Object.assign({id:'t'+(txnSeq++),auto:false,photo:null},o); if(!x.id) x.id='t'+(txnSeq++); TXNS.push(x)}",
+         "function pushTxn(o){const x=Object.assign({id:'t'+(txnSeq++)+(o&&o.auto?'':'_'+PPF_SES),auto:false,photo:null},o); if(!x.id) x.id='t'+(txnSeq++)+'_'+PPF_SES; TXNS.push(x)}"),
+        ("/* ============ init ============ */\nrenderBill();", FIN_JS + "\n/* ============ init ============ */\nrenderBill();"),
+        # บันทึกทุกครั้งที่หน้าจอเปลี่ยน (เฉพาะส่วนที่เมนูการเงินเป็นเจ้าของ · ไม่ส่งซ้ำถ้าไม่เปลี่ยน)
+        ("function renderTxn(){", "function renderTxn(){try{ppFinSave()}catch(_){}"),
+        ("function renderBill(){", "function renderBill(){try{ppFinSave()}catch(_){}"),
+        ("function renderHf(){", "function renderHf(){try{ppFinSave()}catch(_){}"),
+        # ค่าห้องที่รับในเมนูการเงิน
+        ("  if(b.room&&roomPay>0) try{parent.postMessage({pbr:'finpay',",
+         "  if(b.room&&roomPay>0) ppFinRoomPay(b.no,PY.m,roomPay);\n  if(b.room&&roomPay>0) try{parent.postMessage({pbr:'finpay',"),
+    ], 'fin-save')
+    return h

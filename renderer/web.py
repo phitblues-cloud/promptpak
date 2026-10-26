@@ -276,7 +276,12 @@ def _build(now, role='owner'):
         export['cust_ids'] = rpc('pp_cust_ids') or {}
     except Exception:
         export['cust_ids'] = {}
+    try:   # สถานะเมนูการเงิน (ข้ามได้ถ้ายังไม่ได้รัน 15_fin.sql)
+        export['fin_state'] = rpc('pp_fin_state')
+    except Exception:
+        export['fin_state'] = None
     m = overlay.build(render.base_mock(), export, now)
+    m['fin_state'] = export.get('fin_state')
     m['_role'] = role   # พนักงานเห็นเลขบัตรแบบปิดบางส่วน
     _purge_ids(m, now)
     return m, export['stamp']
@@ -360,6 +365,13 @@ def handle(method, query, cookie_header, body, ip):
                         except Exception:
                             pass
             return 200, J, json.dumps(out, ensure_ascii=False)
+        if method == 'POST' and part == 'fin':   # เมนูการเงิน -> บันทึกสถานะ
+            if not role:
+                return 401, J, json.dumps({'error': 'ต้องเข้าสู่ระบบใหม่'}, ensure_ascii=False)
+            data = json.loads(body or '{}')
+            if not isinstance(data, dict):
+                return 400, J, json.dumps({'error': 'ข้อมูลไม่ครบ'}, ensure_ascii=False)
+            return 200, J, json.dumps(rpc('pp_fin_save', {'p': data, 'p_role': role}), ensure_ascii=False)
         if method == 'POST' and part == 'hk':   # แม่บ้าน/งานทำความสะอาด
             if not role:
                 return 401, J, json.dumps({'error': 'ต้องเข้าสู่ระบบใหม่'}, ensure_ascii=False)

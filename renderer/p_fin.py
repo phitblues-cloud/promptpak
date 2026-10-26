@@ -42,6 +42,7 @@ def patch(h):
            'const rate=code=>RMRATE[code]||0, rtypeOnly=code=>RMTYPE[code]||"";\n'
            "const rtype=code=>!code?'บริการอื่นๆ · ไม่มีห้องพัก':`${code[0]==='A'?'โซนตึก':'โซนบ้าน'} · ห้อง ${code} · ${rtypeOnly(code)}`;\n"
            'let BILLS=' + J(fin_bills()) + ';\n'
+           'const FIN_STATE=' + J(m.get('fin_state') or None) + ';\n'
            'const toLoc=ms=>{const d=new Date(ms),s0=new Date(d.getFullYear(),d.getMonth(),d.getDate());return Date.UTC(d.getFullYear(),d.getMonth(),d.getDate())+(ms-s0.getTime())};\n'
            'const nowLoc=()=>toLoc(Date.now());\n'
            'const bkOf=n=>BILLS.find(b=>b.no===n);\n')
