@@ -1573,15 +1573,27 @@ def planai(h):
 
 # ---------- ฟอร์มเพิ่มการจอง: เลือกหลายประเภทห้องในการจองเดียว · อาหารเช้าแยกตามประเภท + ติ๊กทุกห้อง · รูปห้องจริง ----------
 BKMULTI_CSS = r"""
-.kth.ph{background:none;overflow:hidden;padding:0;position:relative;width:5.4rem;height:4rem}
-.kth.ph img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;border-radius:10px}
-.kr{grid-template-columns:5.4rem 1fr auto auto}
-.kex{padding-left:7.15rem}
+.sheet.bk{width:min(64rem,100%);height:min(46rem,94vh)}
+.sheet.bk .sh{padding:1.05rem 1.8rem .95rem}
+#bkSteps.bkst{display:flex!important;flex-wrap:nowrap!important;justify-content:flex-start!important;align-items:center;gap:.4rem;padding:.95rem 1.8rem!important;background:#FFFDFA!important;border-bottom:1.5px solid var(--line)!important}
+#bkSteps .s{font-size:.92rem;gap:.6rem}
+#bkSteps .s i{width:1.9rem;height:1.9rem;font-size:.85rem}
+#bkSteps .s:not(:last-child)::after{margin:0 1rem}
+.bkm{padding:1.3rem 1.6rem 1.4rem;gap:1rem}
+.bks{padding:1.3rem 1.3rem}
+.bkw{grid-template-columns:1fr 16.5rem}
+.krc{border-radius:18px;margin-bottom:.8rem}
+.kr{grid-template-columns:8.5rem 1fr auto auto;gap:1.1rem;padding:.85rem 1rem .85rem .85rem}
+.kth.ph{background:none;overflow:hidden;padding:0;position:relative;width:8.5rem;height:6rem;border-radius:12px}
+.kth.ph img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+.kth:not(.ph){width:8.5rem;height:6rem;border-radius:12px}
+.knm{font-size:1.02rem}.kfc{margin-top:.3rem;line-height:1.5}
+.ksel{margin-right:.15rem}
+.kex{padding:.8rem 1rem .9rem 10.45rem;gap:1.2rem}
 .krm{margin-left:auto;align-self:center;border:0;background:none;color:var(--red,#C41E3A);font:inherit;font-size:.82rem;text-decoration:underline;cursor:pointer}
-.kball{display:flex;gap:.6rem;align-items:center;border:1.5px solid var(--line);border-radius:14px;padding:.6rem .85rem;margin:.2rem 0 .6rem;background:#fff;cursor:pointer}
+.kball{display:flex;gap:.6rem;align-items:center;border:1.5px solid var(--line);border-radius:16px;padding:.75rem 1rem;margin:.2rem 0 .6rem;background:#fff;cursor:pointer}
 .kball small{display:block;color:var(--soft,#6E5A68);font-size:.75rem}
-.kgsum{font-size:.8rem;color:var(--soft,#6E5A68);margin-top:.15rem}
-@media(max-width:760px){.kr{grid-template-columns:3.6rem 1fr auto}.kth.ph{width:3.6rem;height:2.8rem}.kex{padding-left:.85rem}}
+@media(max-width:760px){.kr{grid-template-columns:4.5rem 1fr auto}.kth.ph,.kth:not(.ph){width:4.5rem;height:3.4rem}.kex{padding-left:1rem}.bkst{padding:.7rem 1rem}.bkm{padding:1rem}}
 """
 
 
@@ -1608,6 +1620,7 @@ def bkmulti(h):
         "      g.n=Math.max(1,Math.min(g.n,free.length));let mine=F.picked.filter(c=>free.includes(c)).slice(0,g.n);\n"
         "      for(const c of free){if(mine.length>=g.n)break;if(!mine.includes(c))mine.push(c)}keep=keep.concat(mine)});\n"
         "    F._free=all;F.picked=keep;syncF()};") + h[b:]
+    h = h.replace("bf:false,purpose:'ท่องเที่ยว',", "bf:false,purpose:'ทำงาน',", 1)
     h = _r(h, [
         # ค่าอาหารเช้าตามห้องที่เลือกอาหารเช้า
         ("const roomSum=rs.reduce((a,r)=>a+r.rate*F.nights,0), bf=F.bf?BF_PRICE*people()*F.nights:0;",
