@@ -459,10 +459,11 @@ ok('AI สรุปกล่อง CRM: กันโค้ดแปลกปล�
   script.push(p => { assert.equal(p.tools[0].name, 'web_search');
     return { stop_reason: 'end_turn', content: [
       { type: 'web_search_tool_result', content: [{ type: 'web_search_result', url: 'https://news.example.th/a', title: 'ข่าวจริง' }] },
-      { type: 'tool_use', id: 'sn', name: 'save_news', input: { news: [{ cat: 'โรงงาน · น้ำพอง', tn: 'hi', t: 'ข่าวจริง', sum: 's', why: 'w', url: 'https://news.example.th/a/', src: 'news.example.th' },
+      { type: 'tool_use', id: 'sn', name: 'save_news', input: { news: [{ cat: 'โรงงาน · น้ำพอง', tn: 'hi', t: 'ข่าวจริง', sum: 's', why: 'w', url: 'https://news.example.th/a/', src: 'news.example.th', end: '2099-12-31' },
+                                                    { t: 'งานจบแล้ว', url: 'https://news.example.th/a', end: '2020-01-01' },
                                                     { t: 'ข่าวแต่ง', url: 'https://fake.example/b' }], trends: [] } }] }; });
   r = await call('/api/news');
-  assert.equal(r.body.news.length, 1); assert.equal(r.body.news[0].url, 'https://news.example.th/a/'); assert.equal(r.body.raw.news, 2);
+  assert.equal(r.body.news.length, 1); assert.equal(r.body.news[0].url, 'https://news.example.th/a/'); assert.equal(r.body.raw.news, 3); assert.equal(r.body.raw.old, 1);
   const M = (await call('/')).body;
   assert.ok(M.includes("loadAI('insight')") && M.includes('data-ai=\\"insight\\"'));
   ok('ศูนย์ไอเดีย: Agent Insight จากข้อมูลจริง (เก็บใช้ทั้งวัน) · ข่าวรับเฉพาะลิงก์จากผลค้นเว็บ');
