@@ -1361,9 +1361,9 @@ IDEA_CSS = r"""
 #ideas .box h2{font-size:18px}
 #ideas .feedsrc{font-size:13px;line-height:1.55;margin:6px 0 18px}
 #ideas .box{overflow:visible}
-#ideas .cards{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px;overflow:visible;padding:2px}
+#ideas .cards{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;align-items:stretch;overflow:visible;padding:2px}
 #ideas .cards>.more{grid-column:1/-1}
-#ideas [data-box="hotel"]{grid-template-columns:none;grid-auto-flow:column;grid-auto-columns:calc((100% - 28px)/3);overflow-x:auto;overflow-y:hidden;scroll-snap-type:x mandatory;scrollbar-width:none;-webkit-overflow-scrolling:touch;overscroll-behavior-x:contain}
+#ideas [data-box="hotel"]{grid-template-columns:none;grid-auto-flow:column;grid-auto-columns:calc((100% - 20px)/3);overflow-x:auto;overflow-y:hidden;scroll-snap-type:x mandatory;scrollbar-width:none;-webkit-overflow-scrolling:touch;overscroll-behavior-x:contain}
 #ideas [data-box="hotel"]::-webkit-scrollbar{display:none}
 #ideas [data-box="hotel"]>*{scroll-snap-align:start}
 #ideas [data-box="hotel"]>.more{display:none}
@@ -1377,14 +1377,14 @@ IDEA_CSS = r"""
 .irf{border:1px solid var(--line);background:var(--paper);border-radius:999px;padding:4px 12px;font-size:12.5px;color:var(--muted);white-space:nowrap}
 .irf:disabled{opacity:.55}
 .feedsrc b{color:var(--plum);font-weight:600}
-.icard.pt{display:flex;flex-direction:column;aspect-ratio:4/5;padding:16px 16px 14px;border-radius:18px;min-width:0}
-#ideas [data-box="news"] .icard.pt{aspect-ratio:4/4.4}
+.icard.pt{display:flex;flex-direction:column;padding:16px 16px 14px;border-radius:18px;min-width:0;min-height:228px;height:100%}
+#ideas [data-box="news"] .icard.pt{min-height:210px}
 .icard.pt .k{display:flex;align-items:center;gap:7px;font-size:12px;font-weight:600;color:var(--muted);padding-right:30px;line-height:1.3}
 .icard.pt .k i{width:8px;height:8px;border-radius:50%;flex:none;background:#2E9C6A}
 .icard.pt .k b{font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0}
 .icard.pt .k.hi i{background:#C41E3A}.icard.pt .k.mid i{background:#D99A1E}
-.icard.pt .n{font-family:var(--serif);font-size:26px;font-weight:700;line-height:1.05;margin:auto 0 10px;word-break:break-word}
-.icard.pt .n small{font-family:var(--sans);font-size:12.5px;font-weight:500;color:var(--muted);margin-left:4px}
+.icard.pt .n{font-family:var(--serif);font-size:26px;font-weight:700;line-height:1.1;margin:18px 0 10px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.icard.pt .n small{display:block;font-family:var(--sans);font-size:12.5px;font-weight:500;color:var(--muted);margin-top:2px;overflow:hidden;text-overflow:ellipsis}
 .icard.pt h3{font-size:13.5px;font-weight:600;line-height:1.5;padding:0;margin:0;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
 #ideas [data-box="news"] .icard.pt h3{margin-top:14px;-webkit-line-clamp:4}
 .icard.pt .ft{margin-top:auto;padding-top:10px;font-size:11.5px;color:#9C8A95;display:flex;align-items:center;gap:6px;min-width:0}
