@@ -1084,8 +1084,8 @@ function homePopHTML(v,H,b,due){
    <header class="bkhd"><div class="bkpt"><div class="lbl">หมายเลขการจอง</div><div class="bkno">${v.no}</div>
      <div class="bkwho">${esc(v.title)}<span class="dot">·</span>ห้อง <span id="mRoom">${v.room}</span></div></div>
     <div class="bkst">${bd?`<span class="badge hbd" title="วันเกิดของผู้เข้าพักอยู่ในช่วงเข้าพัก">🎂 วันเกิด ${bd}</span>`:''}${v.badges}<button type="button" class="x bkx" id="closeX" aria-label="ปิด">${ico('x')}</button></div></header>
+   <div class="hmrow"><button type="button" class="hmore" data-bkfull="${esc(v.no)}">ดูเพิ่มเติม ›</button></div>
    <section class="bkstay">
-    <button type="button" class="hmore" data-bkfull="${esc(v.no)}">ดูเพิ่มเติม ›</button>
     <div class="sd"><span class="lbl">เช็คอิน</span><b>${dd(v.ci)}</b><small>${esc(v.ciTxt)}</small></div>
     <div class="sn"><i>${v.nights} คืน</i></div>
     <div class="sd"><span class="lbl">เช็คเอาท์</span><b>${dd(v.co)}</b><small>&nbsp;</small></div>
@@ -1128,8 +1128,9 @@ HOMEPOP_CSS = """
 .hpv .bkst .badge{font-size:.86rem;padding:.3rem .85rem;font-weight:700;box-shadow:0 3px 10px rgba(40,10,40,.2)}
 .hpv .bkx{position:static!important;width:2.2rem;height:2.2rem;border-radius:50%;border:0;background:rgba(255,255,255,.25);color:#fff;display:grid;place-items:center;cursor:pointer;margin-left:.2rem}
 .hpv .bkc,.hpv .bkstay{background:#FFFDFB;border:1px solid var(--hair);border-radius:16px}
-.hpv .bkstay{position:relative;padding:1.15rem 1rem .55rem;display:grid;grid-template-columns:auto minmax(3.5rem,8rem) auto repeat(3,minmax(0,1fr));gap:0 .9rem;align-items:center}
-.hpv .hmore{position:absolute;top:.2rem;right:.7rem;border:0;background:none;font:inherit;font-size:.8rem;font-weight:700;color:var(--purple);cursor:pointer;padding:.15rem .2rem;min-height:1.6rem}
+.hpv .bkstay{position:relative;padding:.6rem 1rem .55rem;display:grid;grid-template-columns:auto minmax(3.5rem,8rem) auto repeat(3,minmax(0,1fr));gap:0 .9rem;align-items:center}
+.hpv .hmrow{display:flex;justify-content:flex-end;margin:-.35rem 0 -.45rem}
+.hpv .hmore{border:0;background:none;font:inherit;font-size:.8rem;font-weight:700;color:var(--purple);cursor:pointer;padding:.15rem .2rem;min-height:1.6rem}
 .hpv .hbd{background:#FFE7EF!important;color:#B0244F!important}
 .hpv .sd{display:flex;flex-direction:column}.hpv .sd.r{text-align:right}
 .hpv .sd b{font-size:.95rem;font-weight:600;line-height:1.3;white-space:nowrap}
