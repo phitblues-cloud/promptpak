@@ -939,7 +939,10 @@ function bkDoc(k,b,v,H,nm,tx,ret){
     const m=$('msheet');m.classList.add('xl');m.querySelectorAll('[data-close]').forEach(x=>x.onclick=ret||closeModal);
     $('docPrint').onclick=()=>{try{window.print()}catch(e){toast('พิมพ์ไม่ได้ในหน้านี้')}}},false);
 }
-function bkBack(){const P=$('pList'),pg=$('bkpg');if(pg)pg.remove();if(P)P.classList.remove('pg')}
+function bkBack(){const P=$('pList'),pg=$('bkpg');if(pg)pg.remove();if(P)P.classList.remove('pg');if(window.__bkFromHome){window.__bkFromHome=false;try{parent.postMessage({pbr:'bkfullback'},'*')}catch(_){}}}
+window.addEventListener('message',e=>{const d=e.data||{};if(d.pbr!=='bkfull')return;const b=B.find(x=>x.no===d.no)||BC.find(x=>x.no===d.no);if(!b)return;
+  try{closeModal()}catch(_){}S.view='list';renderAll();window.__bkFromHome=true;detail(b.id);
+  const bk=document.querySelector('#bkpg .back');if(bk)bk.lastChild.textContent='กลับหน้าแรก'});
 function detail(id,ctx){"""
 
 BKPAGE_CSS = """
@@ -1075,27 +1078,28 @@ function homePopHTML(v,H,b,due){
   const row=(k,val)=>`<div class="kr"><span>${k}</span><div>${val}</div></div>`;
   const ct=(ic,val)=>`<div class="ctl">${hpi(ic)}<div>${val}</div></div>`;
   const dd=s=>{const t=String(s),k=t.indexOf(' ');return `<em>${t.slice(0,k)}</em> ${esc(t.slice(k+1))}`};
-  const taxOn=v.tax&&v.tax!=='ไม่ต้องการ';
+  const taxOn=v.tax&&v.tax!=='ไม่ต้องการ',X=(typeof BKX!=='undefined'&&BKX[v.no])||{},coName=(v.org&&v.org.name)||X.co||'';
+  const TH=['ม.ค.','ก.พ.','มี.ค.','เม.ย.','พ.ค.','มิ.ย.','ก.ค.','ส.ค.','ก.ย.','ต.ค.','พ.ย.','ธ.ค.'],bd=X.bd?(+X.bd.slice(8,10))+' '+TH[+X.bd.slice(5,7)-1]:'';
   return `<article class="bkpv hpv">
    <header class="bkhd"><div class="bkpt"><div class="lbl">หมายเลขการจอง</div><div class="bkno">${v.no}</div>
      <div class="bkwho">${esc(v.title)}<span class="dot">·</span>ห้อง <span id="mRoom">${v.room}</span></div></div>
-    <div class="bkst">${v.badges}<button type="button" class="x bkx" id="closeX" aria-label="ปิด">${ico('x')}</button></div></header>
+    <div class="bkst">${bd?`<span class="badge hbd" title="วันเกิดของผู้เข้าพักอยู่ในช่วงเข้าพัก">🎂 วันเกิด ${bd}</span>`:''}${v.badges}<button type="button" class="x bkx" id="closeX" aria-label="ปิด">${ico('x')}</button></div></header>
    <section class="bkstay">
+    <button type="button" class="hmore" data-bkfull="${esc(v.no)}">ดูเพิ่มเติม ›</button>
     <div class="sd"><span class="lbl">เช็คอิน</span><b>${dd(v.ci)}</b><small>${esc(v.ciTxt)}</small></div>
     <div class="sn"><i>${v.nights} คืน</i></div>
-    <div class="sd r"><span class="lbl">เช็คเอาท์</span><b>${dd(v.co)}</b><small>&nbsp;</small></div>
-    <div class="sxr">
-     <div class="sx">${hpi('bed')}<div><span class="lbl">ห้อง</span><b>${v.roomHTML}</b><small>${esc(v.roomType)}</small></div></div>
-     <div class="sx">${hpi('user')}<div><span class="lbl">ผู้เข้าพัก</span><b>${v.pax} ท่าน</b><small>${v.adults!=null?`ผู้ใหญ่ ${v.adults} · เด็ก ${v.kids||0}`:''}</small></div></div>
-     <div class="sx">${hpi('flag')}<div><span class="lbl">วัตถุประสงค์</span><b>${esc(v.purpose||'ไม่ระบุ')}</b></div></div></div>
+    <div class="sd"><span class="lbl">เช็คเอาท์</span><b>${dd(v.co)}</b><small>&nbsp;</small></div>
+    <div class="sx">${hpi('bed')}<div><span class="lbl">ห้อง</span><b>${v.roomHTML}</b><small>${esc(v.roomType)}</small></div></div>
+    <div class="sx">${hpi('user')}<div><span class="lbl">ผู้เข้าพัก</span><b>${v.pax} ท่าน</b><small>${v.adults!=null?`ผู้ใหญ่ ${v.adults} · เด็ก ${v.kids||0}`:''}</small></div></div>
+    <div class="sx">${hpi('flag')}<div><span class="lbl">วัตถุประสงค์</span><b>${esc(v.purpose||'ไม่ระบุ')}</b><small>&nbsp;</small></div></div>
    </section>
    <div class="hgrid">
     <section class="bkc bkguest"><div class="hd"><h3>ข้อมูลผู้เข้าพัก</h3>${v.regBtn?'<button type="button" class="more" id="mReg">สมัครสมาชิก ›</button>':''}</div>
      <div class="gnm"><h4>${esc(nm)}</h4><small>เข้าพักมาแล้ว ${n} ครั้ง</small></div>
-     <div class="gchips"><span class="hi ty-${TY[1]}">${TY[0]}</span><span class="hi ${v.mem?'ty-mem':'ty-no'}">${v.mem?'เป็นสมาชิก':'ไม่เป็นสมาชิก'}</span><span class="hi ${v.org||v.grp==='ลูกค้าบริษัท'?'ty-co':'ty-no'}">${v.org||v.grp==='ลูกค้าบริษัท'?'ลูกค้าบริษัท':'ลูกค้าทั่วไป'}</span></div>
+     <div class="gchips"><span class="hi ty-${TY[1]}">${TY[0]}</span><span class="hi ${v.mem?'ty-mem':'ty-no'}">${v.mem?'เป็นสมาชิก':'ไม่เป็นสมาชิก'}</span><span class="hi ${coName||v.grp==='ลูกค้าบริษัท'?'ty-co':'ty-no'}">${coName||v.grp==='ลูกค้าบริษัท'?'ลูกค้าบริษัท':'ลูกค้าทั่วไป'}</span></div>
      ${v.org&&v.org.contact?ct('user','ผู้ติดต่อ: '+esc(v.org.contact)):''}
      ${ct('phone',esc(v.phone||'-'))}${ct('line',v.lineOn&&v.line?esc(v.line)+' <span class="badge b3">ผูกแล้ว</span>':'<span class="muted">ยังไม่ผูก LINE</span>')}
-     ${v.org?ct('co',esc(v.org.name)):''}</section>
+     ${coName?ct('co',esc(coName)):''}</section>
     <section class="bkc"><div class="hd"><h3>รายละเอียดการจอง</h3></div>
      ${row('ประเภทห้อง',esc(v.roomType))}${row('ราคาห้อง',fmt(pv.rate)+' บาท / คืน')}
      ${row('อาหารเช้า',pv.bf?'รับ · '+fmt(pv.bf)+' บาท':'<span class="muted">ไม่รับ</span>')}
@@ -1124,7 +1128,9 @@ HOMEPOP_CSS = """
 .hpv .bkst .badge{font-size:.86rem;padding:.3rem .85rem;font-weight:700;box-shadow:0 3px 10px rgba(40,10,40,.2)}
 .hpv .bkx{position:static!important;width:2.2rem;height:2.2rem;border-radius:50%;border:0;background:rgba(255,255,255,.25);color:#fff;display:grid;place-items:center;cursor:pointer;margin-left:.2rem}
 .hpv .bkc,.hpv .bkstay{background:#FFFDFB;border:1px solid var(--hair);border-radius:16px}
-.hpv .bkstay{padding:.55rem 1rem .5rem;display:grid;grid-template-columns:auto 1fr auto;gap:0 1rem;align-items:center}
+.hpv .bkstay{position:relative;padding:1.15rem 1rem .55rem;display:grid;grid-template-columns:auto minmax(3.5rem,8rem) auto repeat(3,minmax(0,1fr));gap:0 .9rem;align-items:center}
+.hpv .hmore{position:absolute;top:.2rem;right:.7rem;border:0;background:none;font:inherit;font-size:.8rem;font-weight:700;color:var(--purple);cursor:pointer;padding:.15rem .2rem;min-height:1.6rem}
+.hpv .hbd{background:#FFE7EF!important;color:#B0244F!important}
 .hpv .sd{display:flex;flex-direction:column}.hpv .sd.r{text-align:right}
 .hpv .sd b{font-size:.95rem;font-weight:600;line-height:1.3;white-space:nowrap}
 .hpv .sd b em{font-family:var(--serif);font-style:normal;font-size:1.5rem;font-weight:700;line-height:1.1}
@@ -1134,7 +1140,7 @@ HOMEPOP_CSS = """
 .hpv .sn::after{content:'';position:absolute;right:0;top:calc(50% - 4px);border:4px solid transparent;border-left:7px solid #C9B3E2}
 .hpv .sn i{position:relative;font-style:normal;font-weight:700;color:var(--purple);background:#FFFDFB;border:1px solid #D7C4EA;border-radius:99px;padding:.08rem .7rem;font-size:.82rem}
 .hpv .sxr{grid-column:1/-1;display:grid;grid-template-columns:repeat(3,1fr);border-top:1px solid var(--hair);margin-top:.45rem;padding-top:.45rem}
-.hpv .sx{display:flex;gap:.45rem;align-items:flex-start;padding:0 .9rem;border-left:1px solid var(--hair);min-width:0}.hpv .sx:first-child{padding-left:0;border-left:0}
+.hpv .sx{display:flex;gap:.45rem;align-items:flex-start;padding-left:.9rem;border-left:1px solid var(--hair);min-width:0}
 .hpv .sx b{display:block;font-size:.9rem;line-height:1.4;font-weight:600}
 .hpv .bki{width:1rem;height:1rem;fill:none;stroke:var(--purple);stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round;flex:none;opacity:.85;margin-top:.15rem}
 .hgrid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:.6rem;align-items:stretch}
@@ -1179,6 +1185,7 @@ def homepop(h):
   $('sheet').className='sheet xl';""",
          """  $('sheet').innerHTML=`<div class="sb">${homePopHTML(vv,HH,b,outTot)}</div>
     <div class="sf">${foot}</div>`;
-  $('sheet').className='sheet xl hpop';"""),
+  $('sheet').className='sheet xl hpop';
+  {const bf=$('sheet').querySelector('[data-bkfull]');if(bf)bf.onclick=()=>{try{parent.postMessage({pbr:'bkfull',no:bf.dataset.bkfull},'*')}catch(_){}}}"""),
     ], 'home-pop')
     return _css(h, HOMEPOP_CSS)
