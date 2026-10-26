@@ -1355,34 +1355,40 @@ def mktsend(h):
 
 # ---------- ศูนย์ไอเดีย: การ์ดแนวตั้ง + ป๊อปอัปรายละเอียด + Agent Insight / ข่าว AI ค้นเว็บ (ต้องรัน supabase/17_insight.sql) ----------
 IDEA_CSS = r"""
-#ideas .ideas.fill{height:auto;min-height:0;align-items:start}
-#ideas .leftcol{display:flex;flex-direction:column;gap:16px}
+#ideas .ideas.fill{height:auto;min-height:0;align-items:stretch;gap:20px}
+#ideas .leftcol{display:flex;flex-direction:column;gap:20px}
+#ideas .box{padding:22px 24px 24px;border-radius:24px}
+#ideas .box h2{font-size:18px}
+#ideas .feedsrc{font-size:13px;line-height:1.55;margin:6px 0 18px}
 #ideas .box{overflow:visible}
-#ideas .cards{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;overflow:visible;padding:2px}
+#ideas .cards{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px;overflow:visible;padding:2px}
 #ideas .cards>.more{grid-column:1/-1}
-#ideas [data-box="hotel"]{grid-template-columns:none;grid-auto-flow:column;grid-auto-columns:calc((100% - 20px)/3);overflow-x:auto;overflow-y:hidden;scroll-snap-type:x mandatory;scrollbar-width:none;-webkit-overflow-scrolling:touch;overscroll-behavior-x:contain}
+#ideas [data-box="hotel"]{grid-template-columns:none;grid-auto-flow:column;grid-auto-columns:calc((100% - 28px)/3);overflow-x:auto;overflow-y:hidden;scroll-snap-type:x mandatory;scrollbar-width:none;-webkit-overflow-scrolling:touch;overscroll-behavior-x:contain}
 #ideas [data-box="hotel"]::-webkit-scrollbar{display:none}
 #ideas [data-box="hotel"]>*{scroll-snap-align:start}
 #ideas [data-box="hotel"]>.more{display:none}
 .ihr{display:flex;align-items:center;gap:6px}
 .iarr{width:30px;height:30px;border-radius:50%;border:1px solid var(--line);background:#fff;color:var(--plum);font-size:17px;line-height:1;padding:0;display:grid;place-items:center}
 .iarr:disabled{opacity:.35}
-#ideas .basket{position:sticky;top:12px;height:calc(100vh - 170px);min-height:560px}
-.ihd{display:flex;justify-content:space-between;align-items:center;gap:8px}
+#ideas .basket{position:relative;height:auto;min-height:560px;border-radius:24px;contain:size}
+#ideas .basket .bhead{padding:22px 24px 16px}
+#ideas .basket .bbody{padding:18px 24px}
+.ihd{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap}
 .irf{border:1px solid var(--line);background:var(--paper);border-radius:999px;padding:4px 12px;font-size:12.5px;color:var(--muted);white-space:nowrap}
 .irf:disabled{opacity:.55}
 .feedsrc b{color:var(--plum);font-weight:600}
-.icard.pt{display:flex;flex-direction:column;aspect-ratio:4/5;padding:12px 12px 10px;border-radius:16px;min-width:0}
+.icard.pt{display:flex;flex-direction:column;aspect-ratio:4/5;padding:16px 16px 14px;border-radius:18px;min-width:0}
 #ideas [data-box="news"] .icard.pt{aspect-ratio:4/4.4}
-.icard.pt .k{display:flex;align-items:center;gap:6px;font-size:11.5px;font-weight:600;color:var(--muted);padding-right:30px;line-height:1.3}
+.icard.pt .k{display:flex;align-items:center;gap:7px;font-size:12px;font-weight:600;color:var(--muted);padding-right:30px;line-height:1.3}
 .icard.pt .k i{width:8px;height:8px;border-radius:50%;flex:none;background:#2E9C6A}
+.icard.pt .k b{font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0}
 .icard.pt .k.hi i{background:#C41E3A}.icard.pt .k.mid i{background:#D99A1E}
-.icard.pt .n{font-family:var(--serif);font-size:30px;font-weight:700;line-height:1.05;margin:auto 0 6px;word-break:break-word}
+.icard.pt .n{font-family:var(--serif);font-size:26px;font-weight:700;line-height:1.05;margin:auto 0 10px;word-break:break-word}
 .icard.pt .n small{font-family:var(--sans);font-size:12.5px;font-weight:500;color:var(--muted);margin-left:4px}
-.icard.pt h3{font-size:14px;line-height:1.4;padding:0;margin:0;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
-#ideas [data-box="news"] .icard.pt h3{margin-top:10px;-webkit-line-clamp:4}
-.icard.pt .ft{margin-top:auto;padding-top:6px;font-size:11.5px;color:#9C8A95;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.icard.pt .check{top:9px;right:9px;width:22px;height:22px;font-size:12px}
+.icard.pt h3{font-size:13.5px;font-weight:600;line-height:1.5;padding:0;margin:0;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
+#ideas [data-box="news"] .icard.pt h3{margin-top:14px;-webkit-line-clamp:4}
+.icard.pt .ft{margin-top:auto;padding-top:10px;font-size:11.5px;color:#9C8A95;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.icard.pt .check{top:13px;right:13px;width:22px;height:22px;font-size:12px}
 .idt{display:grid;grid-template-columns:7.5rem 1fr;gap:8px 14px;margin-top:12px;font-size:15px}
 .idt dt{color:var(--muted);font-weight:600;font-size:13.5px;padding-top:2px}.idt dd{margin:0}
 .inums{display:flex;flex-wrap:wrap;gap:6px}.inums span{background:var(--paper);border:1px solid var(--line);border-radius:10px;padding:3px 9px;font-size:13px}
@@ -1404,9 +1410,9 @@ function SRCL(k){return {booking:'จากข้อมูลการจอง'
 function cardHTML(i){const on=selected.has(i.id),k=boxOf(i.id),tn=TNOF(i),cat=CATOF(i,k);
  const ck=`<button class="check" data-check="${i.id}" aria-label="${on?'เอาออก':'เลือก'}">${on?'✓':''}</button>`;
  if(k==='hotel'){const n=i.n!=null&&i.n!==''?i.n:bigOf(i.t);
-  return `<article class="icard pt ${on?'on':''}" data-card="${i.id}" tabindex="0" aria-pressed="${on}">${ck}<span class="k ${tn}"><i></i>${cat}</span>
+  return `<article class="icard pt ${on?'on':''}" data-card="${i.id}" tabindex="0" aria-pressed="${on}">${ck}<span class="k ${tn}"><i></i><b>${cat}</b></span>
   <div class="n">${n}${i.u?`<small>${i.u}</small>`:''}</div><h3>${i.t}</h3><div class="ft">${SRCL(i.src)||i.src||''}</div></article>`}
- return `<article class="icard pt ${on?'on':''}" data-card="${i.id}" tabindex="0" aria-pressed="${on}">${ck}<span class="k ${tn}"><i></i>${cat}</span>
+ return `<article class="icard pt ${on?'on':''}" data-card="${i.id}" tabindex="0" aria-pressed="${on}">${ck}<span class="k ${tn}"><i></i><b>${cat}</b></span>
   <h3>${i.t}</h3><div class="ft">${i.url?`${i.src||''}${i.date?' · '+i.date:''}`:(i.src||'')}</div></article>`}
 var AISTAT=window.AISTAT||{insight:null,news:null};
 function thTime(s){try{const d=new Date(s),M=['ม.ค.','ก.พ.','มี.ค.','เม.ย.','พ.ค.','มิ.ย.','ก.ค.','ส.ค.','ก.ย.','ต.ค.','พ.ย.','ธ.ค.'];
@@ -1423,7 +1429,8 @@ var _rf0=renderFeed;renderFeed=function(){_rf0();ideaHead();
  document.querySelectorAll('#ideas .icard[data-card]').forEach(c=>{c.onclick=()=>openDetail(c.dataset.card);c.onkeydown=e=>{if(e.target===c&&(e.key==='Enter'||e.key===' ')){e.preventDefault();openDetail(c.dataset.card)}}})};
 function aliasOf(x,kind){if(kind==='insight')return x.src==='company'?'h2':/ห้องว่าง|อาทิตย์|สุดสัปดาห์/.test(x.cat+x.t)?'h5':'';
  return /บุญ|กฐิน|เทศกาล|ประเพณี|ท่องเที่ยว/.test(x.cat+x.t)?'l3':/โรงงาน|ซ่อม|ก่อสร้าง|บริษัท|อบรม|ราชการ/.test(x.cat+x.t)?'l1':''}
-function applyAI(kind,d){AISTAT[kind]=d||{};
+function niceErr(e){e=String(e||'');if(/pp_feed|pp_insight|ai_feed|schema cache/.test(e))return 'ยังไม่ได้รัน supabase/17_insight.sql';if(/ANTHROPIC_API_KEY/.test(e))return 'ยังไม่ได้ตั้งคีย์ Claude';if(/web_search|not enabled|permission/i.test(e))return 'ยังไม่ได้เปิดสิทธิ์ค้นเว็บใน Claude Console';if(/Claude API/.test(e))return 'Claude ไม่ตอบ ลองใหม่ภายหลัง';return e.slice(0,80)}
+function applyAI(kind,d){AISTAT[kind]=d||{};if(d&&d.error)d.error=niceErr(d.error);
  if(kind==='insight'&&d&&d.items&&d.items.length)feeds.hotel.items=d.items.map(x=>({...x,tags:[],alias:aliasOf(x,'insight')}));
  if(kind==='news'&&d&&d.at){feeds.local.items=(d.news||[]).map(x=>({...x,tags:[],alias:aliasOf(x,'news')}));feeds.local.src='';
   feeds.trend.items=(d.trends||[]).map(x=>({...x,tags:[],alias:aliasOf(x,'news')}));feeds.trend.src=''}
@@ -1434,7 +1441,7 @@ async function loadAI(kind,force){AISTAT[kind]={...(AISTAT[kind]||{}),loading:tr
   d=await r.json().catch(()=>({error:'ระบบตอบกลับผิดรูปแบบ'}));if(!r.ok&&!d.error)d.error='รหัส '+r.status}
  catch(_){d={error:'เชื่อมต่อไม่ได้'}}
  if(d.busy&&!force){AISTAT[kind]={...d,loading:true};ideaHead();setTimeout(()=>loadAI(kind),25000);return}
- if(d.note)toast(d.note);if(force&&d.error)toast('ทำใหม่ไม่สำเร็จ: '+d.error);
+ if(d.note)toast(d.note);if(force&&d.error)toast('ทำใหม่ไม่สำเร็จ: '+niceErr(d.error));
  applyAI(kind,d);const b=document.querySelector(`[data-ai="${kind}"]`);if(b)b.disabled=false}
 document.querySelectorAll('[data-ai]').forEach(b=>b.onclick=()=>{b.disabled=true;toast(b.dataset.ai==='insight'?'ให้ Agent วิเคราะห์ใหม่ ใช้เวลาราว 20 วินาที':'ให้ AI ค้นข่าวใหม่ ใช้เวลาราว 1 นาที');loadAI(b.dataset.ai,true)});
 function arrUpd(){const c=$('[data-box="hotel"]');if(!c)return;const l=c.scrollLeft,m=c.scrollWidth-c.clientWidth;
@@ -1452,7 +1459,7 @@ def ideacards(h, owner):
         ('<div class="box"><h2><span class="dot" style="background:var(--plum)"></span>โอกาสจากข้อมูลโรงแรม</h2>\n    <p class="feedsrc">AI คัดเฉพาะเรื่องที่การตลาดช่วยได้ · อัปเดตเช้านี้</p>',
          '<div class="box"><div class="ihd"><h2><span class="dot" style="background:var(--plum)"></span>Insight จากข้อมูลโรงแรม</h2><div class="ihr">' + btn('insight', 'วิเคราะห์ใหม่') + '<button class="iarr" data-scr="-1" aria-label="เลื่อนซ้าย">‹</button><button class="iarr" data-scr="1" aria-label="เลื่อนขวา">›</button></div></div>\n    <p class="feedsrc"></p>'),
         ('<h2><span class="dot" style="background:var(--red)"></span>ข่าวและเทรนด์</h2>',
-         '<h2><span class="dot" style="background:var(--red)"></span>ข่าวและเทรนด์รอบโรงแรม</h2>'),
+         '<h2><span class="dot" style="background:var(--red)"></span>ข่าวและเทรนด์</h2>'),
         ('<div class="minitabs" role="tablist"><button role="tab" data-sub="local">ข่าวรอบโรงแรม <span class="nb"></span></button><button role="tab" data-sub="trend">เทรนด์ <span class="nb"></span></button></div></div>',
          '<div class="ihd">' + btn('news', 'ค้นข่าวใหม่') + '<div class="minitabs" role="tablist"><button role="tab" data-sub="local">ข่าว <span class="nb"></span></button><button role="tab" data-sub="trend">เทรนด์ <span class="nb"></span></button></div></div></div>'),
         ('const LIMIT=5;', 'const LIMIT=6;'),
