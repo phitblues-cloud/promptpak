@@ -1435,7 +1435,7 @@ function ideaHead(){const a=AISTAT.insight,b=AISTAT.news,hs=$('[data-box="hotel"
  const hp=hs&&hs.parentElement.querySelector('.feedsrc');
  if(hp){if(a&&a.items&&a.items.length){const s=a.basis||{};hp.innerHTML=`Agent Insight วิเคราะห์เมื่อ ${thTime(a.at)} · จากข้อมูลในระบบ <b>${s.bookings} การจอง · ${s.guests} ลูกค้า · ${s.companies} บริษัท</b>${s.sample?` (เป็นข้อมูลตัวอย่าง ${s.sample} การจอง)`:''}`}
   else hp.textContent=a&&a.loading?'Agent Insight กำลังวิเคราะห์ข้อมูลจริง… (ระหว่างนี้แสดงตัวเลขที่ระบบคำนวณเอง)':a&&a.error?'Agent Insight วิเคราะห์ไม่สำเร็จ ('+a.error+') ตอนนี้จึงแสดงตัวเลขที่ระบบคำนวณเองแทน'+(PP_OWN?' · กด ↻ วิเคราะห์ใหม่ เพื่อลองอีกครั้ง':' · ระบบจะลองใหม่เองใน 30 นาที'):'ตัวเลขที่ระบบคำนวณเองจากข้อมูลการจอง'}
- if(ns){if(b&&(b.news||[]).length+(b.trends||[]).length)ns.textContent=`AI ค้นจากเว็บข่าวสาธารณะ สัปดาห์ละครั้ง (วันจันทร์) · ล่าสุด ${thTime(b.at)} · กดการ์ดเพื่ออ่านสรุปและลิงก์ข่าวต้นฉบับ`;
+ if(ns){if(b&&(b.news||[]).length+(b.trends||[]).length)ns.textContent=(sub==='trend'?'เทรนด์การตลาดของโรงแรมช่วงนี้':'ข่าวรอบเขื่อนอุบลรัตน์ → น้ำพอง → ขอนแก่น')+` · AI ค้นเว็บสัปดาห์ละครั้ง (วันจันทร์) · ล่าสุด ${thTime(b.at)} · กดการ์ดเพื่ออ่านสรุปและลิงก์ต้นฉบับ`;
   else if(b&&b.loading)ns.textContent='AI กำลังค้นข่าวรอบโรงแรมจากเว็บ… (ใช้เวลาราว 1 นาที)';
   else if(b&&b.at)ns.textContent='AI ค้นเว็บรอบล่าสุดยังไม่พบข่าวที่เกี่ยวกับโรงแรม'+(b.error?' · '+b.error:'');
   else ns.textContent='ตัวอย่างหน้าตา (ยังไม่ได้ค้นข่าวจริง)'+(b&&b.error?' · '+b.error:'')}}
@@ -1488,9 +1488,9 @@ def ideacards(h, owner):
          "<dl class=\"idt\"><dt>สิ่งที่พบ</dt><dd>${i.found}</dd>${i.nums&&i.nums.length?`<dt>ตัวเลขที่ใช้</dt><dd class=\"inums\">${i.nums.map(x=>`<span>${x.l}<b>${x.v}</b></span>`).join('')}</dd>`:''}"
          "<dt>ทำไมสำคัญ</dt><dd>${i.why}</dd><dt>ควรทำอะไร</dt><dd>${i.act}</dd></dl>"
          "<p class=\"icheck\">ตัวเลขมาจาก${SRCL(i.src)?SRCL(i.src).replace('จาก',''):'ข้อมูลในระบบ'} · ตรวจย้อนได้ที่เมนูรายงานและรายการจอง</p>`;\n else if(k==='hotel')h+=`<div class=\"sub\">${i.from||''}</div>"),
-        ("if(k==='trend')h+=`", "if((k==='trend'||k==='local')&&i.url)h+=`<div class=\"sub\">${i.src||''}${i.date?' · '+i.date:''}${i.when?' · '+i.when:''}</div>"
-         "<dl class=\"idt\"><dt>สรุปข่าว</dt><dd>${i.sum}</dd><dt>เกี่ยวกับโรงแรม</dt><dd>${i.why}</dd></dl>"
-         "<a class=\"ilink\" href=\"${i.url}\" target=\"_blank\" rel=\"noopener noreferrer\">อ่านข่าวต้นฉบับ ↗</a><p class=\"icheck\">AI ค้นจากเว็บสาธารณะ · โปรดอ่านต้นฉบับก่อนใช้ตัดสินใจ</p>`;\n else if(k==='trend')h+=`"),
+        ("if(k==='trend')h+=`", "if((k==='trend'||k==='local')&&i.url)h+=`<div class=\"sub\">${i.src||''}${i.date?' · '+i.date:''}</div>"
+         "<dl class=\"idt\"><dt>${k==='trend'?'โรงแรมอื่นทำอะไร':'สรุปข่าว'}</dt><dd>${i.sum}</dd><dt>${k==='trend'?'ปรับใช้กับเรา':'เกี่ยวกับโรงแรม'}</dt><dd>${i.why}</dd>${i.when?`<dt>${k==='trend'?'ช่วงที่เหมาะ':'ช่วงเวลา'}</dt><dd>${i.when}</dd>`:''}</dl>"
+         "<a class=\"ilink\" href=\"${i.url}\" target=\"_blank\" rel=\"noopener noreferrer\">อ่านต้นฉบับ ↗</a><p class=\"icheck\">AI ค้นจากเว็บสาธารณะ · โปรดอ่านต้นฉบับก่อนใช้ตัดสินใจ</p>`;\n else if(k==='trend')h+=`"),
         ("if(k==='local')h+=`", "if(k==='local'&&!i.url)h+=`"),
         ("let h=`<h2>${i.t}</h2>`;", "let h=`<div class=\"ikick ${TNOF(i)}\"><i></i>${CATOF(i,k)} · ${TNL(TNOF(i))}</div><h2>${i.t}</h2>`;"),
     ], 'ideacards')
