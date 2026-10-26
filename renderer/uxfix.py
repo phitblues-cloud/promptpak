@@ -1316,11 +1316,11 @@ window.__ppm=ppmSaver('stp',()=>({confirmed:!!STP.confirmed}));
 """),
     'mkt': dict(funcs=['renderResults', 'renderGV', 'renderKitchen', 'renderDetail', 'updateKBadge'], js=r"""
 const __st=PPM_STATE.mkt;
-if(__st){if(Array.isArray(__st.campaigns))campaigns=__st.campaigns;if(Array.isArray(__st.plans))plans=__st.plans;ppObj(GV,__st.gv);
+if(__st){if(Array.isArray(__st.hid))window.PP_HID=__st.hid;if(Array.isArray(__st.campaigns))campaigns=__st.campaigns;if(Array.isArray(__st.plans))plans=__st.plans;ppObj(GV,__st.gv);
   (__st.segs||[]).forEach(g=>{if(!segments.some(x=>x.id===g.id))segments.push(g)});
   [renderResults,renderGV,renderFeed,updateKBadge].forEach(f=>{try{f()}catch(_){}})}
 if(PPM_STATE.stp&&typeof STP==='object')STP.confirmed=!!PPM_STATE.stp.confirmed;
-window.__ppm=ppmSaver('mkt',()=>({campaigns,plans,gv:GV,segs:segments.filter(x=>x.custom)}));
+window.__ppm=ppmSaver('mkt',()=>({campaigns,plans,gv:GV,segs:segments.filter(x=>x.custom),hid:(window.PP_HID||[]).slice(-200)}));
 """),
 }
 
@@ -1387,7 +1387,13 @@ IDEA_CSS = r"""
 .icard.pt .n small{font-family:var(--sans);font-size:12.5px;font-weight:500;color:var(--muted);margin-left:4px}
 .icard.pt h3{font-size:13.5px;font-weight:600;line-height:1.5;padding:0;margin:0;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
 #ideas [data-box="news"] .icard.pt h3{margin-top:14px;-webkit-line-clamp:4}
-.icard.pt .ft{margin-top:auto;padding-top:10px;font-size:11.5px;color:#9C8A95;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.icard.pt .ft{margin-top:auto;padding-top:10px;font-size:11.5px;color:#9C8A95;display:flex;align-items:center;gap:6px;min-width:0}
+.icard.pt .ft>span{flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.idel{flex:none;width:28px;height:28px;margin:-6px -6px -6px 0;border:0;background:none;border-radius:50%;color:#B3A3AD;display:grid;place-items:center;padding:0}
+.idel:hover,.idel:active{background:#F8E1E4;color:var(--bad)}
+.idel svg{width:16px;height:16px}
+.iunh{color:var(--plum);font-weight:600;cursor:pointer;text-decoration:underline}
+.dlgfoot .bdel{margin-right:auto;color:var(--bad);background:none;border:1px solid #EBC5CC}
 .icard.pt .check{top:13px;right:13px;width:22px;height:22px;font-size:12px}
 .idt{display:grid;grid-template-columns:7.5rem 1fr;gap:8px 14px;margin-top:12px;font-size:15px}
 .idt dt{color:var(--muted);font-weight:600;font-size:13.5px;padding-top:2px}.idt dd{margin:0}
@@ -1408,13 +1414,21 @@ function CATOF(i,k){return i.cat||(k==='hotel'?({h1:'ห้องว่าง',h
 function bigOf(t){const m=String(t||'').match(/฿?\d[\d,.]*%?/);return m?m[0]:''}
 function SRCL(k){return {booking:'จากข้อมูลการจอง',company:'จากข้อมูลบริษัท',guest:'จากข้อมูลลูกค้า',line:'จากแชท LINE'}[k]}
 function cardHTML(i){const on=selected.has(i.id),k=boxOf(i.id),tn=TNOF(i),cat=CATOF(i,k);
- const ck=`<button class="check" data-check="${i.id}" aria-label="${on?'เอาออก':'เลือก'}">${on?'✓':''}</button>`;
+ const ck=`<button class="check" data-check="${i.id}" aria-label="${on?'เอาออก':'เลือก'}">${on?'✓':''}</button>`,del=`<button class="idel" data-del="${i.id}" aria-label="ลบการ์ดนี้" title="ลบการ์ดนี้">${TRASH}</button>`;
  if(k==='hotel'){const n=i.n!=null&&i.n!==''?i.n:bigOf(i.t);
   return `<article class="icard pt ${on?'on':''}" data-card="${i.id}" tabindex="0" aria-pressed="${on}">${ck}<span class="k ${tn}"><i></i><b>${cat}</b></span>
-  <div class="n">${n}${i.u?`<small>${i.u}</small>`:''}</div><h3>${i.t}</h3><div class="ft">${SRCL(i.src)||i.src||''}</div></article>`}
+  <div class="n">${n}${i.u?`<small>${i.u}</small>`:''}</div><h3>${i.t}</h3><div class="ft"><span>${SRCL(i.src)||i.src||''}</span>${del}</div></article>`}
  return `<article class="icard pt ${on?'on':''}" data-card="${i.id}" tabindex="0" aria-pressed="${on}">${ck}<span class="k ${tn}"><i></i><b>${cat}</b></span>
-  <h3>${i.t}</h3><div class="ft">${i.url?`${i.src||''}${i.date?' · '+i.date:''}`:(i.src||'')}</div></article>`}
+  <h3>${i.t}</h3><div class="ft"><span>${i.url?`${i.src||''}${i.date?' · '+i.date:''}`:(i.src||'')}</span>${del}</div></article>`}
 var AISTAT=window.AISTAT||{insight:null,news:null};
+var TRASH='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 7h16M9 7V4.5h6V7M6.5 7l1 13h9l1-13M10 11v6M14 11v6"/></svg>';
+window.PP_HID=window.PP_HID||[];
+function hidKey(x){return String(x.t||'').replace(/<[^>]*>/g,'').trim()}
+function isHid(x){return (window.PP_HID||[]).includes(hidKey(x))}
+function hideCard(id){const it=all().find(x=>x.id===id);if(!it)return;window.PP_HID.push(hidKey(it));selected.delete(id);
+ try{$('#dlg').open&&$('#dlg').close()}catch(_){}renderFeed();renderChips();think();try{window.__ppm&&window.__ppm()}catch(_){}toast('ลบการ์ดแล้ว · กด "คืนการ์ดที่ลบ" ใต้หัวกล่องเพื่อเอากลับ')}
+function unhide(box){const ks=feeds[box==='hotel'?'hotel':sub].items.map(hidKey);window.PP_HID=window.PP_HID.filter(k=>!ks.includes(k));
+ renderFeed();try{window.__ppm&&window.__ppm()}catch(_){}}
 function thTime(s){try{const d=new Date(s),M=['ม.ค.','ก.พ.','มี.ค.','เม.ย.','พ.ค.','มิ.ย.','ก.ค.','ส.ค.','ก.ย.','ต.ค.','พ.ย.','ธ.ค.'];
  return `${d.getDate()} ${M[d.getMonth()]} ${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')} น.`}catch(_){return ''}}
 function ideaHead(){const a=AISTAT.insight,b=AISTAT.news,hs=$('[data-box="hotel"]'),ns=$('[data-src="news"]');
@@ -1426,6 +1440,10 @@ function ideaHead(){const a=AISTAT.insight,b=AISTAT.news,hs=$('[data-box="hotel"
   else if(b&&b.at)ns.textContent='AI ค้นเว็บรอบล่าสุดยังไม่พบข่าวที่เกี่ยวกับโรงแรม'+(b.error?' · '+b.error:'');
   else ns.textContent='ตัวอย่างหน้าตา (ยังไม่ได้ค้นข่าวจริง)'+(b&&b.error?' · '+b.error:'')}}
 var _rf0=renderFeed;renderFeed=function(){_rf0();ideaHead();
+ [['hotel',$('[data-box="hotel"]')&&$('[data-box="hotel"]').parentElement.querySelector('.feedsrc')],['news',$('[data-src="news"]')]].forEach(([bx,el])=>{if(!el)return;
+  const n=feeds[bx==='hotel'?'hotel':sub].items.filter(isHid).length;if(n)el.insertAdjacentHTML('beforeend',` · <span class="iunh" data-unh="${bx}">คืนการ์ดที่ลบ (${n})</span>`)});
+ document.querySelectorAll('[data-unh]').forEach(b=>b.onclick=()=>unhide(b.dataset.unh));
+ document.querySelectorAll('[data-del]').forEach(b=>b.onclick=e=>{e.stopPropagation();hideCard(b.dataset.del)});
  document.querySelectorAll('#ideas .icard[data-card]').forEach(c=>{c.onclick=()=>openDetail(c.dataset.card);c.onkeydown=e=>{if(e.target===c&&(e.key==='Enter'||e.key===' ')){e.preventDefault();openDetail(c.dataset.card)}}})};
 function aliasOf(x,kind){if(kind==='insight')return x.src==='company'?'h2':/ห้องว่าง|อาทิตย์|สุดสัปดาห์/.test(x.cat+x.t)?'h5':'';
  return /บุญ|กฐิน|เทศกาล|ประเพณี|ท่องเที่ยว/.test(x.cat+x.t)?'l3':/โรงงาน|ซ่อม|ก่อสร้าง|บริษัท|อบรม|ราชการ/.test(x.cat+x.t)?'l1':''}
@@ -1463,6 +1481,7 @@ def ideacards(h, owner):
         ('<div class="minitabs" role="tablist"><button role="tab" data-sub="local">ข่าวรอบโรงแรม <span class="nb"></span></button><button role="tab" data-sub="trend">เทรนด์ <span class="nb"></span></button></div></div>',
          '<div class="ihd">' + btn('news', 'ค้นข่าวใหม่') + '<div class="minitabs" role="tablist"><button role="tab" data-sub="local">ข่าว <span class="nb"></span></button><button role="tab" data-sub="trend">เทรนด์ <span class="nb"></span></button></div></div></div>'),
         ('const LIMIT=5;', 'const LIMIT=6;'),
+        ('function list(k){const it=feeds[k].items,', 'function list(k){const it=feeds[k].items.filter(x=>!isHid(x)),'),
         ("function buildMenus(){const ids=[...selected.keys()];", "function buildMenus(){const ids=[...selected.keys()].map(k=>{const v=selected.get(k);return v&&v.alias||k});"),
         ("if(k==='hotel')h+=`<div class=\"sub\">${i.from||''}</div>",
          "if(k==='hotel'&&i.found)h+=`<div class=\"sub\">Agent Insight · วิเคราะห์ ${thTime(AISTAT.insight&&AISTAT.insight.at)}</div>"
@@ -1475,6 +1494,7 @@ def ideacards(h, owner):
         ("if(k==='local')h+=`", "if(k==='local'&&!i.url)h+=`"),
         ("let h=`<h2>${i.t}</h2>`;", "let h=`<div class=\"ikick ${TNOF(i)}\"><i></i>${CATOF(i,k)} · ${TNL(TNOF(i))}</div><h2>${i.t}</h2>`;"),
     ], 'ideacards')
+    h = _r(h, [("h+=`<div class=\"dlgfoot\"><button class=\"btn\" id=\"dlgClose\">ปิด</button>", "h+=`<div class=\"dlgfoot\">${k!=='seg'?`<button class=\"btn bdel\" data-del=\"${i.id}\">ลบการ์ดนี้</button>`:''}<button class=\"btn\" id=\"dlgClose\">ปิด</button>"), ("$('#dlgSel').onclick=()=>{toggle(id);$('#dlg').close()};", "$('#dlgSel').onclick=()=>{toggle(id);$('#dlg').close()};document.querySelectorAll('#dlg [data-del]').forEach(b=>b.onclick=()=>hideCard(b.dataset.del));")], 'idea-del')
     k = h.rindex('</script>')
     h = h[:k] + IDEA_JS + h[k:]
     return _css(h, IDEA_CSS)
