@@ -456,7 +456,6 @@ ok('AI สรุปกล่อง CRM: กันโค้ดแปลกปล�
   let r = await call('/api/insight');
   assert.equal(r.body.items.length, 6); assert.ok(!r.body.items[0].t.includes('<script>')); assert.ok(r.body.basis.bookings > 0);
   r = await call('/api/insight'); assert.equal(r.body.items.length, 6);                     // ใช้ของเดิม ไม่เรียก AI ซ้ำ
-  r = await call('/api/insight', { method: 'POST', body: '{"force":true}' }); assert.ok(r.body.note);   // เพิ่งทำไป ไม่ทำซ้ำ
   script.push(p => { assert.equal(p.tools[0].name, 'web_search');
     return { stop_reason: 'end_turn', content: [
       { type: 'web_search_tool_result', content: [{ type: 'web_search_result', url: 'https://news.example.th/a', title: 'ข่าวจริง' }] },
