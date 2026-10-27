@@ -510,7 +510,17 @@ ok('AI สรุปกล่อง CRM: กันโค้ดแปลกปล�
   await webhook([{ type: 'message', webhookEventId: 'ev-slip', replyToken: 'rt-slip', source: { type: 'user', userId: 'Uliff1' }, message: { type: 'image', id: 'mslip' } }]);
   const paid = rpc(`(select count(*) from ops where kind = 'pay' and data->>'unchecked' = 'true')`);
   assert.equal(paid, 2);
-  ok('จองผ่านหน้าจอ LINE: หลายประเภท · อาหารเช้ารายห้อง · การ์ด QR พร้อมเพย์ · ส่งสลิปในแชท = ชำระ (รอตรวจ)');
+  // เลือก "ชำระวันเข้าพัก" → การ์ดไม่มี QR · รูปในแชทไม่นับเป็นสลิป
+  globalThis.__ppLineOutbox.length = 0;
+  r = await call('/api/liff', { method: 'POST', body: JSON.stringify({ idToken: 'dev:Uliff2', ci, co, adults: 1, kids: 0, pay: 'arrival',
+    items: [{ zone: free[0].zone, type: free[0].type, count: 1, bf: false }], name: 'จ่ายหน้างาน', phone: '0899990001', idno: '1234567890123', consent: true }) });
+  assert.equal(r.status, 200, JSON.stringify(r.body)); assert.equal(r.body.pay, 'arrival');
+  const card2 = globalThis.__ppLineOutbox.find(x => x.path === '/message/push').body.messages[0];
+  assert.ok(!card2.contents.hero && !card2.quickReply);
+  assert.equal(rpc(`(select details->>'liff_pay' from bookings where booking_no = '${r.body.nos[0]}')`), 'arrival');
+  await webhook([{ type: 'message', webhookEventId: 'ev-slip2', replyToken: 'rt-slip2', source: { type: 'user', userId: 'Uliff2' }, message: { type: 'image', id: 'mslip2' } }]);
+  assert.equal(rpc(`(select count(*) from ops where kind = 'pay' and booking_no = '${r.body.nos[0]}')`), 0);
+  ok('จองผ่านหน้าจอ LINE: หลายประเภท · อาหารเช้ารายห้อง · การ์ด QR พร้อมเพย์ · ส่งสลิปในแชท = ชำระ (รอตรวจ) · เลือกชำระวันเข้าพักได้');
 }
 
 // 12) กันเดา PIN
