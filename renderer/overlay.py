@@ -346,7 +346,7 @@ def build(base, export, now):
                   'booked_at': booked, 'lead_days': max(0, (ci - _d(booked)).days),
                   'channel': row.get('channel') or 'LINE OA', 'purpose': 'ทำงาน' if g['company_id'] else 'แวะพัก',
                   'work_site': '', 'adults': 1, 'rack_rate': r['rack_rate'], 'rate': row['rate'],
-                  'room_total': row['room_total'], 'deposit': row.get('deposit') or 300,
+                  'room_total': row['room_total'], 'deposit': row.get('deposit') or 200,
                   'billing_type': 'จ่ายเอง', 'tax_invoice_requested': False,
                   'note': ('จองผ่าน AI ทาง LINE' if row['created_by'] == 'ai' else 'ลูกค้าจองเองผ่านหน้าจอ LINE' if row['created_by'] == 'line' else '') + ((' · ' + row['note']) if row.get('note') else ''),
                   'special': None, 'continued_by': None, 'checkin_actual': None, 'checkout_actual': None,

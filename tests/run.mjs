@@ -520,7 +520,25 @@ ok('AI สรุปกล่อง CRM: กันโค้ดแปลกปล�
   assert.equal(rpc(`(select details->>'liff_pay' from bookings where booking_no = '${r.body.nos[0]}')`), 'arrival');
   await webhook([{ type: 'message', webhookEventId: 'ev-slip2', replyToken: 'rt-slip2', source: { type: 'user', userId: 'Uliff2' }, message: { type: 'image', id: 'mslip2' } }]);
   assert.equal(rpc(`(select count(*) from ops where kind = 'pay' and booking_no = '${r.body.nos[0]}')`), 0);
-  ok('จองผ่านหน้าจอ LINE: หลายประเภท · อาหารเช้ารายห้อง · การ์ด QR พร้อมเพย์ · ส่งสลิปในแชท = ชำระ (รอตรวจ) · เลือกชำระวันเข้าพักได้');
+  // ลูกค้าเดิม: ใช้ข้อมูลเดิม (เลขบัตรปิดบางหลัก) · จ่ายเงินประกันพร้อมค่าห้อง · แนบสลิปในหน้าจอจอง
+  const pv = (await call('/api/liff', { method: 'POST', body: JSON.stringify({ action: 'prev', idToken: 'dev:Uliff1' }) })).body.prev;
+  assert.equal(pv.name, 'ลูกค้า หน้าจอ'); assert.equal(pv.doc, 'x-xxxx-xxxxx-12-3'); assert.ok(!/0899990000/.test(JSON.stringify(pv)));
+  assert.equal((await call('/api/liff', { method: 'POST', body: JSON.stringify({ action: 'prev', idToken: 'dev:Unobody' }) })).body.prev, null);
+  globalThis.__ppLineOutbox.length = 0;
+  r = await call('/api/liff', { method: 'POST', body: JSON.stringify({ idToken: 'dev:Uliff1', ci: plus(50), co: plus(51), adults: 2, kids: 0, pay: 'now', dep: true, usePrev: true,
+    items: [{ zone: free[0].zone, type: free[0].type, count: 2, bf: false }], name: pv.name, phone: pv.phone, idno: '', consent: true }) });
+  assert.equal(r.status, 200, JSON.stringify(r.body)); assert.equal(r.body.dep, 400); assert.equal(r.body.total, free[0].rate * 2 + 400);
+  assert.equal(rpc(`(select phone from guests where line_user_id = 'Uliff1')`), '0899990000');
+  assert.equal(rpc(`(select count(*) from guest_docs where line_user_id = 'Uliff1' and doc_no = '1234567890123')`), 2);
+  const png2 = await fetch(base + r.body.qr); assert.equal(png2.status, 200);
+  const nos3 = r.body.nos;
+  let sl = await call('/api/liff', { method: 'POST', body: JSON.stringify({ action: 'slip', idToken: 'dev:Uliff1', img: 'data:image/jpeg;base64,' + Buffer.from('fake-slip').toString('base64') }) });
+  assert.equal(sl.status, 200, JSON.stringify(sl.body)); assert.equal(sl.body.total, free[0].rate * 2 + 400);
+  assert.equal(rpc(`(select sum((data->>'dep')::int) from ops where kind = 'pay' and booking_no in (${nos3.map(n => `'${n}'`).join(',')}))`), 400);
+  assert.ok(globalThis.__ppLineOutbox.some(x => x.path === '/message/push' && /ได้รับสลิปแล้ว/.test(x.body.messages[0].altText)));
+  sl = await call('/api/liff', { method: 'POST', body: JSON.stringify({ action: 'slip', idToken: 'dev:Uliff1', img: 'data:image/jpeg;base64,eA==' }) });
+  assert.equal(sl.status, 400);
+  ok('จองผ่านหน้าจอ LINE: หลายประเภท · อาหารเช้ารายห้อง · การ์ด QR พร้อมเพย์ · ส่งสลิปในแชท = ชำระ (รอตรวจ) · เลือกชำระวันเข้าพักได้ · ใช้ข้อมูลเดิม · เงินประกัน + แนบสลิปในหน้าจอ');
 }
 
 // 12) กันเดา PIN

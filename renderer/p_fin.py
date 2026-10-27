@@ -37,7 +37,7 @@ def patch(h):
     i = h.index('const DEPOSIT=200;'); j = h.index('const itemsSum=')
     rmap = {r['code']: r['type'] for r in ROOMS}
     rate = {r['code']: r['rate'] for r in ROOMS}
-    new = ('const DEPOSIT=300; // เงินประกันห้อง ต่อห้อง (ตามข้อมูลโรงแรม)\n'
+    new = ('const DEPOSIT=200; // เงินประกันห้อง ต่อห้อง (เจ้าของยืนยัน 27 ต.ค. · ตรงกับ lib/liff.js DEP_PRICE)\n'
            'const RMTYPE=' + J(rmap) + ', RMRATE=' + J(rate) + ';\n'
            'const rate=code=>RMRATE[code]||0, rtypeOnly=code=>RMTYPE[code]||"";\n'
            "const rtype=code=>!code?'บริการอื่นๆ · ไม่มีห้องพัก':`${code[0]==='A'?'โซนตึก':'โซนบ้าน'} · ห้อง ${code} · ${rtypeOnly(code)}`;\n"

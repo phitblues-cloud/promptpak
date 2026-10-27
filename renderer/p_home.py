@@ -59,7 +59,7 @@ def patch(h):
              {'t': 'เก็บค่าห้องต่อ 1 คืนของห้อง B01 ตอนเช็คเอาท์ แล้วออกใบกำกับภาษี ไบโอเทค', 'done': False},
              {'t': 'ตอบแชท LINE OA ที่ยังค้างอยู่', 'done': False}]
     h = h[:i] + 'let tasks = ' + J(tasks) + ';\n\n' + h[j:]
-    h = R(h, 'const DEP = 200;', 'const DEP = 300;', 1, 'home-dep')
+    h = R(h, 'const DEP = 200;', 'const DEP = 200;', 1, 'home-dep')
     # --- CONAME / ENR / XT ---
     i = h.index('const CONAME={'); j = h.index('const coOf=')
     h = h[:i] + 'const CONAME=' + J(CONAME) + ';\n' + h[j:]

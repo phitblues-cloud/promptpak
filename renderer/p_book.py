@@ -81,7 +81,7 @@ def patch(h):
     h = R(h, "grp:h?h.grp:(co?'ลูกค้าบริษัท':'ลูกค้าทั่วไป'),mem:h?h.mem:false,visits:h?h.v:1,regBtn:!((h?h.mem:false)||co),",
           "grp:h?h.grp:(b.grp||(co?'ลูกค้าบริษัท':'ลูกค้าทั่วไป')),mem:h?h.mem:!!b.mem,visits:h?h.v:(b.visits||1),regBtn:!((h?h.mem:!!b.mem)||co),", 1, 'book-grp')
     h = R(h, "const roomPill=b.paid?pill('จ่ายแล้ว','b3'):", "const roomPill=b.cancelled?pill('คืนเงินแล้ว','b6'):b.noshow?pill('ไม่มีรายการเงิน','b6'):b.paid?pill('จ่ายแล้ว','b3'):", 1, 'book-roomPill')
-    h = R(h, "const DEP_AMT=200;", "const DEP_AMT=300;", 1, 'book-dep-amt')
+    h = R(h, "const DEP_AMT=200;", "const DEP_AMT=200;", 1, "book-dep-amt")
     h = R(h, "const depOf=b=>b.hx?b.hx.dep:(b.start>TODAY?'unpaid':'held');", "const depOf=b=>b.hx?b.hx.dep:(b.dep||(b.start>TODAY?'unpaid':'held'));", 1, 'book-depOf')
     # 4) เลขจองใหม่ต่อจากชุดข้อมูล: BK6910078...
     h = R(h, "const draftNo='BK2610-'+String(seq+1).padStart(4,'0');", "const draftNo='BK6910'+String(seq+1).padStart(3,'0');", 1, 'book-draft')
