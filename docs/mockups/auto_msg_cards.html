@@ -1,0 +1,93 @@
+<!doctype html><html lang="th"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>ภาพร่างกล่องข้อความอัตโนมัติ</title>
+<style>
+:root{--cream:#FBF6EF;--pur:#6A3AA2;--pink:#C2287F;--ink:#2a1f33;--soft:#7a6f84;--line:#eadfd3}
+*{box-sizing:border-box}body{margin:0;background:var(--cream);font-family:"IBM Plex Sans Thai",system-ui,sans-serif;color:var(--ink);padding:22px;width:1180px}
+h2{margin:0 0 4px;font-size:21px}.cap{color:var(--soft);font-size:13px;margin:0 0 16px}
+.grid{display:grid;grid-template-columns:repeat(3,1fr);gap:18px}
+.slot{display:flex;flex-direction:column;gap:8px}
+.when{font-size:12.5px;font-weight:700;color:var(--pur);background:#f1e8fa;border-radius:10px;padding:6px 10px}
+.when.new{color:#9a1f63;background:#fde6f1}
+.chat{background:#dfe6ee;border-radius:16px;padding:12px;flex:1}
+.fx{background:#fff;border-radius:16px;overflow:hidden;box-shadow:0 1px 3px #0002;font-size:13.5px}
+.fx .h{background:linear-gradient(100deg,var(--pur),var(--pink));color:#fff;padding:12px 14px;font-weight:700;font-size:15px}
+.fx .b{padding:12px 14px;line-height:1.55;white-space:pre-line}
+.fx .b i{font-style:normal;background:#fff1c9;border-radius:4px;padding:0 4px;font-size:12px;color:#8a5a00}
+.fx .btns{border-top:1px solid #eee}.fx .btns div{text-align:center;padding:10px;color:var(--pur);font-weight:700;font-size:13.5px;border-top:1px solid #f0f0f0}.fx .btns div:first-child{border-top:0}
+.stars{display:flex;gap:6px;padding:0 14px 14px}.stars span{flex:1;text-align:center;border:1.5px solid var(--pur);border-radius:10px;padding:8px 0;font-weight:700;color:var(--pur)}
+.sys{background:#fff8e8;border:1px solid #f1d9a6;border-radius:10px;padding:8px 10px;font-size:12px;margin-top:8px;color:#6b4e12}
+.note{font-size:12px;color:var(--soft)}
+table{width:100%;border-collapse:collapse;background:#fff;border-radius:14px;overflow:hidden;font-size:13px}
+th,td{text-align:left;padding:9px 12px;border-bottom:1px solid var(--line);vertical-align:top}th{background:#f4ecfa;color:var(--pur)}
+.p{display:inline-block;border-radius:99px;padding:2px 10px;font-size:11.5px;font-weight:700;white-space:nowrap}
+.ok{background:#e6f5ec;color:#1f8a4c}.do{background:#ece4fa;color:var(--pur)}.no{background:#fdf1dc;color:#b7791f}.idea{background:#fde6f1;color:#9a1f63}
+h3{margin:26px 0 10px;font-size:17px}
+</style>
+<h2>ภาพร่างกล่องข้อความที่จะส่งเข้า LINE ลูกค้า</h2>
+<p class="cap">ป้ายเหลือง = ค่าที่ยังรอกรอก (ข้อความนั้นจะถูกข้ามจนกว่าจะกรอก) · ตัวอย่างชื่อ คุณธนกฤต ห้อง B06</p>
+<div class="grid">
+
+<div class="slot"><div class="when">① วันเข้าพัก · 10:00 น. (ก่อนหน้านี้ตั้งเป็น "วันก่อนเข้าพัก")</div>
+<div class="chat"><div class="fx"><div class="h">วันนี้พบกันนะคะ</div>
+<div class="b">คุณธนกฤต · ห้อง B06 · 2 คืน
+เช็คอินได้ตั้งแต่ 14:00 น.
+ห้องจะพร้อมให้เมื่อทำความสะอาดเสร็จ จะแจ้งอีกครั้งค่ะ</div>
+<div class="btns"><div>📍 ดูแผนที่ (Google Maps)</div><div>โทรหาโรงแรม 081-234-5678</div><div>ดูรายละเอียดการจอง</div></div></div></div></div>
+
+<div class="slot"><div class="when new">② ห้องพร้อมแล้ว · ทันทีที่แม่บ้านทำเสร็จ (เสนอเพิ่ม)</div>
+<div class="chat"><div class="fx"><div class="h">ห้อง B06 พร้อมแล้วค่ะ</div>
+<div class="b">เช็คอินได้เลยนะคะ คุณธนกฤต
+ที่เคาน์เตอร์แจ้งชื่อได้เลย</div>
+<div class="btns"><div>📍 ดูแผนที่</div><div>ทักพนักงาน</div></div></div></div>
+<div class="note">ส่งเฉพาะคนที่วันนี้เข้าพักและยังไม่เช็คอิน</div></div>
+
+<div class="slot"><div class="when">③ เช็คอิน · ทันทีหลังพนักงานกด "มอบคีย์การ์ด"</div>
+<div class="chat"><div class="fx"><div class="h">ยินดีต้อนรับค่ะ คุณธนกฤต</div>
+<div class="b">ห้อง B06
+Wi‑Fi: <i>ชื่อไวไฟ — รอกรอก</i>  รหัส: <i>รอกรอก</i>
+อาหารเช้า 06:00–10:00 น.
+เช็คเอาท์ภายใน 12:00 น.
+มีอะไรให้ช่วย ทักแชทนี้ได้ตลอดค่ะ</div>
+<div class="btns"><div>ขอของใช้</div><div>แจ้งปัญหาในห้อง</div><div>โทรหาโรงแรม</div></div></div></div></div>
+
+<div class="slot"><div class="when">④ เตือนเช็คเอาท์ · คืนสุดท้าย 19:00 น. (เฉพาะพักหลายคืน)</div>
+<div class="chat"><div class="fx"><div class="h">พรุ่งนี้เช็คเอาท์นะคะ</div>
+<div class="b">เช็คเอาท์ภายใน 12:00 น.
+ถ้าต้องการอยู่ต่อหรือเช็คเอาท์ช้า ทักแชทนี้ได้เลยค่ะ</div>
+<div class="btns"><div>ขอเช็คเอาท์ช้า / พักต่อ</div></div></div></div></div>
+
+<div class="slot"><div class="when">⑤ เช็คเอาท์ · ทันทีหลังพนักงานกดเช็คเอาท์</div>
+<div class="chat"><div class="fx"><div class="h">ขอบคุณที่พักกับเรานะคะ</div>
+<div class="b">คุณธนกฤต พอใจกับการพักครั้งนี้แค่ไหนคะ
+กดให้คะแนนได้เลยค่ะ ใช้เวลาไม่ถึงนาที</div>
+<div class="stars"><span>1</span><span>2</span><span>3</span><span>4</span><span>5</span></div></div></div>
+<div class="note">รวม "ขอบคุณ" กับ "ให้คะแนน" เป็นใบเดียวส่งทันที (เดิมแยกเป็น ขอบคุณ 30 นาที + ขอรีวิวอีก 1 วัน)</div></div>
+
+<div class="slot"><div class="when">⑥ หลังลูกค้ากดคะแนน — แยกตามคะแนน</div>
+<div class="chat"><div class="fx"><div class="h">ได้ 4–5 · ขอบคุณค่ะ 💜</div>
+<div class="b">ดีใจที่พักสบายนะคะ ช่วยเล่าให้คนอื่นฟังบน Google หน่อยได้ไหมคะ</div>
+<div class="btns"><div>⭐ เขียนรีวิว Google <i>รอลิงก์</i></div><div>จองอีกครั้ง</div></div></div>
+<div class="fx" style="margin-top:10px"><div class="h">ได้ 1–3 · ขอโทษค่ะ</div>
+<div class="b">ขอโทษที่ครั้งนี้ไม่ประทับใจ ผู้จัดการจะติดต่อกลับโดยเร็ว
+เล่าให้ฟังได้ไหมคะว่าอะไรที่ควรแก้</div></div>
+<div class="sys">🔔 พร้อมกันนั้นระบบแจ้งผู้จัดการ + ส่งแชทเข้าคิวพนักงาน (ไม่ชวนรีวิว) · คะแนนเข้า CRM › ความพึงพอใจ</div></div></div>
+
+</div>
+
+<h3>รายการข้อความอัตโนมัติทั้งหมดในเมนู CRM — อะไรทำแล้ว อะไรยัง</h3>
+<table>
+<tr><th>ข้อความ</th><th>ตั้งไว้เมื่อ</th><th>สถานะจริง</th><th>รอบนี้</th></tr>
+<tr><td>ทักทายเพื่อนใหม่</td><td>เพิ่มเพื่อน OA</td><td><span class="p ok">ส่งจริงแล้ว</span></td><td>—</td></tr>
+<tr><td>ตอบกลับอัตโนมัติ (นอกเวลาทำการ)</td><td>ลูกค้าทักแชท</td><td><span class="p no">AI ตอบอยู่ แต่ข้อความ "นอกเวลา" แบบตายตัวยังไม่มี</span></td><td>ถามคุณก่อน (ซ้ำกับ AI ไหม)</td></tr>
+<tr><td>ยืนยันการจอง</td><td>จองสำเร็จ</td><td><span class="p ok">ส่งจริงแล้ว (การ์ดม่วง)</span></td><td>—</td></tr>
+<tr><td>ก่อนเข้าพัก</td><td>1 วันก่อน 10:00</td><td><span class="p no">ยังไม่ส่ง</span></td><td><span class="p do">ทำ ① ปรับเป็นวันเข้าพัก 10:00</span></td></tr>
+<tr><td>ต้อนรับและข้อมูลการพัก (+เตือนเช็คเอาท์คืนสุดท้าย)</td><td>กดมอบคีย์การ์ด</td><td><span class="p no">ยังไม่ส่ง (สถานะ "ร่าง")</span></td><td><span class="p do">ทำ ③ ④</span></td></tr>
+<tr><td>ขอบคุณหลังเข้าพัก</td><td>เช็คเอาท์</td><td><span class="p no">ยังไม่ส่ง</span></td><td><span class="p do">ทำ ⑤ (รวมให้คะแนน)</span></td></tr>
+<tr><td>ขอรีวิวและความพึงพอใจ</td><td>เช็คเอาท์ +1 วัน</td><td><span class="p no">ยังไม่ส่ง</span></td><td><span class="p do">ทำ ⑥ ส่งทันทีหลังให้คะแนน</span></td></tr>
+<tr><td>เอกสาร ใบเสร็จ/ใบกำกับภาษี</td><td>ออกใบเสร็จ</td><td><span class="p no">ยังไม่ส่ง · ระบบยังไม่ออกไฟล์เอกสารให้ลูกค้าโหลด</span></td><td>ยังไม่ทำ (ต้องทำระบบออกเอกสารก่อน)</td></tr>
+<tr><td>อวยพรวันเกิด</td><td>วันเกิดลูกค้า 09:00</td><td><span class="p no">รอข้อมูล · ระบบยังไม่เก็บวันเกิด</span></td><td>ยังไม่ทำ</td></tr>
+<tr><td>อวยพรเทศกาล</td><td>วันที่กำหนด</td><td><span class="p no">ปิดอยู่ · เป็นข้อความการตลาด นับโควตา</span></td><td>ยังไม่ทำ</td></tr>
+<tr><td>ดึงลูกค้ากลับ</td><td>14 วันก่อนครบรอบการพัก</td><td><span class="p no">ยังไม่ส่ง · ข้อความการตลาด นับโควตา</span></td><td>ยังไม่ทำ</td></tr>
+<tr><td>ห้องพร้อมแล้ว (ในเมนูยังไม่มี)</td><td>แม่บ้านทำเสร็จ</td><td><span class="p idea">ลืมใส่ในเมนู</span></td><td><span class="p do">ทำ ②</span></td></tr>
+</table>
+<p class="note" style="margin-top:10px">ไอเดียที่เห็นว่ายังไม่มี (จดลง Backlog ไม่ทำรอบนี้): แจ้งลูกค้าเมื่อระบบยกเลิกอัตโนมัติ (ไม่มาตามนัด 06:00) · แจ้ง "ยืนยันยอดแล้ว" เมื่อพนักงานตรวจสลิปผ่าน · เตือนชำระเงินสำหรับคนเลือก "ชำระวันเข้าพัก"</p>
