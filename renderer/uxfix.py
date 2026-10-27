@@ -167,6 +167,27 @@ LC_CSS = """
 .fzone .flt{flex:0 1 auto;min-width:0;overflow-x:auto;scrollbar-width:none;flex-wrap:nowrap!important}
 .fzone .flt button{white-space:nowrap;flex:none}
 .fzone .tpsel{flex:0 0 auto;width:6.6rem;font-size:.72rem;margin-left:auto;padding:0 1.3rem 0 .55rem;text-overflow:ellipsis}
+/* กระชับหัวกล่อง (27 ต.ค.): เห็นแชทมากขึ้น · ตัวกรองไม่ทับกัน */
+.gbox .gh{padding:.4rem 1rem!important}
+.gbox .gh b{font-size:1rem!important}
+.fzone{display:grid!important;grid-template-columns:minmax(0,1fr) auto;gap:.35rem .4rem!important;padding:.4rem .6rem!important;align-content:center}
+.fz1{display:contents!important}
+.fzone .flt{grid-column:1/-1;grid-row:1;overflow-x:auto}
+.fzone .srch{grid-column:1;grid-row:2;min-height:2rem!important;padding:.15rem .7rem!important}
+.fzone .tpsel{grid-column:2;grid-row:2;margin:0!important;width:7rem;min-height:2rem}
+.th2{padding:.45rem 1rem 1.55rem!important}
+.th-h h2{font-size:1.4rem!important}
+.th2 .nmb h2{line-height:1.5!important;padding:0 0 .1rem!important}
+.th2 .nmrow{flex-direction:row!important;align-items:flex-start!important;gap:.5rem!important}
+.th2 .tags{height:auto!important;flex:none;flex-wrap:wrap;gap:.25rem;max-width:45%}
+.th2 .nmc small{font-size:.76rem;line-height:1.45}
+.th2 .nmc .nmb+small{margin-top:.15rem!important}
+.aisum2{padding:.3rem .65rem!important;margin-top:-1.2rem!important}
+.aisum2 .aih{font-size:.7rem}
+.aisum2 .aih .grp{font-size:.74rem!important;padding:.05rem .55rem!important}
+.aisum2 .ait{-webkit-line-clamp:1;font-size:.85rem;line-height:1.4;margin-top:.05rem}
+.aisum2.open .ait{-webkit-line-clamp:unset}
+.pancol .statbox{padding:.4rem .8rem .35rem!important}
 """
 
 
@@ -185,7 +206,7 @@ def linechat(h):
          """<div class="fzone"><div class="fz1"><div class="flt" role="tablist" aria-label="สถานะ">${fl}</div><select class="tpsel" aria-label="ประเภทเรื่อง" onchange="S.tp=this.value;render()">${[['all','ทุกเรื่อง',all.length],...(nu?[['urg','ด่วน',nu]]:[]),...TOPICS.filter(t=>tc[t[0]]).map(t=>[t[0],t[1],tc[t[0]]])].map(([k,t,v])=>`<option value="${k}" ${S.tp===k?'selected':''}>${k==='all'?'ทุกเรื่อง':t+' ('+v+')'}</option>`).join('')}</select></div><input class="srch" id="q" type="search" placeholder="ค้นหาชื่อ ชื่อ LINE ห้อง หรือเรื่อง" value="${esc(S.q)}" aria-label="ค้นหาแชท"></div>"""),
         ('<input class="srch" id="q" type="search" placeholder="ค้นหาชื่อ ชื่อ LINE ห้อง หรือเรื่อง" value="${esc(S.q)}" aria-label="ค้นหาแชท">\n', ''),
         ('ดูเพิ่มเติม ›</button></div><div class="sr3">${noteH}</div></div>`;', 'ดูเพิ่มเติม ›</button></div></div>`;'),
-        ('const floor=7.9*parseFloat(', 'const floor=10.2*parseFloat('),
+        ('const floor=7.9*parseFloat(', 'const floor=6.9*parseFloat('),
         # ความสูงหัวกล่องคงที่ทุกแชท ไม่ยืดหดตามเนื้อหา
         ('const H=Math.ceil(Math.max(rh(th),rh(sb),gH+rh(fz),floor));', 'const H=Math.ceil(Math.max(gH+rh(fz),floor));'),
     ], 'linechat')
