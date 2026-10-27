@@ -157,8 +157,9 @@ LC_CSS = """
 .fzone{flex-wrap:nowrap!important;flex-direction:column!important;align-items:stretch!important;justify-content:center;gap:.4rem!important}
 .fz1{display:flex;align-items:center;gap:.3rem;min-width:0}
 .fzone .srch{min-height:2.2rem;padding:.25rem .75rem;font-size:.88rem;box-sizing:border-box}
-@media (min-width:901px){.listcol,.thrcol,.pancol{height:calc((100vh - 6.4rem) * 1.5)!important}
-#app{padding-bottom:1.2rem!important}.listcol,.thrcol,.pancol{min-height:39rem!important}}
+@media (min-width:901px){.listcol,.thrcol,.pancol{height:calc(100vh - 6.4rem)!important}
+#app{padding-bottom:1.2rem!important}.listcol,.thrcol,.pancol{min-height:30rem!important}}
+@media (min-width:1101px){.layout{grid-template-columns:minmax(0,1fr) minmax(0,1.2fr) minmax(0,1fr)!important}}
 .th2 .nmb h2{line-height:1.55!important;padding:.05rem 0 .2rem!important;margin:0!important}
 .th2 .nmc .nmb+small{margin-top:.35rem}
 .th2 .nmc small{line-height:1.5}
