@@ -240,10 +240,94 @@ def apply(M):
     if 'mkt' in M:
         import ctx
         M['mkt'] = planai(ideacards(mktsend(M['mkt']), (ctx.MOCK or {}).get('_role', 'owner') == 'owner'))
+    if 'crmtool' in M:
+        import ctx
+        if (ctx.MOCK or {}).get('_role', 'owner') == 'owner':   # ตั้งค่าข้อความอัตโนมัติ: เฉพาะเจ้าของ
+            M['crmtool'] = amui(M['crmtool'])
     for k in ('hk', 'crmtool', 'cust', 'crm', 'mkt'):
         if k in M:
             M[k] = modsave(M[k], k)
     return M
+
+
+# ---------- ข้อความอัตโนมัติหาลูกค้า: สวิตช์หลัก + ข้อมูลโรงแรม + ป้ายสถานะ + ส่งทดสอบ (ภาพร่าง docs/mockups/auto_msg_mock.png · ต้องรัน 22_automsg.sql) ----------
+AM_CSS = r"""
+.am-master{display:flex;align-items:center;gap:1rem;background:#FFF5FA;border:2px solid #E9C7D9;border-radius:16px;padding:.8rem 1rem;margin-bottom:.8rem}
+.am-master.on{background:#EEF8F2;border-color:#9CD3B5}
+.am-master .t{flex:1;min-width:0}.am-master b{font-size:1.05rem}.am-master small{display:block;color:var(--soft);margin-top:.15rem;line-height:1.45}
+.am-master .amst{font-weight:700;color:var(--soft);white-space:nowrap}.am-master.on .amst{color:var(--green)}
+.am-conf{background:#FFF8E8;border:1px solid #F1D9A6;border-radius:12px;padding:.6rem .8rem;margin-top:.5rem;display:flex;gap:.6rem;align-items:center;flex-wrap:wrap;font-size:.9rem}
+.am-grid{display:grid;grid-template-columns:1fr 1fr;gap:.8rem;margin-bottom:.8rem}
+@media(max-width:900px){.am-grid{grid-template-columns:1fr}}
+.am-card{background:var(--card);border:1.5px solid var(--line);border-radius:16px;padding:.8rem 1rem}
+.am-card h4{margin:0 0 .2rem;font-size:1rem}.am-card .hs{color:var(--soft);font-size:.85rem;line-height:1.45;margin-bottom:.4rem}
+.am-f{display:flex;flex-direction:column;gap:.15rem;margin:.55rem 0;font-size:.85rem}.am-f label{font-weight:600}
+.am-f input{border:1.5px solid var(--line);border-radius:10px;padding:.5rem .7rem;background:#fff;font:inherit;min-height:2.4rem;width:100%}
+.am-f input.miss{border-style:dashed;border-color:#E4B55C;background:#FFFBF0}
+.am-f .w{color:#B7791F;font-weight:600;font-size:.8rem}
+.am-row{display:flex;align-items:center;gap:.6rem;padding:.55rem 0;border-top:1px solid var(--line);flex-wrap:wrap}.am-row:first-of-type{border-top:0}
+.am-row .n{flex:1;min-width:10rem}.am-row .n b{display:block;font-size:.95rem}.am-row .n small{color:var(--soft)}
+.am-pill{border-radius:99px;padding:.1rem .65rem;font-size:.75rem;font-weight:700;white-space:nowrap}
+.am-pill.ok{background:#E6F5EC;color:#1F7A50}.am-pill.sk{background:#FDF1DC;color:#B7791F}.am-pill.of{background:#EEE;color:#777}
+.am-test{display:flex;gap:.4rem;flex-wrap:wrap}
+.am-sel{display:flex;align-items:center;gap:.5rem;margin:.4rem 0 .2rem;font-size:.85rem;flex-wrap:wrap}.am-sel select{border:1.5px solid var(--line);border-radius:10px;padding:.4rem .6rem;background:#fff;font:inherit;min-height:2.3rem;max-width:100%}
+.am-rec{font-size:.8rem;color:var(--soft);margin-top:.5rem;line-height:1.6}
+"""
+
+AM_JS = r"""
+/* ---- ข้อความอัตโนมัติหาลูกค้าจริง ---- */
+var AM=null,AMCONF=false,AMBUSY=false;
+function amApi(part,body){return fetch(top.location.origin+'/api/app?part='+part,{method:body?'POST':'GET',credentials:'same-origin',headers:{'Content-Type':'application/json'},body:body?JSON.stringify(body):undefined})
+  .then(r=>r.json().catch(()=>({})).then(j=>{if(!r.ok)throw new Error(j.error||('รหัส '+r.status));return j}))}
+function amLoad(re){return amApi('amcfg').then(j=>{AM=j;if(re!==false&&!S.acct&&S.tab==='msg')render()}).catch(()=>{})}
+const AM_LBL={arrive:'เช้าวันเข้าพัก 10:00 น.',welcome:'ต้อนรับ · ทันทีหลังมอบคีย์การ์ด',remind:'เตือนเช็คเอาท์ · คืนสุดท้าย 19:00 น.',rate:'ขอบคุณ + ให้คะแนน · ทันทีหลังเช็คเอาท์'};
+const AM_SUB={arrive:'ห้องพร้อม → "เช็คอินได้เลย" · ยังไม่พร้อม → "เช็คอินได้ตั้งแต่ 14:00"',welcome:'ไวไฟ อาหารเช้า เวลาเช็คเอาท์ ปุ่มขอของใช้/แจ้งปัญหา',remind:'เฉพาะคนที่พักหลายคืน',rate:'กด 1–5 · 4–5 ชวนรีวิว Google · 1–3 แจ้งผู้จัดการ'};
+const AM_FIELDS=[['wifi_name','ชื่อไวไฟ','เช่น Pobrak_Guest'],['wifi_pass','รหัสไวไฟ',''],['breakfast','เวลาอาหารเช้า','เช่น 06:00–10:00 น.'],['checkin_time','เวลาเช็คอิน','14:00'],['checkout_time','เวลาเช็คเอาท์','12:00'],['phone','เบอร์โทรโรงแรม','เช่น 081-234-5678'],['map','ลิงก์แผนที่ Google Maps','https://maps.app.goo.gl/…'],['review_url','ลิงก์รีวิว Google','https://g.page/r/…']];
+const AM_NEED={wifi_name:'ข้อความต้อนรับ',wifi_pass:'ข้อความต้อนรับ',breakfast:'ข้อความต้อนรับ'};
+function amPanel(){
+  if(!AM)return '';
+  const on=AM.on,H=AM.hotel||{},K=AM.kinds||{};
+  const pill=s=>s==='ready'?'<span class="am-pill ok">พร้อมส่ง</span>':s==='skip'?'<span class="am-pill sk">ข้าม · ขาดข้อมูล</span>':'<span class="am-pill of">ปิดอยู่ในรายการข้อความ</span>';
+  const fld=AM_FIELDS.map(([k,t,ph])=>{const miss=!H[k]&&AM_NEED[k];return `<div class="am-f"><label for="am_${k}">${t}</label><input id="am_${k}" value="${esc(H[k]||'')}" placeholder="${esc(ph)}" class="${miss?'miss':''}" autocomplete="off">${miss?`<span class="w">⚠ ${AM_NEED[k]}จะถูกข้ามจนกว่าจะกรอก</span>`:''}</div>`}).join('');
+  const rows=['arrive','welcome','remind','rate'].map(k=>{const x=K[k]||{};const miss=(x.missing||[]).length?`<small style="color:#B7791F"> · ขาด: ${esc(x.missing.join(', '))}</small>`:'';
+    return `<div class="am-row"><div class="n"><b>${AM_LBL[k]}</b><small>${AM_SUB[k]}</small>${miss}</div>${pill(x.state)}<div class="am-test">${k==='arrive'?`<button type="button" class="btn out sm" data-am="test" data-k="arrive" data-v="ready">ทดสอบ: ห้องพร้อม</button><button type="button" class="btn out sm" data-am="test" data-k="arrive" data-v="wait">ทดสอบ: ยังไม่พร้อม</button>`:`<button type="button" class="btn out sm" data-am="test" data-k="${k}">ส่งทดสอบหาตัวเอง</button>`}</div></div>`}).join('');
+  const ppl=(AM.people||[]).map(p=>`<option value="${esc(p.id)}" ${p.id===H.test_to?'selected':''}>${esc(p.name)}</option>`).join('');
+  const st=AM.stats||{},sent=Object.keys(st).filter(k=>/:sent$/.test(k)).reduce((a,k)=>a+st[k],0),skip=Object.keys(st).filter(k=>/:skipped$/.test(k)).reduce((a,k)=>a+st[k],0),fail=Object.keys(st).filter(k=>/:failed$/.test(k)).reduce((a,k)=>a+st[k],0);
+  const kn={arrive:'เช้าวันเข้าพัก',welcome:'ต้อนรับ',remind:'เตือนเช็คเอาท์',rate:'ให้คะแนน'},sn={sent:'ส่งแล้ว',skipped:'ข้าม',failed:'ส่งไม่สำเร็จ',pending:'กำลังส่ง'};
+  const rec=(AM.recent||[]).slice(0,6).map(r=>`${kn[r.kind]||r.kind} · ${esc(r.booking_no||'')} · ${sn[r.status]||r.status}${r.reason?' ('+esc(r.reason)+')':''}`).join('<br>');
+  return `<div class="am-master ${on?'on':''}"><div class="t"><b>ส่งข้อความอัตโนมัติหาลูกค้าจริง</b><small>${on?'เปิดอยู่ — ระบบส่งข้อความด้านล่างหาลูกค้าที่ผูกบัญชี LINE ตามเหตุการณ์ (นับโควตาข้อความของ LINE OA)':'ปิดอยู่ — ตอนนี้ระบบยังไม่ส่งอะไรหาลูกค้าเลย · เปิดแล้วจะส่งเฉพาะข้อความที่ "ใช้งาน" อยู่ในรายการด้านล่าง'}</small>${AMCONF?`<div class="am-conf"><span>จะเริ่มส่งข้อความหาลูกค้าจริง ยืนยันเปิดไหม</span><button type="button" class="btn sm" data-am="on">ยืนยัน เปิดเลย</button><button type="button" class="btn ghost sm" data-am="cancel">ยกเลิก</button></div>`:''}</div><span class="amst">${on?'เปิดอยู่':'ปิดอยู่'}</span><button type="button" class="sw" role="switch" aria-checked="${on}" aria-label="ส่งข้อความอัตโนมัติหาลูกค้าจริง" data-am="master"><span class="tr"></span></button></div>
+  <div class="am-grid"><div class="am-card"><h4>ข้อมูลโรงแรมสำหรับใส่ในข้อความ</h4><div class="hs">ช่องที่เว้นว่าง = ข้อความที่ต้องใช้ช่องนั้นจะ "ข้าม ไม่ส่ง" · รหัสไวไฟเก็บในฐานข้อมูลของระบบ ไม่อยู่ในไฟล์โค้ด</div>${fld}<button type="button" class="btn sm" data-am="save">บันทึกข้อมูลโรงแรม</button></div>
+  <div class="am-card"><h4>ข้อความที่ระบบส่ง</h4><div class="hs">เปิด/ปิดแต่ละข้อความที่สวิตช์ในรายการด้านล่าง ("ใช้งาน")</div>${rows}
+  <div class="am-sel"><span>ส่งทดสอบไปที่</span><select id="am_to" data-am="to">${ppl?'<option value="">— เลือกบัญชี LINE —</option>'+ppl:'<option value="">ยังไม่มีบัญชี LINE ในระบบ</option>'}</select></div>
+  <div class="hs">ส่งทดสอบไม่ผ่านสวิตช์หลัก ไม่นับเป็นการส่งจริง ใช้ดูหน้าตาข้อความก่อนเปิดใช้</div>
+  <div class="am-rec"><b>30 วันนี้:</b> ส่งแล้ว ${sent} · ข้าม ${skip}${fail?' · ส่งไม่สำเร็จ '+fail:''}${rec?'<br>'+rec:''}</div></div></div>`}
+document.addEventListener('click',e=>{const b=e.target.closest('[data-am]');if(!b||AMBUSY)return;const a=b.dataset.am;
+  const run=(p,body,ok)=>{AMBUSY=true;return amApi(p,body).then(j=>{ok&&ok(j)}).catch(x=>toast('⚠️ '+x.message)).finally(()=>{AMBUSY=false})};
+  if(a==='master'){if(AM&&AM.on){run('amsave',{on:false},j=>{AM=j;toast('ปิดการส่งข้อความอัตโนมัติแล้ว');render()})}else{AMCONF=true;render()}return}
+  if(a==='cancel'){AMCONF=false;render();return}
+  if(a==='on'){AMCONF=false;run('amsave',{on:true},j=>{AM=j;toast('เปิดการส่งข้อความอัตโนมัติแล้ว');render()});return}
+  if(a==='save'){const d={};AM_FIELDS.forEach(([k])=>{const i=document.getElementById('am_'+k);if(i)d[k]=i.value});run('amsave',d,j=>{AM=j;toast('บันทึกข้อมูลโรงแรมแล้ว');render()});return}
+  if(a==='test'){const to=(document.getElementById('am_to')||{}).value;if(!to){toast('เลือกบัญชี LINE ที่จะส่งทดสอบก่อน');return}
+    run('amtest',{kind:b.dataset.k,variant:b.dataset.v||'',to},()=>toast('ส่งตัวอย่างแล้ว ดูในแชท LINE ของบัญชีที่เลือก'));return}});
+document.addEventListener('change',e=>{const s=e.target.closest('select[data-am="to"]');if(s&&AM)amApi('amsave',{test_to:s.value}).then(j=>{AM=j}).catch(()=>{})});
+amLoad();
+"""
+
+
+def amui(h):
+    h = _r(h, [
+        ("return lineBar()+stats+", "return amPanel()+lineBar()+stats+"),
+        ("name:'ต้อนรับและข้อมูลการพัก',st:'draft'", "name:'ต้อนรับและข้อมูลการพัก',st:'on'"),
+        ("w:{ev:'checkin',off:'now',delay:10}", "w:{ev:'checkin',off:'now',delay:0}"),
+        ("w:{ev:'checkout',off:'now',delay:30}", "w:{ev:'checkout',off:'now',delay:0}"),
+        ("w:{ev:'arrive',off:'before',days:1,time:'10:00'}", "w:{ev:'arrive',off:'on',time:'10:00'}"),
+        ("name:'ขอรีวิวและความพึงพอใจ',st:'on'", "name:'ขอรีวิวและความพึงพอใจ',st:'off'"),
+        ("name:'เอกสาร ใบเสร็จและใบกำกับภาษี',st:'on'", "name:'เอกสาร ใบเสร็จและใบกำกับภาษี',st:'draft'"),
+        ("name:'ดึงลูกค้ากลับ',st:'on'", "name:'ดึงลูกค้ากลับ',st:'draft'"),
+    ], 'am-ui')
+    h = _css(h, AM_CSS)
+    k = h.rindex('</script>')
+    return h[:k] + '\n' + AM_JS + '\n' + h[k:]
 
 
 # ---------- หน้าแชท LINE: ปุ่มบันทึกจริง (ต้องรัน supabase/07_chat.sql) ----------

@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 """หลังบ้านของหน้าจอ v196: ล็อกอินด้วย PIN, ส่งแอปพร้อมข้อมูลจริง, ส่งโมดูลที่ข้อมูลเปลี่ยน"""
 import datetime, json, os, re, urllib.request, urllib.error
+import automsg
 import render, overlay, session
 from db import rpc, DbError
 
@@ -251,6 +252,10 @@ def _daily():
         rpc('pp_noshow')
     except Exception:
         pass
+    try:   # ข้อความอัตโนมัติตามเวลา (เช้าวันเข้าพัก/เตือนเช็คเอาท์) · สวิตช์หลักปิดอยู่ = ไม่ทำอะไร (ข้ามได้ถ้ายังไม่ได้รัน 22_automsg.sql)
+        automsg.tick(now_bkk())
+    except Exception:
+        pass
     try:   # จองผ่าน LINE: เกิน 24 ชม. ยังไม่ส่งสลิป -> เตือนพนักงาน · ลบรูปบัตรที่ครบกำหนด (ข้ามได้ถ้ายังไม่ได้รัน 18_liff.sql)
         rpc('pp_liff_overdue')
         rpc('pp_doc_purge')
@@ -374,7 +379,25 @@ def handle(method, query, cookie_header, body, ip):
                             rpc('pp_hk', {'p': {'k': 'task_from_booking', 'no': no}, 'p_role': role})
                         except Exception:
                             pass
+            try:   # ข้อความอัตโนมัติหาลูกค้า (เช็คอิน → ต้อนรับ · เช็คเอาท์ → ขอคะแนน) ห้ามทำให้ปุ่มพัง
+                automsg.on_act(data['k'], data, out)
+            except Exception:
+                pass
             return 200, J, json.dumps(out, ensure_ascii=False)
+        if part == 'tick':   # ตัวตั้งเวลา (cron ของ Vercel) · ปลอดภัยแม้ใครเรียก: ส่งซ้ำไม่ได้ และส่งเฉพาะที่ถึงเวลา
+            return 200, J, json.dumps(automsg.tick(now_bkk(), force=True), ensure_ascii=False)
+        if part in ('amcfg', 'amsave', 'amtest'):   # ตั้งค่าข้อความอัตโนมัติ: เฉพาะเจ้าของ
+            if role != 'owner':
+                return 403, J, json.dumps({'error': 'เฉพาะเจ้าของเท่านั้น'}, ensure_ascii=False)
+            data = json.loads(body or '{}') if method == 'POST' else {}
+            try:
+                if part == 'amcfg':
+                    return 200, J, json.dumps(automsg.overview(), ensure_ascii=False)
+                if part == 'amsave':
+                    return 200, J, json.dumps(automsg.save(data, role), ensure_ascii=False)
+                return 200, J, json.dumps(automsg.send_test(str(data.get('kind') or ''), str(data.get('variant') or ''), str(data.get('to') or '')), ensure_ascii=False)
+            except ValueError as e:
+                return 400, J, json.dumps({'error': str(e)}, ensure_ascii=False)
         if method == 'POST' and part == 'mod':   # เมนูอื่นๆ -> บันทึกสถานะ
             if not role:
                 return 401, J, json.dumps({'error': 'ต้องเข้าสู่ระบบใหม่'}, ensure_ascii=False)

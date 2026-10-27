@@ -35,6 +35,7 @@ SHIM = r"""<meta name="robots" content="noindex"><script>
   var J=function(b,st){return Promise.resolve(new Response(JSON.stringify(b),{status:st||200,headers:{'Content-Type':'application/json'}}))};
   if(/part=idocr/.test(s))return J({error:'เดโมยังไม่เปิดอ่านบัตรอัตโนมัติ · กรอกเองได้'});
   if(/part=idimg/.test(s))return J({img:''});
+  if(/part=am(cfg|save|test)/.test(s))return J({error:'เดโมไม่มีส่วนตั้งค่านี้'},403);
   if(/\/api\/(insight|news|plan|summary)/.test(s))return J({error:'เดโมไม่ได้เชื่อม AI จริง'},503);
   return J({ok:true,demo:true})}})();
 </script>"""

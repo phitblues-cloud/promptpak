@@ -553,6 +553,125 @@ ok('AI สรุปกล่อง CRM: กันโค้ดแปลกปล�
   ok('จองผ่านหน้าจอ LINE: หลายประเภท · อาหารเช้ารายห้อง · การ์ด QR พร้อมเพย์ · ส่งสลิปในแชท = ชำระ (รอตรวจ) · เลือกชำระวันเข้าพักได้ · ใช้ข้อมูลเดิม · เงินประกัน + แนบสลิปในหน้าจอ');
 }
 
+// 11p) ข้อความอัตโนมัติ: สวิตช์หลัก · ข้อมูลโรงแรมว่าง = ข้าม · ต้อนรับตอนมอบคีย์การ์ด · เช็คเอาท์ + ให้คะแนน 1-5 · เช้าวันเข้าพัก (ห้องพร้อม/ไม่พร้อม) · เตือนเช็คเอาท์ · กันส่งซ้ำ
+{
+  const today = plus(0);
+  const act = d => call('/api/app?part=act', { method: 'POST', body: JSON.stringify(d) });
+  const save = d => call('/api/app?part=amsave', { method: 'POST', body: JSON.stringify(d) });
+  const logOf = (kind, no) => { const o = psql('-c', `select to_jsonb(l) from auto_msg_log l where kind = '${kind}' and booking_no = '${no}'`); return o ? JSON.parse(o) : null; };
+  const cnt = () => Number(psql('-c', 'select count(*) from auto_msg_log'));
+  const free = (await call(`/api/liff?ci=${today}&co=${plus(2)}`)).body.types.filter(t => t.free > 0);
+  const book = async (uid, name, ci = today, co = plus(2)) => {
+    const t = free[0];
+    const r = await call('/api/liff', { method: 'POST', body: JSON.stringify({ idToken: 'dev:' + uid, ci, co, adults: 1, kids: 0, pay: 'arrival',
+      items: [{ zone: t.zone, type: t.type, count: 1, bf: false }], name, phone: '0899991111', idno: '1234567890123', consent: true }) });
+    assert.equal(r.status, 200, JSON.stringify(r.body)); return r.body.nos[0];
+  };
+  const hotel = { wifi_name: 'PobrakWiFi', wifi_pass: 'pw12345', breakfast: '06:00–10:00', phone: '081-234-5678', map: 'https://maps.app.goo.gl/test', review_url: 'https://g.page/r/test' };
+
+  // เฉพาะเจ้าของตั้งค่าได้ · ลิงก์ต้องเป็น https
+  assert.equal((await fetch(base + '/api/app?part=amsave', { method: 'POST', body: '{"on":true}' })).status, 403);
+  assert.equal((await save({ map: 'ไม่ใช่ลิงก์' })).status, 500);
+  let ov = (await call('/api/app?part=amcfg')).body;
+  assert.equal(ov.on, false);   // ค่าเริ่มต้นปิดอยู่
+  assert.equal(ov.kinds.welcome.state, 'skip');
+
+  // 1) สวิตช์หลักปิด → ไม่ส่งอะไรเลย
+  const A = await book('Uam1', 'คุณธนกฤต วงศ์ศรีแก้ว');
+  await act({ k: 'checkin', no: A });
+  assert.equal(cnt(), 0); ok('ข้อความอัตโนมัติ: สวิตช์หลักปิดอยู่ = ไม่ส่งหาลูกค้าเลย');
+
+  // 2) เปิดสวิตช์ + ข้อมูลโรงแรมยังไม่ครบ (ไม่มีไวไฟ) → ข้ามและบอกสาเหตุ
+  await save({ on: true, breakfast: hotel.breakfast, phone: hotel.phone, map: hotel.map, review_url: hotel.review_url });
+  const B = await book('Uam2', 'คุณสมหญิง ใจดี');
+  await act({ k: 'checkin', no: B });
+  let l = logOf('welcome', B);
+  assert.equal(l.status, 'skipped'); assert.ok(l.reason.includes('ชื่อไวไฟ') && l.reason.includes('รหัสไวไฟ'));
+  ok('ข้อมูลโรงแรมที่ต้องใช้ว่างอยู่ → ข้ามข้อความต้อนรับ พร้อมบอกสาเหตุ');
+
+  // 3) ไวไฟครบ → มอบคีย์การ์ดแล้วส่งการ์ดต้อนรับทันที (ครั้งเดียว)
+  await save({ wifi_name: hotel.wifi_name, wifi_pass: hotel.wifi_pass });
+  await act({ k: 'checkin', no: A });   // กดซ้ำ/ย้อนกลับแล้วกดใหม่ก็ส่งซ้ำไม่ได้
+  l = logOf('welcome', A);
+  assert.equal(l.status, 'sent');
+  const w = JSON.stringify(l.payload.messages);
+  assert.ok(w.includes('PobrakWiFi') && w.includes('pw12345') && w.includes('06:00–10:00') && w.includes('12:00') && w.includes('ธนกฤต') && w.includes('tel:0812345678'));
+  await act({ k: 'checkin', no: A });
+  assert.equal(Number(psql('-c', `select count(*) from auto_msg_log where kind = 'welcome' and booking_no = '${A}'`)), 1);
+  assert.ok(!/pw12345/.test(psql('-c', `select string_agg(body, ' ') from chat_messages where body like '%ส่งอัตโนมัติ%'`)), 'ไม่เอารหัสไวไฟลงแชท');
+  ok('มอบคีย์การ์ดแล้ว → ส่งการ์ดต้อนรับ (ไวไฟ/อาหารเช้า/เช็คเอาท์/โทร) ครั้งเดียว');
+
+  // 4) เมนู CRM ปิดข้อความนี้ (สวิตช์ "ใช้งาน") → ไม่ส่ง
+  await call('/api/app?part=mod', { method: 'POST', body: JSON.stringify({ k: 'crmtool', data: { ms: [{ id: 'thanks', st: 'off' }, { id: 'stay', st: 'on' }, { id: 'pre', st: 'on' }] } }) });
+  const C = await book('Uam3', 'คุณมานะ ตั้งใจ');
+  await act({ k: 'checkin', no: C }); await act({ k: 'checkout', no: C });
+  assert.equal(logOf('rate', C), null);
+  await call('/api/app?part=mod', { method: 'POST', body: JSON.stringify({ k: 'crmtool', data: { ms: [{ id: 'thanks', st: 'on' }, { id: 'stay', st: 'on' }, { id: 'pre', st: 'on' }] } }) });
+  ok('ปิดข้อความในเมนู CRM → ระบบไม่ส่งข้อความนั้น');
+
+  // 5) เช็คเอาท์ → ขอบคุณ + ปุ่มคะแนน 1-5 → กดคะแนน
+  await act({ k: 'checkout', no: A });
+  l = logOf('rate', A); assert.equal(l.status, 'sent');
+  const rm = JSON.stringify(l.payload.messages);
+  assert.ok(rm.includes('pp_rate|' + A + '|1') && rm.includes('pp_rate|' + A + '|5') && rm.includes('ธนกฤต') && rm.includes('จองห้องพัก'));
+  const postback = (uid, data, id) => ({ type: 'postback', webhookEventId: id, replyToken: 'rt-' + id, source: { type: 'user', userId: uid }, postback: { data } });
+  globalThis.__ppLineOutbox.length = 0;
+  await webhook([postback('Uam1', `pp_rate|${A}|5`, 'pb1')]);
+  let rp = JSON.stringify(replies().at(-1).body.messages);
+  assert.ok(rp.includes('ขอบคุณสำหรับ 5 ดาว') && rp.includes('https://g.page/r/test'));
+  assert.equal(rpc(`(select score from auto_msg_rating where key = '${A}')`), 5);
+  await webhook([postback('Uam1', `pp_rate|${A}|1`, 'pb2')]);   // กดซ้ำ ไม่เปลี่ยนคะแนน
+  assert.equal(rpc(`(select score from auto_msg_rating where key = '${A}')`), 5);
+  assert.ok(JSON.stringify(replies().at(-1).body.messages).includes('บันทึกคะแนนของคุณไว้แล้ว'));
+  await webhook([postback('Uother', `pp_rate|${A}|2`, 'pb3')]);   // คนอื่นให้คะแนนการจองของเราไม่ได้
+  assert.equal(rpc(`(select count(*) from auto_msg_rating where key = '${A}')`), 1);
+  // 1-3 ดาว → ขอโทษ + แจ้งผู้จัดการ (ส่งต่อพนักงาน)
+  await act({ k: 'checkin', no: B }); await act({ k: 'checkout', no: B });
+  await webhook([postback('Uam2', `pp_rate|${B}|2`, 'pb4')]);
+  rp = JSON.stringify(replies().at(-1).body.messages);
+  assert.ok(rp.includes('ขอโทษค่ะ') && !rp.includes('Google'));
+  assert.equal(psql('-c', `select needs_staff from chat_threads where line_user_id = 'Uam2'`), 't');
+  assert.ok(psql('-c', `select handoff_reason from chat_threads where line_user_id = 'Uam2'`).includes('2 ดาว'));
+  ok('เช็คเอาท์ → การ์ดขอบคุณ + คะแนน 1–5 · 4–5 ชวนรีวิว Google · 1–3 ขอโทษ + แจ้งผู้จัดการ · กดซ้ำ/คนอื่นกดไม่ได้');
+
+  // 6) เช้าวันเข้าพัก 10:00: ห้องพร้อม / ห้องยังไม่พร้อม (มีงานทำความสะอาดค้าง) · นอกช่วงเวลาไม่ส่ง · ไม่ส่งซ้ำ
+  const D1 = await book('Uam4', 'คุณพร้อม ใจดี'), D2 = await book('Uam5', 'คุณรอ ก่อนนะ');
+  const room2 = psql('-c', `select room_id from bookings where booking_no = '${D2}'`);
+  psql('-c', `update hk_task set st = 5 where st < 5`);                                   // ห้องอื่นสะอาดหมดแล้ว
+  psql('-c', `insert into hk_task (room, kind, st) values ('${room2}', 'out', 2)`);       // ห้องของ D2 แม่บ้านยังทำไม่เสร็จ
+  const tick = async t => { process.env.PP_NOW = t; try { return (await call('/api/app?part=tick')).body; } finally { delete process.env.PP_NOW; } };
+  let tk = await tick(today + 'T09:00');
+  assert.equal(logOf('arrive', D1), null);
+  tk = await tick(today + 'T10:05');
+  const a1 = logOf('arrive', D1), a2 = logOf('arrive', D2);
+  assert.equal(a1.status, 'sent'); assert.equal(a2.status, 'sent');
+  assert.ok(JSON.stringify(a1.payload.messages).includes('ห้องพร้อมแล้ว') && JSON.stringify(a1.payload.messages).includes('https://maps.app.goo.gl/test'));
+  assert.ok(JSON.stringify(a2.payload.messages).includes('เช็คอินได้ตั้งแต่ 14:00') && !JSON.stringify(a2.payload.messages).includes('ห้องพร้อมแล้ว'));
+  const before = cnt(); await tick(today + 'T10:40'); assert.equal(cnt(), before);
+  ok('เช้าวันเข้าพัก 10:00: ห้องพร้อม → "เช็คอินได้เลย" · ห้องยังไม่พร้อม → "เช็คอินได้ตั้งแต่ 14:00" · ไม่ส่งซ้ำ · นอกเวลาไม่ส่ง');
+
+  // 7) คืนสุดท้าย 19:00 (พักหลายคืน เช็คอินแล้ว) → เตือนเช็คเอาท์
+  await act({ k: 'checkin', no: D1 });
+  await tick(plus(1) + 'T18:30'); assert.equal(logOf('remind', D1), null);
+  await tick(plus(1) + 'T19:30');
+  assert.equal(logOf('remind', D1).status, 'sent'); assert.ok(JSON.stringify(logOf('remind', D1).payload.messages).includes('พรุ่งนี้เช็คเอาท์'));
+  assert.equal(logOf('remind', D2), null);   // ยังไม่เช็คอิน ไม่เตือน
+  ok('คืนสุดท้าย 19:00 → เตือนเช็คเอาท์เฉพาะคนที่พักอยู่');
+
+  // 8) ส่งทดสอบ: เลือกบัญชีได้ · ไม่เข้าประวัติกันซ้ำ · ข้อมูลไม่ครบ = บอกสาเหตุ
+  ov = (await call('/api/app?part=amcfg')).body;
+  assert.ok(ov.people.some(p => p.id === 'Uam1') && ov.stats['welcome:sent'] >= 1);
+  const n0 = cnt();
+  const t1 = await call('/api/app?part=amtest', { method: 'POST', body: JSON.stringify({ kind: 'arrive', variant: 'wait', to: 'Uam1' }) });
+  assert.equal(t1.status, 200, JSON.stringify(t1.body)); assert.equal(cnt(), n0);
+  await save({ wifi_name: '' });
+  const t2 = await call('/api/app?part=amtest', { method: 'POST', body: JSON.stringify({ kind: 'welcome', to: 'Uam1' }) });
+  assert.equal(t2.status, 400); assert.ok(t2.body.error.includes('ชื่อไวไฟ'));
+  await save({ on: false });
+  assert.equal((await call('/api/app?part=tick')).body.on, false);
+  ok('ส่งทดสอบหาบัญชีที่เลือก (ไม่นับเป็นการส่งจริง) · ปิดสวิตช์หลัก = ตัวตั้งเวลาไม่ทำงาน');
+}
+
 // 12) กันเดา PIN
 for (let i = 0; i < 8; i++) await call('/api/app?part=pin', { method: 'POST', body: JSON.stringify({ role: 'owner', pin: '000000' }) });
 assert.equal((await call('/api/app?part=pin', { method: 'POST', body: JSON.stringify({ role: 'owner', pin: '246810' }) })).status, 429);

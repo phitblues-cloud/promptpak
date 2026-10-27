@@ -1,8 +1,28 @@
 {
   "outputDirectory": "public",
-  "rewrites": [{ "source": "/", "destination": "/api/app" }],
+  "rewrites": [
+    {
+      "source": "/",
+      "destination": "/api/app"
+    }
+  ],
   "functions": {
-    "api/*.js": { "maxDuration": 60 },
-    "api/app.py": { "maxDuration": 30, "includeFiles": "renderer/**" }
-  }
+    "api/*.js": {
+      "maxDuration": 60
+    },
+    "api/app.py": {
+      "maxDuration": 30,
+      "includeFiles": "renderer/**"
+    }
+  },
+  "crons": [
+    {
+      "path": "/api/app?part=tick",
+      "schedule": "0 3 * * *"
+    },
+    {
+      "path": "/api/app?part=tick",
+      "schedule": "0 12 * * *"
+    }
+  ]
 }
