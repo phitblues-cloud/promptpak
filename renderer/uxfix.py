@@ -188,6 +188,11 @@ LC_CSS = """
 .aisum2 .ait{-webkit-line-clamp:1;font-size:.85rem;line-height:1.4;margin-top:.05rem}
 .aisum2.open .ait{-webkit-line-clamp:unset}
 .pancol .statbox{padding:.4rem .8rem .35rem!important}
+.fzone .tpsel{display:none!important}
+.fzone .srch{grid-column:1/-1!important}
+.toast:not(.show){visibility:hidden;opacity:0}
+.rep textarea#rt{height:2.6rem!important;min-height:2.6rem!important;max-height:7rem;resize:none!important;padding:.55rem .8rem!important;line-height:1.4;box-sizing:border-box}
+.rep{align-items:end}
 """
 
 
@@ -209,6 +214,12 @@ def linechat(h):
         ('const floor=7.9*parseFloat(', 'const floor=6.9*parseFloat('),
         # ความสูงหัวกล่องคงที่ทุกแชท ไม่ยืดหดตามเนื้อหา
         ('const H=Math.ceil(Math.max(rh(th),rh(sb),gH+rh(fz),floor));', 'const H=Math.ceil(Math.max(gH+rh(fz),floor));'),
+        # กล่องทั้ง 3 สูงพอดีจอ (วัดจากตำแหน่งจริง) · ช่องพิมพ์ขยายตามข้อความ
+        ('function syncHH(){', "function fitCols(){if(!matchMedia('(min-width:901px)').matches)return;const c=document.querySelector('.listcol');if(!c)return;"
+         "const top=c.getBoundingClientRect().top+scrollY,h=Math.max(420,Math.floor(innerHeight-top-14));"
+         "document.querySelectorAll('.listcol,.thrcol,.pancol').forEach(e=>e.style.setProperty('height',h+'px','important'))}\n"
+         "document.addEventListener('input',e=>{if(e.target.id==='rt'){const t=e.target;t.style.height='';t.style.setProperty('height',Math.min(t.scrollHeight+2,7*parseFloat(getComputedStyle(document.documentElement).fontSize))+'px','important')}});\n"
+         "function syncHH(){try{fitCols()}catch(_){}"),
     ], 'linechat')
     return _css(h, LC_CSS)
 
