@@ -126,6 +126,11 @@ main{padding:0 14px 130px;margin:-34px auto 0;position:relative;z-index:2;max-wi
 /* done */
 .done{text-align:center;padding:24px 20px}.done .ok{width:72px;height:72px;border-radius:50%;background:var(--orchid);color:#fff;font-size:36px;display:grid;place-items:center;margin:4px auto 14px}
 .done h2{font-family:'Trirong',serif;font-weight:500;margin:0 0 6px;font-size:22px}.done p{color:var(--soft);margin:0 0 18px;font-size:14px}
+/* หน้ารายละเอียดการจอง */
+.bdgs{display:flex;gap:6px;flex-wrap:wrap;padding:0 16px 10px}.bg{font-size:11.5px;font-weight:600;border-radius:99px;padding:2px 11px}
+.bg.w{background:#FBEBC9;color:#9A6A10}.bg.g{background:#E3F4EA;color:#1F7A50}.bg.r{background:#FDECF1;color:var(--red)}.bg.n{background:#EEE7F5;color:var(--o2)}
+.inf{display:grid;grid-template-columns:auto 1fr;gap:6px 14px;font-size:13.5px}.inf span:nth-child(odd){color:var(--soft)}
+.lnk{display:block;text-align:center;font-weight:600;color:var(--o2);border:1px solid var(--hair);border-radius:14px;padding:11px;margin-top:10px;text-decoration:none;font-size:14px}
 </style>
 </head>
 <body>
@@ -175,6 +180,7 @@ main{padding:0 14px 130px;margin:-34px auto 0;position:relative;z-index:2;max-wi
   <div class="k" style="margin-top:8px">กดค้างที่ QR เพื่อบันทึกรูป แล้วเปิดในแอปธนาคาร</div></div>
   <label class="slip" id="slipbox" for="sf"><span id="slipimg">🧾</span><span id="sliptxt"><b>แนบสลิปการโอน</b></span></label><input type="file" id="sf" accept="image/*" class="hide">
   <div class="later">ยังไม่สะดวกโอน? ปิดหน้านี้ได้ ห้องถูกจองไว้แล้ว ส่งรูปสลิปในแชทภายหลังได้ภายใน 24 ชม.</div></section>
+ <section data-step="7" class="hide"><div id="dt"><div class="card" style="text-align:center;color:var(--soft)">กำลังโหลดการจอง…</div></div></section>
  <section data-step="6" class="hide"><div class="card done"><div class="ok">✓</div><h2>รับการจองแล้ว</h2><p id="dmsg"></p><button class="go" id="close" type="button">กลับไปที่แชท</button></div></section>
 </main>
 <div class="bar" id="bar"><button class="bk hide" id="back" type="button" aria-label="ย้อนกลับ">‹</button><div class="t"><small id="bsub"></small><strong id="btot"></strong></div><button class="go" id="next" type="button">ถัดไป ›</button></div>
@@ -194,7 +200,7 @@ const MAX=()=>(S.cfg&&S.cfg.maxRooms)||4;
 const showErr=m=>{const e=$('err');e.textContent=m||'';e.classList.toggle('hide',!m);if(m)scrollTo({top:0,behavior:'smooth'})};
 const total=()=>Object.values(S.sel).reduce((a,g)=>a+g.n,0),people=()=>S.ad+S.kd;
 const digits=s=>String(s||'').replace(/\D/g,'');
-const TITLES={1:['เลือกวันเข้าพัก','แตะวันเข้าพัก แล้วแตะวันเช็คเอาท์'],2:['เลือกห้องพัก','เลือกได้หลายประเภท'],3:['ข้อมูลผู้เข้าพัก','ใช้ลงทะเบียนเข้าพักตามกฎหมาย'],4:['สรุปการจอง','ตรวจสอบและเลือกวิธีชำระเงิน'],5:['ชำระเงิน',''],6:['ขอบคุณที่เลือกพบรักรีสอร์ท','']};
+const TITLES={1:['เลือกวันเข้าพัก','แตะวันเข้าพัก แล้วแตะวันเช็คเอาท์'],2:['เลือกห้องพัก','เลือกได้หลายประเภท'],3:['ข้อมูลผู้เข้าพัก','ใช้ลงทะเบียนเข้าพักตามกฎหมาย'],4:['สรุปการจอง','ตรวจสอบและเลือกวิธีชำระเงิน'],5:['ชำระเงิน',''],7:['การจองของคุณ',''],6:['ขอบคุณที่เลือกพบรักรีสอร์ท','']};
 const DEPP=()=>(S.cfg&&S.cfg.dep)||200,depTotal=()=>S.pay==='now'&&S.dep?DEPP()*total():0;
 
 async function init(){
@@ -209,6 +215,8 @@ async function init(){
       try{const p=await liff.getProfile();if(p&&p.displayName){S.lineName=p.displayName;$('nm').value=p.displayName;$('fromLine').classList.remove('hide')}}catch(_){}
     }catch(e){showErr('เปิดหน้าจองจากแอป LINE ไม่สำเร็จ ลองกดปุ่มจองห้องพักในแชทอีกครั้ง')}
   } else showErr('กรุณาเปิดหน้านี้จากปุ่ม "จองห้องพัก" ในแชท LINE ของโรงแรม');
+  {const q=new URLSearchParams(location.search);let n=q.get('no')||'';if(!n){try{n=new URLSearchParams((q.get('liff.state')||'').replace(/^\//,'')).get('no')||''}catch(_){}}S.detNo=n}
+  if(S.detNo){S.step=7;render();loadDetail();return}
   render();
   if(S.token)loadPrev();
 }
@@ -287,6 +295,7 @@ function missing(step){const m=[],c=calc();
 
 /* ---------- แสดงผล ---------- */
 function bar(){const c=calc(),s=S.step;
+  if(s===7){const d=S.det,pay=!!(d&&d.qr);$('back').classList.add('hide');$('bar').classList.toggle('hide',!pay);if(pay){$('bsub').textContent='ยอดที่ต้องโอน';$('btot').textContent='฿'+fmt(d.due);$('next').textContent='ชำระเงิน / แนบสลิป ›';$('next').disabled=false}return}
   $('back').classList.toggle('hide',s===1||s>=5);$('bar').classList.toggle('hide',s===6);
   if(s===5){$('bsub').textContent=S.slip?'แนบสลิปแล้ว 1 รูป':'แนบสลิปก่อนกดยืนยัน';$('btot').textContent='฿'+fmt(S.res.total);$('next').textContent=S.busy?'กำลังส่ง…':'ยืนยันการชำระ ✓';$('next').disabled=!S.slip||S.busy;return}
   const dt=s===4?depTotal():0;
@@ -308,7 +317,7 @@ function review(){const c=calc();
   document.querySelectorAll('[data-pay]').forEach(b=>b.classList.toggle('on',b.dataset.pay===S.pay))}
 function render(){const s=S.step;
   document.querySelectorAll('section[data-step]').forEach(x=>x.classList.toggle('hide',+x.dataset.step!==s));
-  [...$('pr').children].forEach((i,n)=>i.classList.toggle('on',n<Math.min(s,4)));$('pr').classList.toggle('hide',s===6);
+  [...$('pr').children].forEach((i,n)=>i.classList.toggle('on',n<Math.min(s,4)));$('pr').classList.toggle('hide',s===6||s===7);
   const sub=s===2&&S.ci?`${TDS[D(S.ci).getUTCDay()]} ${dshort(S.ci)} – ${TDS[D(S.co).getUTCDay()]} ${dshort(S.co)} · ${TITLES[2][1]}`:s===1&&S.lineName?`สวัสดีคุณ${S.lineName} · ${TITLES[1][1]}`:s===5&&S.res?`จองห้องไว้ให้แล้ว · ${S.res.nos.join(', ')}`:TITLES[s][1];
   $('ttl').innerHTML=esc(TITLES[s][0])+`<small>${esc(sub)}</small>`;
   if(s===1)calHTML();
@@ -316,6 +325,43 @@ function render(){const s=S.step;
   if(s===3)retHTML();
   if(s===4)review();
   bar()}
+
+/* ---------- หน้ารายละเอียดการจอง (เปิดจากการ์ดในแชท: ?no=BK...) ---------- */
+function bdg(d){const a=[];
+  if(d.cancelled)a.push('<span class="bg r">ยกเลิกแล้ว</span>');
+  else if(d.paid)a.push(d.slip_unchecked?'<span class="bg g">ส่งสลิปแล้ว · รอพนักงานตรวจ</span>':'<span class="bg g">ชำระแล้ว</span>');
+  else if(d.pay_mode==='arrival')a.push('<span class="bg n">ชำระวันเข้าพัก</span>');
+  else a.push('<span class="bg w">รอชำระ</span>');
+  return a.join('')}
+function detHTML(d){const h=(S.cfg&&S.cfg.hotel)||{},dayIn=TD[D(d.check_in).getUTCDay()],dayOut=TD[D(d.check_out).getUTCDay()];
+  const rooms=(d.rooms||[]).map(r=>`<div class="sr"><span>${esc(r.type)} ${esc(r.zone)} · ${esc(r.room)}</span><span>฿${fmt(r.amt)}</span></div>`).join('');
+  const depLine=d.dep_online?`<div class="sr"><span>เงินประกันห้อง <span class="gd">(คืนหลังเช็คเอาท์)</span></span><span>฿${fmt(d.dep_online)}</span></div>`
+    :`<div class="sr"><span>เงินประกันห้อง <span class="gd">(คืนหลังเช็คเอาท์)</span></span><span>฿${fmt(d.dep_each*(d.rooms||[]).length)} ที่เคาน์เตอร์</span></div>`;
+  const tot=d.pay_mode==='arrival'&&!d.paid?d.room_total+d.bf_total+d.dep_each*(d.rooms||[]).length:d.due;
+  const lab=d.paid?'ยอดที่ชำระ':d.pay_mode==='arrival'?'ยอดชำระที่เคาน์เตอร์':'ยอดโอน';
+  return `<div class="pass"><div class="ph1"><span>${esc(d.nos.join(', '))}</span><b>พบรักรีสอร์ท</b></div>
+   <div class="ptop"><div><div class="k">เช็คอิน</div><div class="d">${dshort(d.check_in)}</div><div class="w">${dayIn} · 14:00</div></div><div class="mid"><span>${d.nights} คืน</span><i></i><span>${(d.rooms||[]).length} ห้อง</span></div>
+    <div style="text-align:right"><div class="k">เช็คเอาท์</div><div class="d">${dshort(d.check_out)}</div><div class="w">${dayOut} · ก่อน 12:00</div></div></div>
+   <div class="bdgs">${bdg(d)}</div><div class="tear"></div>
+   <div class="pl"><div class="sr who"><span>ผู้เข้าพัก</span><span>${esc(d.name)} · ${d.adults+d.kids} ท่าน</span></div>${rooms}
+    ${d.bf_total?`<div class="sr"><span>อาหารเช้า</span><span>฿${fmt(d.bf_total)}</span></div>`:''}${depLine}
+    <div class="sr t"><span>${lab}</span><span>฿${fmt(tot)}</span></div></div></div>
+   <div class="card"><div class="inf"><span>เช็คอิน</span><span>ตั้งแต่ 14:00 น.</span><span>เช็คเอาท์</span><span>ไม่เกิน 12:00 น.</span>
+    ${h.breakfast?`<span>อาหารเช้า</span><span>${esc(h.breakfast)}</span>`:''}${h.phone?`<span>โทร</span><span><a href="tel:${esc(h.phone)}" style="color:var(--o2);font-weight:600">${esc(h.phone)}</a></span>`:''}
+    ${d.purpose?`<span>วัตถุประสงค์</span><span>${esc(d.purpose)}</span>`:''}</div>
+    ${h.map?`<a class="lnk" href="${esc(h.map)}">📍 ดูแผนที่ · เปิด Google Maps</a>`:''}
+    ${h.phone?`<a class="lnk" href="tel:${esc(h.phone)}">โทรหาโรงแรม</a>`:''}</div>`}
+async function loadDetail(){
+  if(!S.token){$('dt').innerHTML='<div class="card" style="text-align:center;color:var(--soft)">กรุณาเปิดหน้านี้จากการ์ดในแชท LINE ของโรงแรม</div>';return}
+  try{const r=await fetch('/api/liff',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'detail',idToken:S.token,no:S.detNo})});const d=await r.json();
+    if(!r.ok||d.error)throw new Error(d.error||'เปิดการจองไม่สำเร็จ');
+    S.det=d;$('dt').innerHTML=detHTML(d);bar()}
+  catch(e){$('dt').innerHTML=`<div class="card" style="text-align:center;color:var(--red)">${esc(e.message)}</div>`}}
+function payFromDetail(){const d=S.det;if(!d||!d.qr)return;
+  S.res={nos:d.nos,total:d.due,room:d.room_total+d.bf_total,dep:d.dep_online};
+  $('qimg').src=d.qr;$('qamt').textContent='฿'+fmt(d.due);
+  $('qbrk').innerHTML=`<div class="brk"><span>ค่าห้อง${d.bf_total?' + อาหารเช้า':''}</span><span>฿${fmt(d.room_total+d.bf_total)}</span></div>`+(d.dep_online?`<div class="brk"><span>เงินประกันห้อง (คืนได้)</span><span>฿${fmt(d.dep_online)}</span></div>`:'');
+  go(5)}
 function go(n){showErr('');S.step=n;render();scrollTo({top:0})}
 
 /* ---------- เหตุการณ์ ---------- */
@@ -344,7 +390,7 @@ document.addEventListener('input',e=>{if(['nm','ph','idn','tn','ti','ta'].includ
 $('cPrev').onclick=()=>{const [y,m]=S.cal.split('-').map(Number);const d=new Date(Date.UTC(y,m-2,1));S.cal=d.toISOString().slice(0,7);calHTML()};
 $('cNext').onclick=()=>{const [y,m]=S.cal.split('-').map(Number);const d=new Date(Date.UTC(y,m,1));S.cal=d.toISOString().slice(0,7);calHTML()};
 $('back').onclick=()=>go(Math.max(1,S.step-1));
-$('next').onclick=()=>{const miss=missing(S.step);if(miss.length){showErr(miss[0]);return}if(S.step<4)go(S.step+1);else if(S.step===4)submit();else sendSlip()};
+$('next').onclick=()=>{if(S.step===7){payFromDetail();return}const miss=missing(S.step);if(miss.length){showErr(miss[0]);return}if(S.step<4)go(S.step+1);else if(S.step===4)submit();else sendSlip()};
 function readImg(f,cb){if(!f)return;const r=new FileReader();r.onload=()=>{const im=new Image();im.onload=()=>{const k=Math.min(1,1200/Math.max(im.width,im.height)),c=document.createElement('canvas');
   c.width=Math.round(im.width*k);c.height=Math.round(im.height*k);c.getContext('2d').drawImage(im,0,0,c.width,c.height);cb(c.toDataURL('image/jpeg',.75))};im.src=r.result};r.readAsDataURL(f)}
 async function submit(){if(S.busy)return;S.busy=true;bar();showErr('');

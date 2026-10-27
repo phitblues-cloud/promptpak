@@ -488,6 +488,7 @@ ok('AI สรุปกล่อง CRM: กันโค้ดแปลกปล�
 
 // 11o) ลูกค้าจองเองผ่านหน้าจอ LINE (LIFF): จองหลายประเภท · อาหารเช้ารายห้อง · การ์ด + QR พร้อมเพย์ · ส่งรูปในแชท = สลิป
 {
+  process.env.LIFF_ID = '2000000000-testliff';
   const ci = plus(40), co = plus(42);
   const cfg = (await call(`/api/liff?ci=${ci}&co=${co}`)).body;
   assert.ok(cfg.types.length > 1 && cfg.bf === 170);
@@ -499,7 +500,16 @@ ok('AI สรุปกล่อง CRM: กันโค้ดแปลกปล�
   assert.equal(r.status, 200, JSON.stringify(r.body)); assert.equal(r.body.nos.length, 2);
   assert.equal(r.body.total, (free[0].rate + free[1].rate) * 2 + 170 * 1 * 2);
   const card = globalThis.__ppLineOutbox.find(x => x.path === '/message/push');
-  assert.ok(card && card.body.messages[0].type === 'flex' && card.body.messages[0].contents.hero.url.includes('/api/qr?no=' + r.body.nos[0]));
+  assert.ok(card && card.body.messages[0].type === 'flex' && !card.body.messages[0].contents.hero, 'การ์ดไม่มี QR');
+  assert.ok(JSON.stringify(card.body.messages[0].contents.footer).includes('liff.line.me/2000000000-testliff?no=' + r.body.nos[0]), 'ปุ่มเปิดรายละเอียดการจอง');
+  const nosA = r.body.nos;
+  // หน้ารายละเอียดการจอง: เจ้าของการจองดูได้ · LINE อื่นดูไม่ได้ · ยังไม่จ่าย → มี QR
+  const dt = await call('/api/liff', { method: 'POST', body: JSON.stringify({ action: 'detail', idToken: 'dev:Uliff1', no: r.body.nos[0] }) });
+  assert.equal(dt.status, 200, JSON.stringify(dt.body)); assert.equal(dt.body.nos.length, 2); assert.equal(dt.body.paid, false);
+  assert.equal(dt.body.due, r.body.total); assert.ok(dt.body.qr.includes('/api/qr?no=' + r.body.nos[0]));
+  assert.ok(!/1234567890123|0899990000/.test(JSON.stringify(dt.body)), 'ไม่ส่งเลขบัตร/เบอร์');
+  assert.equal((await call('/api/liff', { method: 'POST', body: JSON.stringify({ action: 'detail', idToken: 'dev:Uother', no: r.body.nos[0] }) })).status, 400);
+  assert.equal((await call('/api/liff', { method: 'POST', body: JSON.stringify({ action: 'detail', idToken: 'dev:Uliff1', no: "x'; drop" }) })).status, 400);
   const png = await fetch(base + '/api/qr?no=' + r.body.nos[0]); assert.equal(png.headers.get('content-type'), 'image/png');
   assert.deepEqual([...new Uint8Array(await png.arrayBuffer()).slice(1, 4)], [80, 78, 71]);
   // ไม่ยินยอม / เกิน 4 ห้อง → ไม่จอง
@@ -510,13 +520,15 @@ ok('AI สรุปกล่อง CRM: กันโค้ดแปลกปล�
   await webhook([{ type: 'message', webhookEventId: 'ev-slip', replyToken: 'rt-slip', source: { type: 'user', userId: 'Uliff1' }, message: { type: 'image', id: 'mslip' } }]);
   const paid = rpc(`(select count(*) from ops where kind = 'pay' and data->>'unchecked' = 'true')`);
   assert.equal(paid, 2);
+  const dt2 = (await call('/api/liff', { method: 'POST', body: JSON.stringify({ action: 'detail', idToken: 'dev:Uliff1', no: nosA[0] }) })).body;
+  assert.equal(dt2.paid, true); assert.equal(dt2.slip_unchecked, true); assert.equal(dt2.qr, null);
   // เลือก "ชำระวันเข้าพัก" → การ์ดไม่มี QR · รูปในแชทไม่นับเป็นสลิป
   globalThis.__ppLineOutbox.length = 0;
   r = await call('/api/liff', { method: 'POST', body: JSON.stringify({ idToken: 'dev:Uliff2', ci, co, adults: 1, kids: 0, pay: 'arrival',
     items: [{ zone: free[0].zone, type: free[0].type, count: 1, bf: false }], name: 'จ่ายหน้างาน', phone: '0899990001', idno: '1234567890123', consent: true }) });
   assert.equal(r.status, 200, JSON.stringify(r.body)); assert.equal(r.body.pay, 'arrival');
   const card2 = globalThis.__ppLineOutbox.find(x => x.path === '/message/push').body.messages[0];
-  assert.ok(!card2.contents.hero && !card2.quickReply);
+  assert.ok(!card2.contents.hero && !card2.quickReply && card2.contents.footer);
   assert.equal(rpc(`(select details->>'liff_pay' from bookings where booking_no = '${r.body.nos[0]}')`), 'arrival');
   await webhook([{ type: 'message', webhookEventId: 'ev-slip2', replyToken: 'rt-slip2', source: { type: 'user', userId: 'Uliff2' }, message: { type: 'image', id: 'mslip2' } }]);
   assert.equal(rpc(`(select count(*) from ops where kind = 'pay' and booking_no = '${r.body.nos[0]}')`), 0);
