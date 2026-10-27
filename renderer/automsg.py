@@ -2,16 +2,15 @@
 """ข้อความอัตโนมัติหาลูกค้าทาง LINE (การ์ดตามภาพร่าง docs/mockups/liff/auto_msg_v2.png · ต้องรัน 22_automsg.sql)
   arrive  เช้าวันเข้าพัก 10:00  (ห้องพร้อม → "เช็คอินได้เลย" · ยังไม่พร้อม → "เช็คอินได้ตั้งแต่ 14:00")
   welcome ทันทีหลังพนักงานกดเช็คอิน (มอบคีย์การ์ด): ไวไฟ อาหารเช้า เวลาเช็คเอาท์
-  remind  คืนสุดท้าย 19:00 (เฉพาะพักหลายคืน)
   rate    ทันทีหลังพนักงานกดเช็คเอาท์: ขอบคุณ + ปุ่มให้คะแนน 1-5 (ตอบรับคะแนนอยู่ที่ api/line-webhook.js)
 กติกา: สวิตช์หลักปิดอยู่เป็นค่าเริ่มต้น · ช่องข้อมูลโรงแรมที่ว่าง = ข้ามข้อความที่ต้องใช้ · 1 เหตุการณ์ต่อ 1 การจองส่งครั้งเดียว
 ทุกฟังก์ชันที่ถูกเรียกจากปุ่มของพนักงานห้ามทำให้ปุ่มพัง (ครอบ try ไว้ที่ on_act)"""
 import json, os, re, time
 from db import rpc, DbError
 
-MENU_ID = {'arrive': 'pre', 'welcome': 'stay', 'remind': 'stay', 'rate': 'thanks'}   # ข้อความในเมนู CRM ที่เป็นสวิตช์ "ใช้งาน"
+MENU_ID = {'arrive': 'pre', 'welcome': 'stay', 'rate': 'thanks'}   # ข้อความในเมนู CRM ที่เป็นสวิตช์ "ใช้งาน"
 MENU_DEFAULT = {'pre': 'on', 'stay': 'on', 'thanks': 'on'}                              # ยังไม่เคยบันทึกเมนูนี้ = เปิด
-LABEL = {'arrive': 'เช้าวันเข้าพัก', 'welcome': 'ต้อนรับหลังมอบคีย์การ์ด', 'remind': 'เตือนเช็คเอาท์คืนสุดท้าย', 'rate': 'ขอบคุณ + ให้คะแนน'}
+LABEL = {'arrive': 'เช้าวันเข้าพัก', 'welcome': 'ต้อนรับหลังมอบคีย์การ์ด', 'rate': 'ขอบคุณ + ให้คะแนน'}
 
 ORCHID = ('#4B2477', '#C04C9C')
 GREEN = ('#1F7A50', '#2E9C6A')
@@ -105,6 +104,40 @@ def _links(cfg, no=None):
     return out
 
 
+RATE_LABEL = {1: 'ไม่ประทับใจ', 2: 'ควรปรับปรุง', 3: 'พอใช้', 4: 'ดี', 5: 'ดีเยี่ยม'}
+DARK, GOLD, IVORY, STAR_OFF = '#2E1450', '#B8923A', '#FBF8F3', '#D8CFBC'
+
+
+def _base():
+    return _env('PUBLIC_URL') or 'https://promptpak-eight.vercel.app'
+
+
+def _survey_card(key, who, rooms, test=False):
+    """แบบสอบถามขั้น 1: ภาพรวมการพัก · ดาว 5 ดวง (สีเทา) แตะดวงไหน = ให้คะแนนเท่านั้น (ข้อความที่ลูกค้าส่งขึ้นเป็น ⭐ ทอง)"""
+    stars = {'type': 'box', 'layout': 'horizontal', 'margin': 'lg', 'contents': [
+        {'type': 'box', 'layout': 'vertical', 'flex': 1, 'paddingAll': '2px',
+         'action': {'type': 'postback', 'label': 'ให้ %d ดาว' % i, 'data': 'pp_rate|%s|%d' % (key, i), 'displayText': '⭐' * i + ' ' + RATE_LABEL[i]},
+         'contents': [{'type': 'text', 'text': '★', 'size': '3xl', 'align': 'center', 'color': STAR_OFF}]} for i in range(1, 6)]}
+    ends = {'type': 'box', 'layout': 'horizontal', 'contents': [
+        {'type': 'text', 'text': 'ไม่ประทับใจ', 'size': 'xxs', 'color': '#8C7FA0'},
+        {'type': 'text', 'text': 'ดีเยี่ยม', 'size': 'xxs', 'color': '#8C7FA0', 'align': 'end'}]}
+    head = {'type': 'box', 'layout': 'vertical', 'paddingAll': '16px',
+            'background': {'type': 'linearGradient', 'angle': '135deg', 'startColor': DARK, 'endColor': '#4B2477'},
+            'contents': [
+                {'type': 'box', 'layout': 'horizontal', 'alignItems': 'center', 'contents': [
+                    {'type': 'image', 'url': _base() + '/brand/mark_w.png', 'size': '24px', 'aspectMode': 'fit', 'flex': 0},
+                    {'type': 'text', 'text': 'พบรักรีสอร์ท' + (' · ทดสอบ' if test else ''), 'size': 'xs', 'color': '#F4E9C8', 'margin': 'sm', 'gravity': 'center'},
+                    {'type': 'text', 'text': 'ขั้น 1 / 3', 'size': 'xxs', 'color': '#D9C48A', 'align': 'end', 'gravity': 'center'}]},
+                {'type': 'text', 'text': 'ขอบคุณที่มาพักกับเรานะคะ', 'size': 'lg', 'weight': 'bold', 'color': '#FFFFFF', 'margin': 'md', 'wrap': True},
+                {'type': 'text', 'text': '%s · ห้อง %s' % (who, rooms), 'size': 'xs', 'color': '#D9C48A', 'margin': 'xs'}]}
+    bub = {'type': 'bubble', 'size': 'mega', 'header': head,
+           'body': {'type': 'box', 'layout': 'vertical', 'backgroundColor': IVORY, 'paddingAll': '16px', 'contents': [
+               {'type': 'box', 'layout': 'vertical', 'height': '2px', 'backgroundColor': GOLD, 'contents': [{'type': 'filler'}], 'margin': 'none'},
+               {'type': 'text', 'text': 'โดยรวมแล้ว การพักครั้งนี้เป็นอย่างไรบ้างคะ', 'size': 'md', 'weight': 'bold', 'color': DARK, 'wrap': True, 'margin': 'lg'},
+               stars, ends]}}
+    return {'type': 'flex', 'altText': 'ขอบคุณที่มาพักกับพบรักรีสอร์ท ช่วยให้คะแนนการพักครั้งนี้หน่อยนะคะ', 'contents': bub}
+
+
 def build(kind, t, cfg, *, ready=False, test=False):
     """สร้างข้อความ LINE (รายการ) จากข้อมูลผู้รับ t (ผลของ pp_am_target) และการตั้งค่า"""
     who = 'คุณ' + _first(t.get('name'))
@@ -133,21 +166,9 @@ def build(kind, t, cfg, *, ready=False, test=False):
             btns.append(_btn('โทรหาโรงแรม', {'type': 'uri', 'uri': 'tel:' + d}))
         return [_bubble('ยินดีต้อนรับค่ะ %s' % who, ORCHID, body, btns, 'ยินดีต้อนรับค่ะ ห้อง %s · ไวไฟ อาหารเช้า เวลาเช็คเอาท์' % rooms,
                         'พบรักรีสอร์ท · ห้อง %s%s' % (rooms, ' · ทดสอบ' if test else ''))]
-    if kind == 'remind':
-        return [_bubble('พรุ่งนี้เช็คเอาท์นะคะ', BLUE,
-                        [_text('เช็คเอาท์ภายใน %s น. ค่ะ ถ้าต้องการพักต่อหรือเช็คเอาท์ช้า พิมพ์บอกในแชทนี้ได้เลย' % cfg['checkout_time'])],
-                        [_btn('ขอเช็คเอาท์ช้า', {'type': 'message', 'text': 'ขอเช็คเอาท์ช้า / พักต่อ'})],
-                        'พรุ่งนี้เช็คเอาท์ภายใน %s น.' % cfg['checkout_time'], sub)]
     if kind == 'rate':
         key = 'TEST' if test else t.get('key')
-        stars = {'type': 'box', 'layout': 'horizontal', 'spacing': 'sm', 'margin': 'lg', 'contents': [
-            {'type': 'button', 'style': 'secondary', 'height': 'sm', 'flex': 1,
-             'action': {'type': 'postback', 'label': str(i), 'data': 'pp_rate|%s|%d' % (key, i), 'displayText': 'ให้คะแนน %d' % i}}
-            for i in range(1, 6)]}
-        return [_bubble('เช็คเอาท์เรียบร้อยค่ะ', ORCHID,
-                        [_text('ขอบคุณที่พักกับพบรักรีสอร์ทนะคะ %s เดินทางปลอดภัยค่ะ 🙏\nช่วยให้คะแนนการพักครั้งนี้หน่อยนะคะ' % who), stars],
-                        [_btn('จองอีกครั้ง', {'type': 'message', 'text': 'จองห้องพัก'})],
-                        'ขอบคุณที่พักกับพบรักรีสอร์ท ช่วยให้คะแนน 1-5 หน่อยนะคะ', sub)]
+        return [_survey_card(key, who, rooms, test)]
     raise ValueError(kind)
 
 
@@ -213,7 +234,7 @@ _last_tick = [0.0]
 
 
 def tick(now, force=False):
-    """ตัวตั้งเวลา (เรียกจากการเปิดหน้าจอ/โพลล์ และ cron ของ Vercel): เช้าวันเข้าพัก 10:00-17:59 · เตือนเช็คเอาท์ 19:00-21:59 · ส่งซ้ำไม่ได้"""
+    """ตัวตั้งเวลา (เรียกจากการเปิดหน้าจอ/โพลล์ และ cron ของ Vercel): เช้าวันเข้าพัก 10:00-17:59 · ส่งซ้ำไม่ได้"""
     if not force and time.time() - _last_tick[0] < 50:
         return {'skipped': 'recent'}
     _last_tick[0] = time.time()
@@ -221,7 +242,7 @@ def tick(now, force=False):
     if not cfg['on']:
         return {'on': False}
     today, hh = now[:10], int(now[11:13])
-    res = {'on': True, 'arrive': 0, 'remind': 0}
+    res = {'on': True, 'arrive': 0}
     ms = None
     try:
         ms = rpc('pp_mod_state') or {}
@@ -231,10 +252,6 @@ def tick(now, force=False):
         for t in rpc('pp_am_arrivals', {'p_today': today}) or []:
             if deliver('arrive', t, cfg, ready=bool(t.get('ready'))) == 'sent':
                 res['arrive'] += 1
-    if 19 <= hh < 22 and menu_state('remind', ms) == 'on':
-        for t in rpc('pp_am_reminders', {'p_today': today}) or []:
-            if deliver('remind', t, cfg) == 'sent':
-                res['remind'] += 1
     return res
 
 
@@ -246,7 +263,7 @@ def overview():
     o['on'] = cfg['on']
     ms = (rpc('pp_mod_state') or {})
     o['kinds'] = {}
-    for kind in ('arrive', 'welcome', 'remind', 'rate'):
+    for kind in ('arrive', 'welcome', 'rate'):
         st = menu_state(kind, ms)
         miss = _missing(kind, cfg)
         o['kinds'][kind] = {'label': LABEL[kind], 'menu': st, 'missing': miss,

@@ -609,30 +609,48 @@ ok('AI สรุปกล่อง CRM: กันโค้ดแปลกปล�
   await call('/api/app?part=mod', { method: 'POST', body: JSON.stringify({ k: 'crmtool', data: { ms: [{ id: 'thanks', st: 'on' }, { id: 'stay', st: 'on' }, { id: 'pre', st: 'on' }] } }) });
   ok('ปิดข้อความในเมนู CRM → ระบบไม่ส่งข้อความนั้น');
 
-  // 5) เช็คเอาท์ → ขอบคุณ + ปุ่มคะแนน 1-5 → กดคะแนน
+  // 5) เช็คเอาท์ → การ์ดดาว (ขั้น 1) → การ์ดรายเรื่อง (ขั้น 2) → ข้อความขอบคุณ/ขอโทษ (ขั้น 3)
   await act({ k: 'checkout', no: A });
   l = logOf('rate', A); assert.equal(l.status, 'sent');
   const rm = JSON.stringify(l.payload.messages);
-  assert.ok(rm.includes('pp_rate|' + A + '|1') && rm.includes('pp_rate|' + A + '|5') && rm.includes('ธนกฤต') && rm.includes('จองห้องพัก'));
+  assert.ok(rm.includes('pp_rate|' + A + '|1') && rm.includes('pp_rate|' + A + '|5') && rm.includes('ธนกฤต') && rm.includes('ขั้น 1 / 3'));
+  assert.ok(!rm.includes('จองอีกครั้ง') && !rm.includes('จองห้องพัก'), 'ไม่มีปุ่มจองอีกครั้ง');
   const postback = (uid, data, id) => ({ type: 'postback', webhookEventId: id, replyToken: 'rt-' + id, source: { type: 'user', userId: uid }, postback: { data } });
+  const lastReply = () => JSON.stringify(replies().at(-1).body.messages);
   globalThis.__ppLineOutbox.length = 0;
   await webhook([postback('Uam1', `pp_rate|${A}|5`, 'pb1')]);
-  let rp = JSON.stringify(replies().at(-1).body.messages);
-  assert.ok(rp.includes('ขอบคุณสำหรับ 5 ดาว') && rp.includes('https://g.page/r/test'));
+  let rp = lastReply();   // ขั้น 2: การ์ดปัด · A ไม่ได้สั่งอาหารเช้า → ไม่มีใบ "อาหาร"
+  assert.ok(rp.includes('carousel') && rp.includes(`pp_topic|${A}|room|5`) && rp.includes(`pp_topic|${A}|value|1`) && !rp.includes('|food|') && rp.includes(`pp_done|${A}`));
   assert.equal(rpc(`(select score from auto_msg_rating where key = '${A}')`), 5);
-  await webhook([postback('Uam1', `pp_rate|${A}|1`, 'pb2')]);   // กดซ้ำ ไม่เปลี่ยนคะแนน
+  await webhook([postback('Uam1', `pp_rate|${A}|1`, 'pb2')]);   // กดดาวซ้ำ ไม่เปลี่ยนคะแนน
   assert.equal(rpc(`(select score from auto_msg_rating where key = '${A}')`), 5);
-  assert.ok(JSON.stringify(replies().at(-1).body.messages).includes('บันทึกคะแนนของคุณไว้แล้ว'));
+  assert.ok(lastReply().includes('บันทึกคะแนนของคุณไว้แล้ว'));
   await webhook([postback('Uother', `pp_rate|${A}|2`, 'pb3')]);   // คนอื่นให้คะแนนการจองของเราไม่ได้
   assert.equal(rpc(`(select count(*) from auto_msg_rating where key = '${A}')`), 1);
-  // 1-3 ดาว → ขอโทษ + แจ้งผู้จัดการ (ส่งต่อพนักงาน)
+  const r0 = replies().length;
+  for (const [t, v, i] of [['room', 5, 'a1'], ['facility', 3, 'a2'], ['service', 5, 'a3']]) await webhook([postback('Uam1', `pp_topic|${A}|${t}|${v}`, i)]);
+  assert.equal(replies().length, r0, 'ยังตอบไม่ครบ ไม่ส่งอะไรเพิ่ม');
+  await webhook([postback('Uam1', `pp_topic|${A}|value|5`, 'a4')]);   // ตอบครบ 4 เรื่อง → ขั้น 3 เอง
+  rp = lastReply();
+  assert.ok(rp.includes('ขอบคุณมากค่ะ') && rp.includes('https://g.page/r/test') && !rp.includes('★'), rp);
+  assert.deepEqual(JSON.parse(psql('-c', `select topics::text from auto_msg_rating where key = '${A}'`)), { room: 5, facility: 3, service: 5, value: 5 });
+  const r1 = replies().length; await webhook([postback("Uam1", `pp_done|${A}`, "a5")]); assert.equal(replies().length, r1, 'ขั้น 3 ส่งครั้งเดียว');
+  // ไม่พอใจ: ภาพรวม 4 แต่เลือก "ปรับปรุง" เรื่องอาหาร (B สั่งอาหารเช้า) → ขอโทษ + แจ้งผู้จัดการ · ตอบไม่ครบแล้วกด "ข้าม"
+  psql('-c', `update bookings set details = details || '{"bf":170}'::jsonb where booking_no = '${B}'`);
   await act({ k: 'checkin', no: B }); await act({ k: 'checkout', no: B });
-  await webhook([postback('Uam2', `pp_rate|${B}|2`, 'pb4')]);
-  rp = JSON.stringify(replies().at(-1).body.messages);
-  assert.ok(rp.includes('ขอโทษค่ะ') && !rp.includes('Google'));
+  await webhook([postback('Uam2', `pp_rate|${B}|4`, 'pb4')]);
+  assert.ok(lastReply().includes(`pp_topic|${B}|food|3`), 'B สั่งอาหารเช้า → มีใบอาหาร');
+  await webhook([postback('Uam2', `pp_topic|${B}|food|1`, 'b1')]);
+  await webhook([postback('Uam2', `pp_done|${B}`, 'b2')]);
+  rp = lastReply();
+  assert.ok(rp.includes('ขอโทษด้วยนะคะ') && rp.includes('อาหาร') && !rp.includes('Google'), rp);
   assert.equal(psql('-c', `select needs_staff from chat_threads where line_user_id = 'Uam2'`), 't');
-  assert.ok(psql('-c', `select handoff_reason from chat_threads where line_user_id = 'Uam2'`).includes('2 ดาว'));
-  ok('เช็คเอาท์ → การ์ดขอบคุณ + คะแนน 1–5 · 4–5 ชวนรีวิว Google · 1–3 ขอโทษ + แจ้งผู้จัดการ · กดซ้ำ/คนอื่นกดไม่ได้');
+  assert.ok(psql('-c', `select handoff_reason from chat_threads where line_user_id = 'Uam2'`).includes('อาหาร'));
+  // ตัวอย่างจากหน้าตั้งค่า (key TEST) ไม่แตะฐานข้อมูล
+  await webhook([postback('Uam1', 'pp_rate|TEST|3', 'pt1')]); assert.ok(lastReply().includes('carousel'));
+  await webhook([postback('Uam1', 'pp_done|TEST', 'pt2')]); assert.ok(lastReply().includes('ขอบคุณมากค่ะ'));
+  assert.equal(rpc(`(select count(*) from auto_msg_rating where key = 'TEST')`), 0);
+  ok('เช็คเอาท์ → ดาวภาพรวม → การ์ดรายเรื่อง (ข้ามอาหารถ้าไม่สั่งอาหารเช้า) → ขอบคุณ+ลิงก์รีวิว / ขอโทษ+แจ้งผู้จัดการ · ส่งขั้น 3 ครั้งเดียว · กดซ้ำ/คนอื่นกดไม่ได้');
 
   // 6) เช้าวันเข้าพัก 10:00: ห้องพร้อม / ห้องยังไม่พร้อม (มีงานทำความสะอาดค้าง) · นอกช่วงเวลาไม่ส่ง · ไม่ส่งซ้ำ
   const D1 = await book('Uam4', 'คุณพร้อม ใจดี'), D2 = await book('Uam5', 'คุณรอ ก่อนนะ');
@@ -650,13 +668,7 @@ ok('AI สรุปกล่อง CRM: กันโค้ดแปลกปล�
   const before = cnt(); await tick(today + 'T10:40'); assert.equal(cnt(), before);
   ok('เช้าวันเข้าพัก 10:00: ห้องพร้อม → "เช็คอินได้เลย" · ห้องยังไม่พร้อม → "เช็คอินได้ตั้งแต่ 14:00" · ไม่ส่งซ้ำ · นอกเวลาไม่ส่ง');
 
-  // 7) คืนสุดท้าย 19:00 (พักหลายคืน เช็คอินแล้ว) → เตือนเช็คเอาท์
   await act({ k: 'checkin', no: D1 });
-  await tick(plus(1) + 'T18:30'); assert.equal(logOf('remind', D1), null);
-  await tick(plus(1) + 'T19:30');
-  assert.equal(logOf('remind', D1).status, 'sent'); assert.ok(JSON.stringify(logOf('remind', D1).payload.messages).includes('พรุ่งนี้เช็คเอาท์'));
-  assert.equal(logOf('remind', D2), null);   // ยังไม่เช็คอิน ไม่เตือน
-  ok('คืนสุดท้าย 19:00 → เตือนเช็คเอาท์เฉพาะคนที่พักอยู่');
 
   // 8) ส่งทดสอบ: เลือกบัญชีได้ · ไม่เข้าประวัติกันซ้ำ · ข้อมูลไม่ครบ = บอกสาเหตุ
   ov = (await call('/api/app?part=amcfg')).body;

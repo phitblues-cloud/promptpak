@@ -46,7 +46,7 @@ async function handleEvent(ev) {
     await rpc('pp_chat_log', { p_line_user_id: userId, p_display_name: name, p_sender: 'ลูกค้า', p_body: '(กดริชเมนู: จองห้องพัก)' });
     return liffButton(ev, userId, name);
   }
-  if (ev.type === 'postback' && /^pp_rate\|/.test(ev.postback?.data || '')) return handleRate(ev, userId, name);   // กดคะแนน 1-5 จากการ์ดเช็คเอาท์
+  if (ev.type === 'postback' && /^pp_(rate|topic|done)\|/.test(ev.postback?.data || '')) return handleRate(ev, userId, name);   // กดคะแนน 1-5 จากการ์ดเช็คเอาท์
   if (ev.type !== 'message') return;
 
   if (ev.message?.type !== 'text') {
