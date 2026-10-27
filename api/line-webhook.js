@@ -65,8 +65,14 @@ async function handleEvent(ev) {
   if (liffId && /^\s*(จองห้องพัก|จองห้อง|จองที่พัก)\s*$/.test(ev.message.text)) {
     const t = 'กดปุ่มด้านล่างเพื่อเลือกวันและห้องพักได้เลยค่ะ ระบบเช็กห้องว่างให้ทันที 🙏';
     await rpc('pp_chat_log', { p_line_user_id: userId, p_display_name: name, p_sender: 'ระบบ', p_body: t + ' [ปุ่ม: เปิดหน้าจองห้องพัก]' });
-    await replyMessages(ev.replyToken, [{ type: 'template', altText: 'จองห้องพัก พบรักรีสอร์ท', template: { type: 'buttons', text: t,
-      actions: [{ type: 'uri', label: 'เปิดหน้าจองห้องพัก', uri: `https://liff.line.me/${liffId}` }] } }]);
+    try {
+      await replyMessages(ev.replyToken, [{ type: 'template', altText: 'จองห้องพัก พบรักรีสอร์ท', template: { type: 'buttons', text: t,
+        actions: [{ type: 'uri', label: 'เปิดหน้าจองห้องพัก', uri: `https://liff.line.me/${liffId}` }] } }]);
+    } catch (e) {   // ส่งปุ่มไม่ได้ → ส่งลิงก์เป็นข้อความแทน และบันทึกสาเหตุให้พนักงานเห็น
+      console.error('liff button failed', e);
+      await rpc('pp_chat_log', { p_line_user_id: userId, p_display_name: name, p_sender: 'ระบบ', p_body: 'ส่งปุ่มจองไม่สำเร็จ: ' + String(e.message).slice(0, 200) }).catch(() => {});
+      await reply(ev.replyToken, `เปิดหน้าจองห้องพักได้ที่ลิงก์นี้เลยค่ะ 🙏\nhttps://liff.line.me/${liffId}`).catch(() => {});
+    }
     return;
   }
 

@@ -4,7 +4,7 @@ import { json } from '../lib/http.js';
 
 export async function GET() {
   const need = ['SUPABASE_URL', 'SUPABASE_SERVICE_ROLE_KEY', 'APP_SECRET', 'OWNER_PIN', 'STAFF_PIN', 'LINE_CHANNEL_SECRET',
-    'LINE_CHANNEL_ACCESS_TOKEN', 'ANTHROPIC_API_KEY'];
+    'LINE_CHANNEL_ACCESS_TOKEN', 'ANTHROPIC_API_KEY', 'LIFF_ID', 'LINE_LOGIN_CHANNEL_ID'];
   const env = Object.fromEntries(need.map(k => [k, Boolean(process.env[k])]));
   let database = 'ok';
   try {
