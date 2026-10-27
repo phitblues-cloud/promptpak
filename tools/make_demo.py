@@ -1,12 +1,12 @@
 # -*- coding: utf-8 -*-
 """สร้าง public/demo.html = แอปหน้าตาล่าสุด + ข้อมูลสมมติ (ชุดตัวอย่างใน seed) ไม่ต่อฐานข้อมูล/เซิร์ฟเวอร์ ใช้สแกน QR ให้คนทดลองกด
-ใช้: LOCAL_PG=postgresql://postgres@/ppdemo?host=/tmp&port=5433 python3 tools/make_demo.py [2026-10-24T10:00]
+ใช้: LOCAL_PG=postgresql://postgres@/ppdemo?host=/tmp&port=5433 python3 tools/make_demo.py [2026-10-25T10:00]  (ก่อนรัน: psql ... -f tools/demo_tweak.sql)
 (ฐาน ppdemo = รัน supabase/01_schema.sql + 02_seed.sql บนฐานเปล่า)"""
 import os, sys
 HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, os.path.join(HERE, '..', 'renderer'))
 os.environ.setdefault('APP_SECRET', 'demo')
-now = sys.argv[1] if len(sys.argv) > 1 else '2026-10-24T10:00'
+now = sys.argv[1] if len(sys.argv) > 1 else '2026-10-25T10:00'
 os.environ['PP_NOW'] = now
 import web
 
