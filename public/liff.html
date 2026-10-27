@@ -204,6 +204,8 @@ const TITLES={1:['เลือกวันเข้าพัก','แตะว�
 const DEPP=()=>(S.cfg&&S.cfg.dep)||200,depTotal=()=>S.pay==='now'&&S.dep?DEPP()*total():0;
 
 async function init(){
+  {const q=new URLSearchParams(location.search);let n=q.get('no')||'';if(!n){try{n=new URLSearchParams((q.get('liff.state')||'').replace(/^\//,'')).get('no')||''}catch(_){}}S.detNo=n}
+  if(S.detNo){S.step=7;render()}   // เปิดจากการ์ด: โชว์ "กำลังโหลดการจอง" ทันที ไม่ให้เห็นหน้าจองก่อน
   try{S.cfg=await (await fetch('/api/liff')).json()}catch(_){showErr('เชื่อมต่อระบบไม่ได้ ลองเปิดใหม่อีกครั้ง')}
   const t=(S.cfg&&S.cfg.today)||new Date().toISOString().slice(0,10);S.today=t;S.cal=t.slice(0,7);
   const dev=new URLSearchParams(location.search).get('dev');
@@ -212,11 +214,10 @@ async function init(){
     try{await liff.init({liffId:S.cfg.liffId});
       if(!liff.isLoggedIn()){liff.login({redirectUri:location.href});return}
       S.token=liff.getIDToken()||'';
-      try{const p=await liff.getProfile();if(p&&p.displayName){S.lineName=p.displayName;$('nm').value=p.displayName;$('fromLine').classList.remove('hide')}}catch(_){}
+      if(!S.detNo)try{const p=await liff.getProfile();if(p&&p.displayName){S.lineName=p.displayName;$('nm').value=p.displayName;$('fromLine').classList.remove('hide')}}catch(_){}
     }catch(e){showErr('เปิดหน้าจองจากแอป LINE ไม่สำเร็จ ลองกดปุ่มจองห้องพักในแชทอีกครั้ง')}
   } else showErr('กรุณาเปิดหน้านี้จากปุ่ม "จองห้องพัก" ในแชท LINE ของโรงแรม');
-  {const q=new URLSearchParams(location.search);let n=q.get('no')||'';if(!n){try{n=new URLSearchParams((q.get('liff.state')||'').replace(/^\//,'')).get('no')||''}catch(_){}}S.detNo=n}
-  if(S.detNo){S.step=7;render();loadDetail();return}
+  if(S.detNo){loadDetail();return}
   render();
   if(S.token)loadPrev();
 }
