@@ -1,0 +1,61 @@
+<!doctype html><html lang="th"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>ภาพร่าง: ส่งข้อความอัตโนมัติจริง</title>
+<style>
+:root{--cream:#FBF6EF;--pur:#6A3AA2;--pink:#C2287F;--ink:#2a1f33;--soft:#7a6f84;--line:#eadfd3;--ok:#1f8a4c;--warn:#b7791f}
+*{box-sizing:border-box}body{margin:0;background:var(--cream);font-family:"IBM Plex Sans Thai",system-ui,sans-serif;color:var(--ink);padding:22px}
+h2{margin:0 0 4px;font-size:20px}.cap{color:var(--soft);font-size:13px;margin:0 0 16px}
+.tag{display:inline-block;background:#fff;border:1px dashed var(--pink);color:var(--pink);border-radius:99px;padding:2px 10px;font-size:12px;font-weight:600;margin-bottom:8px}
+.card{background:#fff;border:1px solid var(--line);border-radius:18px;padding:16px 18px;margin-bottom:18px}
+.master{display:flex;align-items:center;gap:16px;border:2px solid #e9c7d9;background:#fff5fa}
+.master .t{flex:1}.master b{font-size:16px}.master small{display:block;color:var(--soft);margin-top:3px}
+.sw{width:58px;height:32px;border-radius:99px;background:#cfc6d6;position:relative;flex:none}.sw:after{content:"";position:absolute;top:3px;left:3px;width:26px;height:26px;border-radius:50%;background:#fff}
+.state{font-weight:700;color:var(--soft)}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:18px}
+.f{display:flex;flex-direction:column;gap:4px;margin:10px 0;font-size:13px}.f label{font-weight:600}
+.in{border:1px solid var(--line);border-radius:10px;padding:9px 12px;background:#fffdfa;font-size:14px}.in.empty{color:#b0a6b8;border-style:dashed}
+.hint{font-size:12px;color:var(--soft)}.skip{color:var(--warn);font-weight:600}
+.btn{display:inline-block;border-radius:12px;padding:9px 16px;font-weight:700;font-size:13px;border:1.5px solid var(--pur);color:var(--pur);background:#fff}
+.btn.p{background:linear-gradient(90deg,var(--pur),var(--pink));color:#fff;border:0}
+.row{display:flex;align-items:center;gap:10px;padding:10px 0;border-top:1px solid var(--line);font-size:13px}.row:first-child{border-top:0}
+.row .n{flex:1}.row b{font-size:14px}.pill{border-radius:99px;padding:2px 10px;font-size:11px;font-weight:700}
+.p-ok{background:#e6f5ec;color:var(--ok)}.p-skip{background:#fdf1dc;color:var(--warn)}.p-off{background:#eee;color:#888}
+.phone{background:#dfe6ee;border-radius:14px;padding:12px;font-size:13px}.bub{background:#fff;border-radius:12px;padding:10px 12px;max-width:80%;white-space:pre-line}
+.note{background:#fff8e8;border:1px solid #f1d9a6;border-radius:12px;padding:10px 12px;font-size:12.5px;margin-top:10px}
+</style>
+<h2>ภาพร่าง: ให้ "ข้อความอัตโนมัติ" ส่งจริง</h2>
+<p class="cap">เมนู CRM › เครื่องมือ CRM › ข้อความ — หน้าเดิมไม่เปลี่ยน เพิ่มเฉพาะ 3 จุดนี้</p>
+
+<span class="tag">① แถบสวิตช์หลัก (ใหม่ · อยู่บนสุดของหน้าข้อความ)</span>
+<div class="card master"><div class="t"><b>ส่งข้อความอัตโนมัติหาลูกค้าจริง</b>
+<small>ปิดอยู่ — ตอนนี้ระบบยังไม่ส่งอะไรหาลูกค้าเลย · เปิดแล้วจะส่งตามข้อความที่ "ใช้งาน" อยู่ด้านล่าง · นับโควตา LINE OA (ฟรี 300 ข้อความ/เดือน)</small></div>
+<span class="state">ปิดอยู่</span><div class="sw"></div></div>
+
+<div class="grid">
+<div>
+<span class="tag">② การ์ดใหม่: ข้อมูลโรงแรมสำหรับใส่ในข้อความ</span>
+<div class="card"><b>ข้อมูลโรงแรม</b><div class="hint">ใช้เติมตัวแปร เช่น {รหัสไวไฟ} {เวลาอาหารเช้า} ในข้อความ · ช่องที่เว้นว่าง = ข้อความที่ต้องใช้ช่องนั้น "ข้ามไม่ส่ง"</div>
+<div class="f"><label>ชื่อไวไฟ</label><div class="in empty">ยังไม่ได้กรอก</div><span class="skip">⚠ ข้อความ "ต้อนรับและข้อมูลการพัก" จะถูกข้าม</span></div>
+<div class="f"><label>รหัสไวไฟ</label><div class="in empty">ยังไม่ได้กรอก</div></div>
+<div class="f"><label>เวลาอาหารเช้า</label><div class="in">06:00–10:00</div></div>
+<div class="f"><label>เวลาเช็คอิน / เช็คเอาท์</label><div class="in">14:00 / 12:00</div></div>
+<div class="f"><label>เบอร์โทรโรงแรม</label><div class="in">081-234-5678</div></div>
+<div class="f"><label>ลิงก์แผนที่</label><div class="in">https://maps.app.goo.gl/KReW…</div></div>
+<div class="f"><label>ลิงก์รีวิว Google</label><div class="in empty">ยังไม่ได้กรอก</div><span class="skip">⚠ ส่วน "ชวนรีวิว" จะถูกข้าม</span></div>
+<div class="hint">รหัสไวไฟเก็บในฐานข้อมูลของระบบ ไม่อยู่ในไฟล์โค้ด</div></div></div>
+
+<div>
+<span class="tag">③ ปุ่มใหม่ในแต่ละข้อความ + ป้ายสถานะ</span>
+<div class="card"><b>การเข้าพัก</b>
+<div class="row"><span class="pill p-ok">พร้อมส่ง</span><div class="n"><b>ก่อนเข้าพัก</b><br><span class="hint">วันก่อนเข้าพัก 10:00 น.</span></div></div>
+<div class="row"><span class="pill p-skip">ข้าม: ขาดรหัสไวไฟ</span><div class="n"><b>ต้อนรับและข้อมูลการพัก</b><br><span class="hint">หลังพนักงานกดเช็คอิน 10 นาที</span></div></div>
+<div class="row"><span class="pill p-ok">พร้อมส่ง</span><div class="n"><b>ขอบคุณหลังเข้าพัก</b><br><span class="hint">หลังกดเช็คเอาท์ 30 นาที</span></div></div>
+<div class="row"><span class="pill p-skip">ข้าม: ขาดลิงก์รีวิว</span><div class="n"><b>ขอรีวิวและความพึงพอใจ</b><br><span class="hint">เช็คเอาท์แล้ว 1 วัน 10:00 น.</span></div></div>
+</div>
+<div class="card"><b>ในหน้าแก้ข้อความ (ตัวอย่าง: ขอบคุณหลังเข้าพัก)</b>
+<div class="phone" style="margin:10px 0"><div class="bub">ขอบคุณที่เข้าพักที่พบรักรีสอร์ทค่ะ คุณธนกฤต
+เมื่อเช้านี้พักเป็นอย่างไรบ้างคะ ให้คะแนนได้ 1–5</div></div>
+<span class="btn p">ส่งทดสอบหาตัวเอง</span> <span class="btn">ดูประวัติการส่ง</span>
+<div class="note">ปุ่มทดสอบส่งเฉพาะบัญชี LINE ของเจ้าของที่ผูกไว้ ไม่นับเป็นการส่งจริง ใช้เช็คหน้าตาข้อความก่อนเปิดสวิตช์หลัก</div></div>
+<div class="card"><b>ขอบเขตงานรอบนี้</b>
+<div class="hint" style="margin-top:6px">• ส่งเมื่อพนักงานกดเช็คอิน / เช็คเอาท์ · ก่อนเข้าพัก 1 วัน · เช้าวันเข้าพัก<br>• ส่งซ้ำไม่ได้ (1 เหตุการณ์ต่อ 1 การจองส่งครั้งเดียว) · ไม่ส่งหาการจองที่ยกเลิก/ไม่ผูก LINE<br>• ให้คะแนน 1–5 และแจ้งผู้จัดการเมื่อ 1–3 ทำเป็นรอบถัดไป</div></div>
+</div></div>
