@@ -251,6 +251,11 @@ def _daily():
         rpc('pp_noshow')
     except Exception:
         pass
+    try:   # จองผ่าน LINE: เกิน 24 ชม. ยังไม่ส่งสลิป -> เตือนพนักงาน · ลบรูปบัตรที่ครบกำหนด (ข้ามได้ถ้ายังไม่ได้รัน 18_liff.sql)
+        rpc('pp_liff_overdue')
+        rpc('pp_doc_purge')
+    except Exception:
+        pass
 
 
 def _build(now, role='owner'):

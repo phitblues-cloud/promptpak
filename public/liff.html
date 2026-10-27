@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>จองห้องพัก · พบรักรีสอร์ท</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Thai:wght@400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://static.line-scdn.net/liff/edge/2/sdk.js" charset="utf-8"></script>
+<style>
+:root{--paper:#FBF6EF;--paper2:#F4EBDF;--ink:#2E1F2B;--soft:#6E5A68;--line:#E8DCCF;--pink:#C42A86;--plum:#6A3AA2;--red:#C41E3A;--good:#16784F;--warn:#B7791F;
+--grad:linear-gradient(120deg,#C8283F,#C42A86 55%,#6D3BA6)}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--paper);color:var(--ink);font-family:'Noto Sans Thai',system-ui,sans-serif;font-size:15px;line-height:1.45;-webkit-text-size-adjust:100%}
+button,input,select,textarea{font:inherit;color:inherit}
+.hero{background:var(--grad);color:#fff;padding:18px 18px 20px}.hero h1{margin:0;font-size:20px}.hero p{margin:2px 0 0;opacity:.9;font-size:13px}
+main{padding:14px 12px 120px;max-width:560px;margin:0 auto}
+.sec{background:#fff;border:1px solid var(--line);border-radius:18px;padding:14px;margin-bottom:12px}
+.sec h2{margin:0 0 10px;font-size:15.5px;display:flex;align-items:center;gap:8px}
+.sec h2 i{width:22px;height:22px;border-radius:50%;background:#F2EAFA;color:var(--plum);font-style:normal;font-size:12px;display:grid;place-items:center;flex:none}
+.sec h2 small{margin-left:auto;font-weight:500;font-size:12px;color:var(--soft)}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+label.f{display:block;font-size:12px;color:var(--soft);margin:0 0 3px}
+input[type=date],input[type=text],input[type=tel],input[type=email],textarea{width:100%;border:1.5px solid var(--line);border-radius:12px;padding:10px 12px;background:#fff;min-height:44px}
+input:focus,textarea:focus{outline:2px solid #E7C6E0;border-color:var(--pink)}
+.fld{margin-bottom:10px}
+.ppl{display:flex;gap:14px;margin-top:10px;flex-wrap:wrap}
+.st{display:inline-flex;align-items:center;border:1.5px solid var(--line);border-radius:12px;overflow:hidden;background:#fff}
+.st button{width:38px;height:38px;border:0;background:var(--paper2);font-size:18px;font-weight:700}
+.st output{min-width:34px;text-align:center;font-weight:700}
+.pl{display:flex;align-items:center;gap:8px;font-size:13.5px}
+.rc{border:1.5px solid var(--line);border-radius:16px;overflow:hidden;margin-bottom:10px;background:#fff}
+.rc.on{border:2px solid var(--pink);box-shadow:0 4px 14px rgba(194,40,127,.14)}
+.rc.full{opacity:.55}
+.rc .img{width:100%;aspect-ratio:16/8;object-fit:cover;display:block;background:var(--paper2)}
+.rb{padding:10px 12px;display:grid;grid-template-columns:1fr auto;gap:2px 10px;align-items:center}
+.rn{font-weight:700;font-size:15.5px}.zn{font-size:11.5px;font-weight:700;color:var(--plum);background:#F2EAFA;border-radius:999px;padding:1px 8px;margin-left:5px;vertical-align:middle}
+.rf{font-size:12px;color:var(--soft)}
+.pr{text-align:right;font-weight:700;font-size:16px}.pr small{display:block;font-weight:600;font-size:11.5px;color:var(--good)}.pr small.low{color:var(--warn)}
+.sel{grid-column:1/-1;margin-top:8px;border:1.5px solid var(--line);background:#fff;border-radius:12px;min-height:42px;font-weight:700}
+.rc.on .sel{color:var(--red);border-color:#EBC5CC}
+.rc:not(.on) .sel:not(:disabled){background:var(--grad);color:#fff;border:0}
+.ex{border-top:1px dashed #EBCFE0;background:#FFFAFC;padding:10px 12px;display:flex;align-items:center;gap:12px;flex-wrap:wrap;font-size:13.5px}
+.tg{display:flex;align-items:center;gap:8px;margin-left:auto;cursor:pointer}
+.tg input{appearance:none;-webkit-appearance:none;width:42px;height:24px;border-radius:99px;background:#DDD;position:relative;margin:0}
+.tg input::after{content:"";position:absolute;left:3px;top:3px;width:18px;height:18px;border-radius:50%;background:#fff;box-shadow:0 1px 3px #0003;transition:left .15s}
+.tg input:checked{background:var(--plum)}.tg input:checked::after{left:21px}
+.ball{display:flex;align-items:center;gap:10px;border:1.5px solid var(--line);border-radius:14px;padding:10px 12px;background:#fff;font-size:14px}
+.ball small{display:block;color:var(--soft);font-size:12px}
+.chips{display:flex;gap:6px;flex-wrap:wrap}.chip{border:1.5px solid var(--line);border-radius:999px;padding:6px 14px;background:#fff;font-size:13.5px}
+.chip.on{border-color:var(--pink);background:#FDEEF5;color:var(--pink);font-weight:600}
+.up{display:flex;align-items:center;gap:10px;border:1.5px dashed #D9C4E6;border-radius:12px;padding:10px 12px;color:var(--plum);font-size:13.5px;cursor:pointer;background:#FCFAFE}
+.up img{width:64px;height:42px;object-fit:cover;border-radius:6px}
+.cons{display:flex;gap:10px;font-size:12.5px;color:var(--soft);line-height:1.5;margin-top:10px}
+.cons input{width:20px;height:20px;flex:none;margin:1px 0 0;accent-color:var(--plum)}
+.sumr{display:flex;justify-content:space-between;gap:10px;font-size:13.5px;padding:4px 0}
+.sumr.t{font-weight:700;font-size:16px;border-top:1px dashed var(--line);margin-top:6px;padding-top:8px}
+.note{font-size:12px;color:var(--soft);margin-top:6px}
+.bar{position:fixed;left:0;right:0;bottom:0;background:#fff;border-top:1px solid var(--line);padding:10px 14px calc(12px + env(safe-area-inset-bottom));display:flex;align-items:center;gap:12px;z-index:5}
+.bar .tot{flex:1;min-width:0}.bar small{display:block;font-size:12px;color:var(--soft);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.bar b{font-size:20px}
+.go{border:0;background:var(--grad);color:#fff;border-radius:14px;padding:12px 18px;font-weight:700;font-size:15px;min-height:46px}
+.go:disabled{opacity:.45}
+.err{background:#FDECEE;color:var(--red);border-radius:12px;padding:10px 12px;font-size:13.5px;margin-bottom:12px}
+.load{color:var(--soft);font-size:13.5px;padding:10px 2px}
+.done{text-align:center;padding:60px 24px}.done .ok{width:72px;height:72px;border-radius:50%;background:var(--grad);color:#fff;font-size:38px;display:grid;place-items:center;margin:0 auto 16px}
+.hide{display:none!important}
+.taxf{margin-top:10px}
+</style>
+</head>
+<body>
+<div class="hero"><h1 id="hi">จองห้องพัก · พบรักรีสอร์ท</h1><p>เลือกวันและห้องพักได้เลย ระบบเช็กห้องว่างให้ทันที</p></div>
+<main id="app">
+ <div id="err" class="err hide" role="alert"></div>
+ <section class="sec"><h2><i>1</i>วันเข้าพักและผู้เข้าพัก</h2>
+  <div class="grid2"><div><label class="f" for="ci">วันเข้าพัก</label><input type="date" id="ci"></div><div><label class="f" for="co">วันเช็คเอาท์</label><input type="date" id="co"></div></div>
+  <div class="ppl"><span class="pl">ผู้ใหญ่ <span class="st"><button type="button" data-p="a-">−</button><output id="ad">2</output><button type="button" data-p="a+">+</button></span></span>
+   <span class="pl">เด็ก <span class="st"><button type="button" data-p="k-">−</button><output id="kd">0</output><button type="button" data-p="k+">+</button></span></span></div>
+ </section>
+ <section class="sec"><h2><i>2</i>เลือกห้องพัก<small>เลือกได้หลายประเภท</small></h2>
+  <div id="rooms"><div class="load">กำลังเช็กห้องว่าง…</div></div>
+  <div id="ball"></div>
+ </section>
+ <section class="sec" id="guest"><h2><i>3</i>ข้อมูลผู้จอง</h2>
+  <div class="fld"><label class="f" for="nm">ชื่อ-นามสกุล *</label><input type="text" id="nm" autocomplete="name"></div>
+  <div class="fld"><label class="f" for="ph">เบอร์โทรศัพท์ *</label><input type="tel" id="ph" inputmode="tel" autocomplete="tel" placeholder="08x-xxx-xxxx"></div>
+  <div class="fld"><label class="f" for="idn">เลขบัตรประชาชน *</label><input type="text" id="idn" inputmode="numeric" maxlength="17" placeholder="13 หลัก"></div>
+  <label class="up" for="idf"><span id="upimg">📷</span><span id="upt">ถ่ายรูป / แนบรูปบัตรประชาชน (ไม่บังคับ)</span></label><input type="file" id="idf" accept="image/*" class="hide">
+  <label class="cons"><input type="checkbox" id="cs"><span>ยินยอมให้โรงแรมเก็บเลขและรูปบัตรประชาชน เพื่อลงทะเบียนผู้เข้าพักตามกฎหมาย · รูปบัตรลบอัตโนมัติ 90 วันหลังเช็คเอาท์ *</span></label>
+  <div class="fld" style="margin-top:12px"><label class="f">วัตถุประสงค์การเข้าพัก (ไม่บังคับ)</label><div class="chips" id="purp"><button type="button" class="chip on">ทำงาน</button><button type="button" class="chip">ท่องเที่ยว</button><button type="button" class="chip">กิจกรรม</button></div></div>
+  <div class="fld"><label class="f" for="em">อีเมล (ไม่บังคับ)</label><input type="email" id="em" autocomplete="email"></div>
+ </section>
+ <section class="sec"><h2><i>4</i>ใบกำกับภาษี<label class="tg" style="margin-left:auto"><input type="checkbox" id="tx"></label></h2>
+  <div class="rf" id="txh">เปิดเมื่อต้องการใบกำกับภาษีเต็มรูป</div>
+  <div class="taxf hide" id="taxf">
+   <div class="fld"><label class="f" for="tn">ชื่อบริษัท / ผู้เสียภาษี *</label><input type="text" id="tn"></div>
+   <div class="fld"><label class="f" for="ti">เลขประจำตัวผู้เสียภาษี *</label><input type="text" id="ti" inputmode="numeric" maxlength="17"></div>
+   <div class="fld"><label class="f" for="ta">ที่อยู่ *</label><textarea id="ta" rows="2"></textarea></div>
+  </div>
+ </section>
+ <section class="sec"><h2><i>5</i>สรุปการจอง</h2><div id="sum"><div class="note">เลือกห้องพักก่อน</div></div>
+  <div class="note">หลังกดยืนยัน ระบบส่งการ์ดยืนยันพร้อม QR พร้อมเพย์ไปในแชท LINE · ชำระแล้วส่งรูปสลิปในแชทได้เลย</div></section>
+</main>
+<div class="done hide" id="done"><div class="ok">✓</div><h2 style="margin:0 0 6px">รับการจองแล้ว</h2><p id="dmsg" style="color:var(--soft);margin:0 0 20px"></p><button class="go" id="close" type="button">กลับไปที่แชท</button></div>
+<div class="bar" id="bar"><div class="tot"><small id="bsub">ยังไม่ได้เลือกห้อง</small><b id="btot">0 ฿</b></div><button class="go" id="submit" type="button" disabled>ยืนยันการจอง</button></div>
+<script>
+(function(){
+const $=id=>document.getElementById(id);
+const S={cfg:null,types:[],sel:{},ad:2,kd:0,purpose:'ทำงาน',img:'',token:'',busy:false,nights:1};
+const fmt=n=>Number(n||0).toLocaleString('en-US');
+const esc=t=>String(t??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const key=t=>t.zone+'|'+t.type;
+const addDays=(iso,n)=>{const d=new Date(iso+'T00:00:00Z');d.setUTCDate(d.getUTCDate()+n);return d.toISOString().slice(0,10)};
+const showErr=m=>{const e=$('err');e.textContent=m||'';e.classList.toggle('hide',!m);if(m)window.scrollTo({top:0,behavior:'smooth'})};
+const dev=new URLSearchParams(location.search).get('dev');
+
+async function init(){
+  try{S.cfg=await (await fetch('/api/liff')).json()}catch(_){showErr('เชื่อมต่อระบบไม่ได้ ลองเปิดใหม่อีกครั้ง');return}
+  const t=S.cfg.today||new Date().toISOString().slice(0,10);
+  $('ci').min=t;$('co').min=addDays(t,1);$('ci').value=t;$('co').value=addDays(t,1);
+  if(dev){S.token='dev:'+dev}
+  else if(window.liff&&S.cfg.liffId){
+    try{await liff.init({liffId:S.cfg.liffId});
+      if(!liff.isLoggedIn()){liff.login({redirectUri:location.href});return}
+      S.token=liff.getIDToken()||'';
+      try{const p=await liff.getProfile();if(p&&p.displayName){$('hi').textContent='สวัสดีคุณ'+p.displayName+' 👋';if(!$('nm').value)$('nm').value=p.displayName}}catch(_){}
+    }catch(e){showErr('เปิดหน้าจองจากแอป LINE ไม่สำเร็จ ลองกดปุ่มจองห้องพักในแชทอีกครั้ง')}
+  } else showErr('กรุณาเปิดหน้านี้จากปุ่ม "จองห้องพัก" ในแชท LINE ของโรงแรม');
+  load();
+}
+async function load(){
+  const ci=$('ci').value,co=$('co').value;
+  if(!ci||!co||co<=ci){$('rooms').innerHTML='<div class="load">เลือกวันเช็คเอาท์ให้หลังวันเข้าพัก</div>';S.types=[];render();return}
+  $('rooms').innerHTML='<div class="load">กำลังเช็กห้องว่าง…</div>';
+  try{const d=await (await fetch(`/api/liff?ci=${ci}&co=${co}`)).json();if(d.error)throw new Error(d.error);
+    S.types=d.types||[];S.nights=d.nights||1;
+    Object.keys(S.sel).forEach(k=>{const t=S.types.find(x=>key(x)===k);if(!t||!t.free)delete S.sel[k];else S.sel[k].n=Math.min(S.sel[k].n,t.free)});
+  }catch(e){S.types=[];$('rooms').innerHTML=`<div class="load">${esc(e.message)}</div>`}
+  render();
+}
+const total=()=>Object.values(S.sel).reduce((a,g)=>a+g.n,0);
+const people=()=>S.ad+S.kd;
+function calc(){
+  const keys=Object.keys(S.sel),rooms=[];keys.forEach(k=>{for(let i=0;i<S.sel[k].n;i++)rooms.push(k)});
+  const n=rooms.length||1;let room=0,bf=0;
+  rooms.forEach((k,i)=>{const t=S.types.find(x=>key(x)===k);if(!t)return;room+=t.rate*S.nights;const share=Math.max(1,Math.floor(people()/n)+(i<people()%n?1:0));if(S.sel[k].bf)bf+=S.cfg.bf*share*S.nights});
+  return {room,bf,net:room+bf,rooms};
+}
+function render(){
+  const max=(S.cfg&&S.cfg.maxRooms)||4;
+  if(S.types.length)$('rooms').innerHTML=S.types.map(t=>{const k=key(t),g=S.sel[k],on=!!g,full=!t.free;
+    return `<div class="rc ${on?'on':''} ${full?'full':''}">${t.photo?`<img class="img" src="${t.photo}" alt="${esc(t.type)}" loading="lazy">`:''}
+     <div class="rb"><div><span class="rn">${esc(t.type)}</span><span class="zn">${esc(t.zone)}</span><div class="rf">สูงสุด ${t.max} ท่าน/ห้อง${t.bed?' · '+esc(t.bed):''}</div></div>
+      <div class="pr">${fmt(t.rate)} ฿<small class="${t.free<=2?'low':''}">${full?'เต็มช่วงนี้':(t.free<=2?'เหลือ ':'ว่าง ')+t.free+' ห้อง'}</small></div>
+      <button type="button" class="sel" data-k="${esc(k)}" ${full?'disabled':''}>${on?'ลบ':full?'เต็ม':'เลือก'}</button></div>
+     ${on?`<div class="ex"><span class="st"><button type="button" data-c="-1" data-k="${esc(k)}">−</button><output>${g.n}</output><button type="button" data-c="1" data-k="${esc(k)}">+</button></span> ห้อง
+      <label class="tg"><input type="checkbox" data-bf="${esc(k)}" ${g.bf?'checked':''}>อาหารเช้า</label></div>`:''}</div>`}).join('');
+  const keys=Object.keys(S.sel);
+  $('ball').innerHTML=keys.length?`<label class="ball"><span class="tg" style="margin:0"><input type="checkbox" id="bfall" ${keys.every(k=>S.sel[k].bf)?'checked':''}></span><span><b>อาหารเช้าทุกห้อง</b><small>+${S.cfg.bf} ฿/ท่าน/คืน</small></span></label>`:'';
+  const c=calc(),cap=keys.reduce((a,k)=>{const t=S.types.find(x=>key(x)===k);return a+(t?t.max*S.sel[k].n:0)},0);
+  $('sum').innerHTML=keys.length?keys.map(k=>{const t=S.types.find(x=>key(x)===k);return `<div class="sumr"><span>${esc(t.type)} ${esc(t.zone)} × ${S.sel[k].n} · ${S.nights} คืน</span><span>${fmt(t.rate*S.sel[k].n*S.nights)}</span></div>`}).join('')
+    +(c.bf?`<div class="sumr"><span>อาหารเช้า ${S.cfg.bf} ฿/ท่าน/คืน</span><span>${fmt(c.bf)}</span></div>`:'')
+    +`<div class="sumr t"><span>ยอดชำระ</span><span>${fmt(c.net)} ฿</span></div>`
+    +(cap<people()?`<div class="note" style="color:var(--red)">ผู้เข้าพัก ${people()} ท่าน เกินความจุห้องที่เลือก (${cap} ท่าน) เพิ่มห้องหรือเลือกประเภทอื่น</div>`:''):'<div class="note">เลือกห้องพักก่อน</div>';
+  $('btot').textContent=fmt(c.net)+' ฿';
+  const miss=missing(cap);
+  $('bsub').textContent=total()?`${total()} ห้อง · ${S.nights} คืน`+(miss.length?` · ยังขาด: ${miss[0]}`:''):'ยังไม่ได้เลือกห้อง';
+  $('submit').disabled=!!miss.length||S.busy;
+  $('ad').textContent=S.ad;$('kd').textContent=S.kd;
+}
+function missing(cap){const m=[],digits=s=>String(s||'').replace(/\D/g,'');
+  if(!total())m.push('เลือกห้องพัก');
+  if(cap<people())m.push('ความจุห้องไม่พอ');
+  if(total()>((S.cfg&&S.cfg.maxRooms)||4))m.push('จองผ่าน LINE ได้ไม่เกิน 4 ห้อง');
+  if(!$('nm').value.trim())m.push('ชื่อ-นามสกุล');
+  if(digits($('ph').value).length<9)m.push('เบอร์โทร');
+  if(digits($('idn').value).length!==13)m.push('เลขบัตร 13 หลัก');
+  if(!$('cs').checked)m.push('ติ๊กยินยอม');
+  if($('tx').checked&&(!$('tn').value.trim()||digits($('ti').value).length!==13||!$('ta').value.trim()))m.push('ข้อมูลใบกำกับภาษี');
+  if(!S.token)m.push('เปิดจากแอป LINE');
+  return m}
+
+document.addEventListener('click',e=>{
+  const s=e.target.closest('.sel');if(s&&!s.disabled){const k=s.dataset.k;if(S.sel[k])delete S.sel[k];else{if(total()>=((S.cfg&&S.cfg.maxRooms)||4)){showErr('จองผ่าน LINE ได้ครั้งละไม่เกิน 4 ห้อง ถ้าต้องการมากกว่านี้ พิมพ์บอกในแชทได้เลยค่ะ');return}
+    const all=Object.keys(S.sel);S.sel[k]={n:1,bf:all.length>0&&all.every(x=>S.sel[x].bf)}}showErr('');render();return}
+  const c=e.target.closest('[data-c]');if(c){const k=c.dataset.k,t=S.types.find(x=>key(x)===k),d=+c.dataset.c;
+    if(d>0&&total()>=((S.cfg&&S.cfg.maxRooms)||4)){showErr('จองผ่าน LINE ได้ครั้งละไม่เกิน 4 ห้อง');return}
+    S.sel[k].n=Math.max(1,Math.min(t.free,S.sel[k].n+d));render();return}
+  const p=e.target.closest('[data-p]');if(p){const v=p.dataset.p;if(v==='a+')S.ad=Math.min(30,S.ad+1);if(v==='a-')S.ad=Math.max(1,S.ad-1);if(v==='k+')S.kd=Math.min(20,S.kd+1);if(v==='k-')S.kd=Math.max(0,S.kd-1);render();return}
+  const ch=e.target.closest('#purp .chip');if(ch){const on=ch.classList.contains('on');document.querySelectorAll('#purp .chip').forEach(x=>x.classList.remove('on'));if(!on)ch.classList.add('on');S.purpose=on?'':ch.textContent;return}
+});
+document.addEventListener('change',e=>{const t=e.target;
+  if(t.dataset.bf){S.sel[t.dataset.bf].bf=t.checked;render()}
+  else if(t.id==='bfall'){Object.values(S.sel).forEach(g=>g.bf=t.checked);render()}
+  else if(t.id==='ci'){if($('co').value<=t.value)$('co').value=addDays(t.value,1);$('co').min=addDays(t.value,1);load()}
+  else if(t.id==='co')load();
+  else if(t.id==='tx'){$('taxf').classList.toggle('hide',!t.checked);$('txh').classList.toggle('hide',t.checked);render()}
+  else if(t.id==='cs')render();
+  else if(t.id==='idf')readImg(t.files[0]);
+});
+document.addEventListener('input',e=>{if(['nm','ph','idn','tn','ti','ta'].includes(e.target.id))render()});
+function readImg(f){if(!f)return;const r=new FileReader();r.onload=()=>{const im=new Image();im.onload=()=>{const k=Math.min(1,1200/Math.max(im.width,im.height)),c=document.createElement('canvas');
+  c.width=Math.round(im.width*k);c.height=Math.round(im.height*k);c.getContext('2d').drawImage(im,0,0,c.width,c.height);S.img=c.toDataURL('image/jpeg',.72);
+  $('upimg').innerHTML=`<img src="${S.img}" alt="">`;$('upt').textContent='แนบรูปบัตรแล้ว · แตะเพื่อเปลี่ยน'};im.src=r.result};r.readAsDataURL(f)}
+$('submit').onclick=async()=>{if(S.busy)return;S.busy=true;render();$('submit').textContent='กำลังจอง…';showErr('');
+  const body={idToken:S.token,ci:$('ci').value,co:$('co').value,adults:S.ad,kids:S.kd,
+    items:Object.keys(S.sel).map(k=>{const [zone,type]=k.split('|');return {zone,type,count:S.sel[k].n,bf:S.sel[k].bf}}),
+    name:$('nm').value.trim(),phone:$('ph').value.trim(),idno:$('idn').value,img:S.img,consent:$('cs').checked,purpose:S.purpose,email:$('em').value.trim(),
+    tax:$('tx').checked?{name:$('tn').value.trim(),id:$('ti').value,addr:$('ta').value.trim()}:null};
+  try{const r=await fetch('/api/liff',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});const d=await r.json();
+    if(!r.ok||d.error)throw new Error(d.error||'จองไม่สำเร็จ');
+    $('app').classList.add('hide');$('bar').classList.add('hide');$('done').classList.remove('hide');
+    $('dmsg').textContent=`เลขจอง ${d.nos.join(', ')} · ยอดชำระ ${fmt(d.total)} บาท · ดูการ์ดยืนยันและ QR พร้อมเพย์ในแชทได้เลยค่ะ`;
+  }catch(e){showErr(e.message+(/ว่างไม่พอ/.test(e.message)?' · มีคนจองตัดหน้า ลองเลือกห้องใหม่':''));if(/ว่างไม่พอ/.test(e.message))load()}
+  S.busy=false;$('submit').textContent='ยืนยันการจอง';render()};
+$('close').onclick=()=>{try{if(window.liff&&liff.isInClient())liff.closeWindow();else window.close()}catch(_){}};
+init();
+})();
+</script>
+</body>
+</html>

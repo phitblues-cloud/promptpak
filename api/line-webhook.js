@@ -1,6 +1,6 @@
 // รับข้อความจาก LINE OA → บันทึก (ข้อความ/สติกเกอร์/รูป/ไฟล์) → แจ้งพนักงานตอบเอง
 // AI ไม่ตอบลูกค้าอัตโนมัติ (เจ้าของไม่ต้องการแชทบอท) · เปิดได้ด้วย AI_AUTOREPLY=1
-import { verifySignature, reply, showLoading, getProfile, getContent } from '../lib/line.js';
+import { verifySignature, reply, replyMessages, showLoading, getProfile, getContent } from '../lib/line.js';
 import { uploadMedia } from '../lib/storage.js';
 import { rpc } from '../lib/db.js';
 import { bookingAgent } from '../lib/ai.js';
@@ -45,11 +45,30 @@ async function handleEvent(ev) {
   if (ev.message?.type !== 'text') {
     const { body, meta } = await mediaOf(ev.message || {});
     await rpc('pp_chat_log', { p_line_user_id: userId, p_display_name: name, p_sender: 'ลูกค้า', p_body: body, p_meta: meta });
+    // รูปจากลูกค้าที่จองผ่านหน้าจอ LINE และยังไม่ชำระ = สลิป → บันทึกชำระ (ป้าย "สลิปยังไม่ตรวจ") แล้วตอบรับ
+    const slip = meta.type === 'image' && meta.url ? await rpc('pp_liff_slip', { p_line_user_id: userId, p_url: meta.url }).catch(() => null) : null;
+    if (slip && slip.matched) {
+      const t = `ได้รับสลิปแล้วค่ะ ✓ (${slip.nos.join(', ')} · ${Number(slip.total).toLocaleString('en-US')} บาท)\nพนักงานจะตรวจยอดอีกครั้ง แล้วพบกันวันเข้าพักนะคะ 🙏`;
+      await rpc('pp_chat_log', { p_line_user_id: userId, p_display_name: name, p_sender: 'ระบบ', p_body: t });
+      await rpc('pp_handoff', { p_line_user_id: userId, p_reason: 'ส่งสลิปการจองผ่าน LINE · รอตรวจยอด' });
+      if (ev.replyToken) await reply(ev.replyToken, t);
+      return;
+    }
     await rpc('pp_handoff', { p_line_user_id: userId, p_reason: 'ลูกค้าส่ง' + body });
     return;
   }
 
   await rpc('pp_chat_log', { p_line_user_id: userId, p_display_name: name, p_sender: 'ลูกค้า', p_body: ev.message.text });
+
+  // ปุ่ม "จองห้องพัก" จากริชเมนู → ส่งปุ่มเปิดหน้าจอจอง (LIFF)
+  const liffId = (process.env.LIFF_ID || '').trim();
+  if (liffId && /^\s*(จองห้องพัก|จองห้อง|จองที่พัก)\s*$/.test(ev.message.text)) {
+    const t = 'กดปุ่มด้านล่างเพื่อเลือกวันและห้องพักได้เลยค่ะ ระบบเช็กห้องว่างให้ทันที 🙏';
+    await rpc('pp_chat_log', { p_line_user_id: userId, p_display_name: name, p_sender: 'ระบบ', p_body: t + ' [ปุ่ม: เปิดหน้าจองห้องพัก]' });
+    await replyMessages(ev.replyToken, [{ type: 'template', altText: 'จองห้องพัก พบรักรีสอร์ท', template: { type: 'buttons', text: t,
+      actions: [{ type: 'uri', label: 'เปิดหน้าจองห้องพัก', uri: `https://liff.line.me/${liffId}` }] } }]);
+    return;
+  }
 
   // ไม่มีแชทบอท: ทุกข้อความรอพนักงานตอบจากหน้า "แชทลูกค้า LINE"
   if (!AI_ON()) { await rpc('pp_handoff', { p_line_user_id: userId, p_reason: 'ลูกค้าทักมา' }); return; }

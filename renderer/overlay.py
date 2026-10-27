@@ -309,7 +309,7 @@ def build(base, export, now):
                   'vehicle': None, 'is_member': False, 'bookings_total': 1, 'stays_completed_or_inhouse': 0,
                   'nights_stayed_to_ref': 0, 'upcoming_bookings': 1,
                   'first_stay': row['check_in'], 'last_stay': row['check_in'],
-                  'customer_type_at_ref': 'ลูกค้าใหม่', 'tags': ['จองผ่าน AI'] if row.get('created_by') == 'ai' else [],
+                  'customer_type_at_ref': 'ลูกค้าใหม่', 'tags': ['จองผ่าน AI'] if row.get('created_by') == 'ai' else ['จองเองทาง LINE'] if row.get('created_by') == 'line' else [],
                   'preferences_note': ''})
         m['guests'].append(g)
         guest_ids[key] = gid
@@ -348,7 +348,7 @@ def build(base, export, now):
                   'work_site': '', 'adults': 1, 'rack_rate': r['rack_rate'], 'rate': row['rate'],
                   'room_total': row['room_total'], 'deposit': row.get('deposit') or 300,
                   'billing_type': 'จ่ายเอง', 'tax_invoice_requested': False,
-                  'note': ('จองผ่าน AI ทาง LINE' if row['created_by'] == 'ai' else '') + ((' · ' + row['note']) if row.get('note') else ''),
+                  'note': ('จองผ่าน AI ทาง LINE' if row['created_by'] == 'ai' else 'ลูกค้าจองเองผ่านหน้าจอ LINE' if row['created_by'] == 'line' else '') + ((' · ' + row['note']) if row.get('note') else ''),
                   'special': None, 'continued_by': None, 'checkin_actual': None, 'checkout_actual': None,
                   'line_checkin_at': None, 'keycard_given': False,
                   'booking_status': 'ยกเลิก' if row['status'] == 'ยกเลิก' else 'จองแล้ว',

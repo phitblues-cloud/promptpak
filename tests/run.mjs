@@ -486,6 +486,33 @@ ok('AI สรุปกล่อง CRM: กันโค้ดแปลกปล�
   ok('แผนการตลาดจาก AI: กรองเฉพาะกลุ่ม/ช่องทางที่มีจริง · ใช้ซ้ำเมื่อเลือกชุดเดิม');
 }
 
+// 11o) ลูกค้าจองเองผ่านหน้าจอ LINE (LIFF): จองหลายประเภท · อาหารเช้ารายห้อง · การ์ด + QR พร้อมเพย์ · ส่งรูปในแชท = สลิป
+{
+  const ci = plus(40), co = plus(42);
+  const cfg = (await call(`/api/liff?ci=${ci}&co=${co}`)).body;
+  assert.ok(cfg.types.length > 1 && cfg.bf === 170);
+  const free = cfg.types.filter(t => t.free > 0).slice(0, 2);
+  globalThis.__ppLineOutbox.length = 0;
+  let r = await call('/api/liff', { method: 'POST', body: JSON.stringify({ idToken: 'dev:Uliff1', ci, co, adults: 2, kids: 0,
+    items: [{ zone: free[0].zone, type: free[0].type, count: 1, bf: true }, { zone: free[1].zone, type: free[1].type, count: 1, bf: false }],
+    name: 'ลูกค้า หน้าจอ', phone: '0899990000', idno: '1234567890123', consent: true, purpose: 'ทำงาน' }) });
+  assert.equal(r.status, 200, JSON.stringify(r.body)); assert.equal(r.body.nos.length, 2);
+  assert.equal(r.body.total, (free[0].rate + free[1].rate) * 2 + 170 * 1 * 2);
+  const card = globalThis.__ppLineOutbox.find(x => x.path === '/message/push');
+  assert.ok(card && card.body.messages[0].type === 'flex' && card.body.messages[0].contents.hero.url.includes('/api/qr?no=' + r.body.nos[0]));
+  const png = await fetch(base + '/api/qr?no=' + r.body.nos[0]); assert.equal(png.headers.get('content-type'), 'image/png');
+  assert.deepEqual([...new Uint8Array(await png.arrayBuffer()).slice(1, 4)], [80, 78, 71]);
+  // ไม่ยินยอม / เกิน 4 ห้อง → ไม่จอง
+  r = await call('/api/liff', { method: 'POST', body: JSON.stringify({ idToken: 'dev:Uliff1', ci, co, adults: 1, items: [{ zone: free[0].zone, type: free[0].type, count: 1 }],
+    name: 'x', phone: '0899990000', idno: '1234567890123', consent: false }) });
+  assert.equal(r.status, 400);
+  // ส่งรูปในแชท → บันทึกชำระ + ป้ายสลิปยังไม่ตรวจ
+  await webhook([{ type: 'message', webhookEventId: 'ev-slip', replyToken: 'rt-slip', source: { type: 'user', userId: 'Uliff1' }, message: { type: 'image', id: 'mslip' } }]);
+  const paid = rpc(`(select count(*) from ops where kind = 'pay' and data->>'unchecked' = 'true')`);
+  assert.equal(paid, 2);
+  ok('จองผ่านหน้าจอ LINE: หลายประเภท · อาหารเช้ารายห้อง · การ์ด QR พร้อมเพย์ · ส่งสลิปในแชท = ชำระ (รอตรวจ)');
+}
+
 // 12) กันเดา PIN
 for (let i = 0; i < 8; i++) await call('/api/app?part=pin', { method: 'POST', body: JSON.stringify({ role: 'owner', pin: '000000' }) });
 assert.equal((await call('/api/app?part=pin', { method: 'POST', body: JSON.stringify({ role: 'owner', pin: '246810' }) })).status, 429);
