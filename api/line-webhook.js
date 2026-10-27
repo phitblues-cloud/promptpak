@@ -40,6 +40,11 @@ async function handleEvent(ev) {
     if (ev.replyToken) await reply(ev.replyToken, w);
     return;
   }
+  // ริชเมนูตั้งเป็น postback (data มีคำว่า จอง/book) → ส่งปุ่มจองเหมือนพิมพ์ "จองห้องพัก"
+  if (ev.type === 'postback' && /จอง|book/i.test(ev.postback?.data || '') && LIFF()) {
+    await rpc('pp_chat_log', { p_line_user_id: userId, p_display_name: name, p_sender: 'ลูกค้า', p_body: '(กดริชเมนู: จองห้องพัก)' });
+    return liffButton(ev, userId, name);
+  }
   if (ev.type !== 'message') return;
 
   if (ev.message?.type !== 'text') {
@@ -60,21 +65,8 @@ async function handleEvent(ev) {
 
   await rpc('pp_chat_log', { p_line_user_id: userId, p_display_name: name, p_sender: 'ลูกค้า', p_body: ev.message.text });
 
-  // ปุ่ม "จองห้องพัก" จากริชเมนู → ส่งปุ่มเปิดหน้าจอจอง (LIFF)
-  const liffId = (process.env.LIFF_ID || '').trim();
-  if (liffId && /^\s*(จองห้องพัก|จองห้อง|จองที่พัก)\s*$/.test(ev.message.text)) {
-    const t = 'กดปุ่มด้านล่างเพื่อเลือกวันและห้องพักได้เลยค่ะ ระบบเช็กห้องว่างให้ทันที 🙏';
-    await rpc('pp_chat_log', { p_line_user_id: userId, p_display_name: name, p_sender: 'ระบบ', p_body: t + ' [ปุ่ม: เปิดหน้าจองห้องพัก]' });
-    try {
-      await replyMessages(ev.replyToken, [{ type: 'template', altText: 'จองห้องพัก พบรักรีสอร์ท', template: { type: 'buttons', text: t,
-        actions: [{ type: 'uri', label: 'เปิดหน้าจองห้องพัก', uri: `https://liff.line.me/${liffId}` }] } }]);
-    } catch (e) {   // ส่งปุ่มไม่ได้ → ส่งลิงก์เป็นข้อความแทน และบันทึกสาเหตุให้พนักงานเห็น
-      console.error('liff button failed', e);
-      await rpc('pp_chat_log', { p_line_user_id: userId, p_display_name: name, p_sender: 'ระบบ', p_body: 'ส่งปุ่มจองไม่สำเร็จ: ' + String(e.message).slice(0, 200) }).catch(() => {});
-      await reply(ev.replyToken, `เปิดหน้าจองห้องพักได้ที่ลิงก์นี้เลยค่ะ 🙏\nhttps://liff.line.me/${liffId}`).catch(() => {});
-    }
-    return;
-  }
+  // ปุ่ม "จองห้องพัก" จากริชเมนู → ส่งปุ่มเปิดหน้าจอจอง (LIFF) · ไม่สนเว้นวรรค/อีโมจิ
+  if (LIFF() && /^(จองห้องพัก|จองห้อง|จองที่พัก|จองเลย|จอง)$/.test(String(ev.message.text).replace(/[^\u0E00-\u0E7F]/g, ''))) return liffButton(ev, userId, name);
 
   // ไม่มีแชทบอท: ทุกข้อความรอพนักงานตอบจากหน้า "แชทลูกค้า LINE"
   if (!AI_ON()) { await rpc('pp_handoff', { p_line_user_id: userId, p_reason: 'ลูกค้าทักมา' }); return; }
@@ -117,4 +109,18 @@ export async function POST(request) {
 
 export function GET() {
   return new Response('PROMPT PAK LINE webhook is running');
+}
+
+const LIFF = () => (process.env.LIFF_ID || '').trim();
+async function liffButton(ev, userId, name) {
+  const liffId = LIFF(), t = 'กดปุ่มด้านล่างเพื่อเลือกวันและห้องพักได้เลยค่ะ ระบบเช็กห้องว่างให้ทันที 🙏';
+  await rpc('pp_chat_log', { p_line_user_id: userId, p_display_name: name, p_sender: 'ระบบ', p_body: t + ' [ปุ่ม: เปิดหน้าจองห้องพัก]' });
+  try {
+    await replyMessages(ev.replyToken, [{ type: 'template', altText: 'จองห้องพัก พบรักรีสอร์ท', template: { type: 'buttons', text: t,
+      actions: [{ type: 'uri', label: 'เปิดหน้าจองห้องพัก', uri: `https://liff.line.me/${liffId}` }] } }]);
+  } catch (e) {   // ส่งปุ่มไม่ได้ → ส่งลิงก์เป็นข้อความแทน และบันทึกสาเหตุให้พนักงานเห็น
+    console.error('liff button failed', e);
+    await rpc('pp_chat_log', { p_line_user_id: userId, p_display_name: name, p_sender: 'ระบบ', p_body: 'ส่งปุ่มจองไม่สำเร็จ: ' + String(e.message).slice(0, 200) }).catch(() => {});
+    await reply(ev.replyToken, `เปิดหน้าจองห้องพักได้ที่ลิงก์นี้เลยค่ะ 🙏\nhttps://liff.line.me/${liffId}`).catch(() => {});
+  }
 }
