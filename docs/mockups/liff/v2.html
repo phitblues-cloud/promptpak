@@ -1,0 +1,121 @@
+<!DOCTYPE html><html lang="th"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>LIFF v2 mock</title>
+<link rel="stylesheet" href="base.css">
+<style>
+html,body{background:#E9E4EF}
+.wrap{display:flex;gap:28px;padding:24px;align-items:flex-start;width:max-content}
+.ph{width:390px;background:var(--bg);border-radius:34px;overflow:hidden;box-shadow:0 10px 40px rgba(0,0,0,.18);position:relative;min-height:844px;padding-bottom:96px}
+.cap{font:600 15px 'IBM Plex Sans Thai';color:#4B2477;margin:0 0 10px 6px}
+.ph .bar{position:absolute}
+main{padding-bottom:20px}
+.ret{background:linear-gradient(135deg,#FBF4FC,#F3EAFB);border:1.5px solid #E2CDEB;border-radius:18px;padding:14px 16px;margin-bottom:12px}
+.ret h4{margin:0 0 2px;font-size:15px}.ret p{margin:0 0 10px;font-size:12.5px;color:var(--soft)}
+.ret .row{display:flex;justify-content:space-between;font-size:13.5px;padding:2px 0}.ret .row span:first-child{color:var(--soft)}
+.ret .bt{display:flex;gap:8px;margin-top:12px}.ret .bt button{flex:1;border-radius:99px;padding:10px;font-weight:600;font-size:14px}
+.b1{background:var(--orchid);color:#fff}.b2{background:#fff;color:var(--o2);border:1px solid #E2CDEB!important}
+.done-in{display:flex;align-items:center;gap:10px;background:#EAF7F0;color:#1F7A50;border-radius:14px;padding:10px 14px;font-size:13.5px;margin-bottom:12px}
+.done-in a{margin-left:auto;color:var(--o2);font-weight:600;text-decoration:none}
+.sum{background:#fff;border-radius:18px;padding:12px 16px;box-shadow:0 6px 22px rgba(75,36,119,.10);margin-bottom:12px}
+.dep{display:flex;gap:10px;align-items:flex-start;margin-top:12px;padding:11px 12px;background:#FBF6EA;border:1px solid #F1DFB4;border-radius:14px;font-size:13.5px;text-align:left}
+.dep input{appearance:none;-webkit-appearance:none;width:20px;height:20px;border-radius:6px;border:1.5px solid #C9A85A;margin:1px 0 0;flex:none;position:relative;background:#fff}
+.dep input:checked{background:#B7871F;border:0}.dep input:checked:after{content:'';position:absolute;left:7px;top:3px;width:5px;height:10px;border:solid #fff;border-width:0 2px 2px 0;transform:rotate(45deg)}
+.dep small{display:block;color:#8A6A1F;font-size:12px}
+.pay > div{flex:1}
+.qrc{background:#fff;border-radius:22px;box-shadow:0 6px 22px rgba(75,36,119,.12);padding:18px;text-align:center;margin-bottom:12px}
+.qrc .amt{font-size:32px;font-weight:600;color:var(--o1);line-height:1.1}.qrc .k{font-size:12px;color:var(--soft)}
+.qrc img{width:230px;height:230px;margin:10px auto 4px;display:block;image-rendering:pixelated}
+.pp{display:inline-flex;gap:6px;align-items:center;font-size:12px;color:#1C3F7A;font-weight:600;background:#EAF0FA;border-radius:99px;padding:3px 12px}
+.brk{font-size:12.5px;color:var(--soft);display:flex;justify-content:space-between;padding:2px 4px}
+.slip{border:1.5px dashed #CDBDE0;border-radius:16px;padding:16px;text-align:center;color:var(--o2);font-size:14px;background:#fff;margin-bottom:10px}
+.slip.ok{border-style:solid;border-color:#9FD9BC;background:#F2FBF6;color:#1F7A50;display:flex;align-items:center;gap:12px;text-align:left}
+.slip.ok .th{width:46px;height:62px;border-radius:6px;background:linear-gradient(#e8f0ff,#cfdcf5);flex:none}
+.later{text-align:center;font-size:12.5px;color:var(--soft);margin-top:4px}
+.chat{background:#8CABD9;min-height:844px;padding:14px}
+.bub{background:#fff;border-radius:18px;overflow:hidden;width:290px;box-shadow:0 1px 2px rgba(0,0,0,.1);font-size:13px}
+.bh{background:var(--orchid);color:#fff;padding:12px 14px}.bh small{opacity:.8;font-size:11px;display:block}.bh b{font-size:16px}
+.bb{padding:12px 14px}.bb .sr{font-size:12.5px}
+.lnhd{color:#fff;font-size:13px;margin:0 0 10px;opacity:.9}
+.note{font-size:11.5px;color:var(--soft);background:#FFF;border-radius:10px;padding:8px 10px;margin-top:8px;line-height:1.5}
+</style></head><body><div class="wrap">
+
+<!-- A: returning guest -->
+<div><div class="cap">A · ขั้น 3 — ลูกค้าเคยจอง</div><div class="ph">
+<div class="hero"><div class="logo"><img src="mark_w.png"><div class="nm">พบรักรีสอร์ท<small>POBRAK GROUP · อุบลรัตน์</small></div></div>
+<div class="ttl">ข้อมูลผู้เข้าพัก<small>ใช้ลงทะเบียนเข้าพักตามกฎหมาย</small></div><div class="pr"><i class="on"></i><i class="on"></i><i class="on"></i><i></i></div></div>
+<main>
+ <div class="ret"><h4>ยินดีต้อนรับกลับค่ะ 👋</h4><p>พบข้อมูลจากการจองครั้งก่อน (มี.ค. 2569)</p>
+  <div class="row"><span>ชื่อ</span><span>สมชาย ใจดี</span></div>
+  <div class="row"><span>เบอร์</span><span>081-xxx-5678</span></div>
+  <div class="row"><span>บัตรประชาชน</span><span>x-xxxx-xxxxx-12-3</span></div>
+  <div class="row"><span>ใบกำกับภาษี</span><span>บจก. ตัวอย่าง</span></div>
+  <div class="bt"><button class="b2">กรอกใหม่</button><button class="b1">ใช้ข้อมูลเดิม</button></div></div>
+ <div class="card" style="opacity:.45"><div class="f"><label>ชื่อ-นามสกุล *</label><input></div><div class="f"><label>เบอร์โทรศัพท์ *</label><input></div><div class="f" style="margin:0"><label>เลขบัตรประชาชน *</label><input></div></div>
+</main>
+<div class="bar"><button class="bk">‹</button><div class="t"><small>2 ห้อง · 2 คืน</small><strong>฿2,140</strong></div><button class="go" disabled>ตรวจสอบการจอง ›</button></div>
+</div></div>
+
+<!-- B: after use previous -->
+<div><div class="cap">B · กด "ใช้ข้อมูลเดิม" แล้ว</div><div class="ph">
+<div class="hero"><div class="logo"><img src="mark_w.png"><div class="nm">พบรักรีสอร์ท<small>POBRAK GROUP · อุบลรัตน์</small></div></div>
+<div class="ttl">ข้อมูลผู้เข้าพัก<small>ใช้ลงทะเบียนเข้าพักตามกฎหมาย</small></div><div class="pr"><i class="on"></i><i class="on"></i><i class="on"></i><i></i></div></div>
+<main>
+ <div class="done-in">✓ ใช้ข้อมูลเดิมแล้ว<a href="#">แก้ไข</a></div>
+ <div class="sum">
+  <div class="sr"><span>ชื่อ</span><span>สมชาย ใจดี</span></div><div class="sr"><span>เบอร์</span><span>081-xxx-5678</span></div>
+  <div class="sr"><span>บัตรประชาชน</span><span>x-xxxx-xxxxx-12-3</span></div><div class="sr"><span>ใบกำกับภาษี</span><span>บจก. ตัวอย่าง</span></div></div>
+ <div class="card">
+  <label class="cons"><input type="checkbox" checked><span>ยินยอมให้โรงแรมเก็บเลขและรูปบัตรประชาชน เพื่อลงทะเบียนผู้เข้าพักตามกฎหมาย · รูปบัตรลบอัตโนมัติ 90 วันหลังเช็คเอาท์ *</span></label>
+  <div class="f" style="margin:14px 0 0"><label>วัตถุประสงค์ (ไม่บังคับ)</label><div class="chips"><button class="chip on">ทำงาน</button><button class="chip">ท่องเที่ยว</button><button class="chip">กิจกรรม</button></div></div></div>
+ <div class="note">ทริปนี้ต้องติ๊กยินยอมใหม่ทุกครั้ง (กฎ PDPA) · ช่องอื่นเติมให้หมดแล้ว กดถัดไปได้เลย</div>
+</main>
+<div class="bar"><button class="bk">‹</button><div class="t"><small>2 ห้อง · 2 คืน</small><strong>฿2,140</strong></div><button class="go">ตรวจสอบการจอง ›</button></div>
+</div></div>
+
+<!-- C: summary with deposit -->
+<div><div class="cap">C · ขั้น 4 — ติ๊กจ่ายเงินประกันพร้อมกัน</div><div class="ph">
+<div class="hero"><div class="logo"><img src="mark_w.png"><div class="nm">พบรักรีสอร์ท<small>POBRAK GROUP · อุบลรัตน์</small></div></div>
+<div class="ttl">สรุปการจอง<small>ตรวจสอบและเลือกวิธีชำระเงิน</small></div><div class="pr"><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i></div></div>
+<main>
+ <div class="pass"><div class="ph1"><span>การจองของคุณ</span><b>พบรักรีสอร์ท</b></div>
+  <div class="ptop"><div><div class="k">เช็คอิน</div><div class="d">30 ต.ค.</div><div class="w">ศุกร์ 14:00</div></div><div class="mid">2 คืน<i></i>2 ห้อง</div><div style="text-align:right"><div class="k">เช็คเอาท์</div><div class="d">1 พ.ย.</div><div class="w">อาทิตย์ 12:00</div></div></div>
+  <div class="tear"></div><div class="pl">
+   <div class="sr"><span>ค่าห้อง + อาหารเช้า</span><span>฿2,140</span></div>
+   <div class="sr"><span>เงินประกันห้อง 2 ห้อง <small style="color:#B7871F">(คืนหลังเช็คเอาท์)</small></span><span>฿400</span></div>
+   <div class="sr t"><span>ยอดโอน</span><span>฿2,540</span></div></div></div>
+ <div class="k2">วิธีชำระเงิน</div>
+ <div class="pay on"><span class="rd"></span><div><b>ชำระทันที <span class="tagg">ยืนยันห้องทันที</span></b><small>สแกน QR พร้อมเพย์ แล้วแนบสลิปในหน้าถัดไป</small>
+  <label class="dep"><input type="checkbox" checked><span>จ่ายเงินประกันห้องด้วย <b>+฿400</b><small>฿200 ต่อห้อง · คืนเต็มจำนวนหลังเช็คเอาท์ · เช็คอินเร็วขึ้น ไม่ต้องจ่ายที่เคาน์เตอร์</small></span></label></div></div>
+ <div class="pay"><span class="rd"></span><div><b>ชำระวันเข้าพัก</b><small>จ่ายค่าห้อง + เงินประกันห้องที่เคาน์เตอร์ตอนเช็คอิน</small></div></div>
+</main>
+<div class="bar"><button class="bk">‹</button><div class="t"><small>รวมเงินประกัน ฿400</small><strong>฿2,540</strong></div><button class="go">ไปหน้าชำระเงิน ›</button></div>
+</div></div>
+
+<!-- D: QR page -->
+<div><div class="cap">D · หน้าชำระเงิน (ชำระทันที)</div><div class="ph">
+<div class="hero"><div class="logo"><img src="mark_w.png"><div class="nm">พบรักรีสอร์ท<small>POBRAK GROUP · อุบลรัตน์</small></div></div>
+<div class="ttl">ชำระเงิน<small>จองห้องไว้ให้แล้ว · BK6910097, BK6910098</small></div><div class="pr"><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i></div></div>
+<main>
+ <div class="qrc"><span class="pp">พร้อมเพย์ · PromptPay</span><img src="qr.png">
+  <div class="k">ยอดที่ต้องโอน</div><div class="amt">฿2,540</div>
+  <div class="brk" style="margin-top:8px"><span>ค่าห้อง + อาหารเช้า</span><span>฿2,140</span></div><div class="brk"><span>เงินประกันห้อง (คืนได้)</span><span>฿400</span></div>
+  <div class="k" style="margin-top:8px">กดค้างที่ QR เพื่อบันทึกรูป แล้วเปิดในแอปธนาคาร</div></div>
+ <div class="slip ok"><div class="th"></div><div><b>แนบสลิปแล้ว</b><br><small>แตะเพื่อเปลี่ยนรูป</small></div></div>
+ <div class="later">ยังไม่สะดวกโอน? ปิดหน้านี้ได้ ห้องถูกจองไว้แล้ว ส่งสลิปในแชทภายหลังได้ภายใน 24 ชม.</div>
+</main>
+<div class="bar"><div class="t"><small>แนบสลิปแล้ว 1 รูป</small><strong>฿2,540</strong></div><button class="go">ยืนยันการชำระ ✓</button></div>
+</div></div>
+
+<!-- E: LINE messages -->
+<div><div class="cap">E · ข้อความที่ลูกค้าได้ในแชท</div><div class="ph chat">
+ <div class="lnhd">ชำระวันเข้าพัก → สรุปการจอง ไม่มี QR</div>
+ <div class="bub"><div class="bh"><small>พบรักรีสอร์ท</small><b>รับการจองแล้ว ✓</b><small>BK6910097 · ชำระวันเข้าพัก</small></div>
+  <div class="bb"><div class="sr"><span>เข้าพัก</span><span>30 ต.ค. – 1 พ.ย. (2 คืน)</span></div><div class="sr"><span>ห้อง</span><span>B01, B05</span></div>
+   <div class="sr"><span>ผู้จอง</span><span>สมชาย ใจดี</span></div><div class="sr t" style="font-size:14px"><span>ชำระที่เคาน์เตอร์</span><span>฿2,540</span></div>
+   <div style="font-size:11.5px;color:var(--soft)">รวมเงินประกันห้อง ฿400 (คืนหลังเช็คเอาท์)</div></div></div>
+ <div class="lnhd" style="margin-top:22px">ชำระทันที + แนบสลิปแล้ว → การ์ดยืนยัน</div>
+ <div class="bub"><div class="bh" style="background:linear-gradient(125deg,#1F7A50,#2E9C6A)"><small>พบรักรีสอร์ท</small><b>ได้รับสลิปแล้ว ✓</b><small>BK6910097 · รอพนักงานตรวจยอด</small></div>
+  <div class="bb"><div class="sr"><span>เข้าพัก</span><span>30 ต.ค. – 1 พ.ย. (2 คืน)</span></div><div class="sr"><span>โอนแล้ว</span><span>฿2,540</span></div>
+   <div style="font-size:11.5px;color:var(--soft)">รวมเงินประกัน ฿400 · เช็คอินไม่ต้องจ่ายเพิ่ม</div></div></div>
+</div></div>
+
+</div></body></html>

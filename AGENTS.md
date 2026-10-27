@@ -1,6 +1,6 @@
 # AGENTS.md — คู่มือสำหรับ AI/นักพัฒนาที่มาทำต่อ (GPT / Codex / Claude / คน)
 
-อ่านไฟล์นี้ให้จบก่อนแก้โค้ด · อัปเดตล่าสุด 24 ต.ค. 2569
+อ่าน `HANDOFF.md` (สถานะล่าสุด + วิธีทำงานกับเจ้าของ) แล้วอ่านไฟล์นี้ให้จบก่อนแก้โค้ด · อัปเดตล่าสุด 24 ต.ค. 2569
 
 ## 0. กติกาเจ้าของงาน (ห้ามละเลย)
 1. เจ้าของงาน (Weerawit) **ไม่ใช่สาย IT** ใช้ **iPad อย่างเดียว** — อธิบายเป็นภาษาไทยง่ายๆ ไม่ใช้ศัพท์เทคนิคโดยไม่แปล ตอบเป็นภาษาไทยเสมอ
@@ -59,7 +59,7 @@ iPad (Safari) ──▶ /  (vercel.json rewrite) ──▶ api/app.py (Python) �
 ```bash
 createdb pp && for r in anon authenticated service_role; do psql -d pp -c "create role $r"; done
 export LOCAL_PG="postgresql://postgres@/pp?host=/tmp&port=5432"
-node tests/run.mjs                       # ทดสอบทั้งเส้นทาง 18 ข้อ (AI จำลอง ไม่เสียเงิน) — ต้องผ่านทุกข้อก่อน push
+node tests/run.mjs                       # ทดสอบทั้งเส้นทาง 42 ข้อ (AI จำลอง ไม่เสียเงิน) — ต้องผ่านทุกข้อก่อน push
 LOCAL_DEV=1 APP_SECRET=x OWNER_PIN=123456 STAFF_PIN=654321 PORT=3999 node dev/server.mjs   # เปิด http://localhost:3999
 # จำลองวันอื่น: PP_NOW=2026-10-31T10:00  · จำลอง AI สรุป: PP_FAKE_AI=1
 ```

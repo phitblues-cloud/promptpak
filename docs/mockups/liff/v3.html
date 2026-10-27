@@ -1,0 +1,91 @@
+<!DOCTYPE html><html lang="th"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>LIFF v3 mock</title><link rel="stylesheet" href="base.css">
+<style>
+html,body{background:#E9E4EF}
+.wrap{display:flex;gap:28px;padding:24px;align-items:flex-start;width:max-content}
+.ph{width:390px;background:var(--bg);border-radius:34px;overflow:hidden;box-shadow:0 10px 40px rgba(0,0,0,.18);position:relative;min-height:860px;padding-bottom:20px}
+.cap{font:600 15px 'IBM Plex Sans Thai';color:#4B2477;margin:0 0 10px 6px;max-width:390px}
+.chat{background:#1d1d1f;padding:14px 12px}
+.t{color:#9a9aa0;font-size:11px;text-align:center;margin:12px 0 6px}
+.bub{background:#fff;border-radius:18px;overflow:hidden;width:300px;font-size:13px;margin-bottom:6px}
+.bh{background:var(--orchid);color:#fff;padding:12px 14px}.bh small{opacity:.85;font-size:11px;display:block}.bh b{font-size:16px}
+.bh.gr{background:linear-gradient(125deg,#1F7A50,#2E9C6A)}.bh.b{background:linear-gradient(125deg,#1C3F7A,#3A6FB5)}.bh.o{background:linear-gradient(125deg,#9A6A10,#C99A2E)}
+.bb{padding:12px 14px}.bb .sr{font-size:12.5px}.bb p{margin:0 0 6px;line-height:1.55;font-size:13px;color:#2B1B3A}
+.btn{display:block;text-align:center;color:#7B3A9E;font-weight:600;border-top:1px solid #eee;padding:10px;font-size:13.5px}
+.btn.p{background:var(--orchid);color:#fff;border:0;margin:0 14px 12px;border-radius:99px}
+.stars{display:flex;justify-content:space-between;padding:4px 14px 12px}.stars span{width:46px;height:46px;border-radius:12px;background:#F6F1FA;display:grid;place-items:center;font-size:20px}
+.kv{display:grid;grid-template-columns:auto 1fr;gap:4px 12px;font-size:12.5px}.kv span:nth-child(odd){color:#7D7090}
+.st2{display:flex;gap:6px;flex-wrap:wrap;margin:4px 0 10px}.pill{font-size:11px;font-weight:600;border-radius:99px;padding:2px 10px;background:#FBEBC9;color:#9A6A10}.pill.g{background:#E3F5EC;color:#1F7A50}
+.map{height:120px;border-radius:14px;background:linear-gradient(135deg,#dfe9d8,#c9dcef);display:grid;place-items:center;color:#4a6;font-size:13px;margin-bottom:10px}
+.rate{display:flex;justify-content:center;gap:10px;font-size:38px;margin:10px 0 4px;color:#E2B33C}
+.rate i{font-style:normal;color:#E1D9EA}
+.chips2{display:flex;gap:8px;flex-wrap:wrap;justify-content:center;margin:10px 0}.chips2 span{border-radius:99px;padding:6px 14px;font-size:13px;background:#fff;border:1px solid #E2CDEB}
+.chips2 span.on{background:#F1E1F2;color:#9A2F86;font-weight:600;border-color:#D9B5DE}
+textarea{width:100%;border:1.5px solid #E2CDEB;border-radius:14px;padding:10px;font:inherit;min-height:80px}
+.flow{font-size:12px;color:#7D7090;background:#fff;border-radius:12px;padding:10px 12px;margin-top:10px;line-height:1.6}
+</style></head><body><div class="wrap">
+
+<!-- 1 chat card -->
+<div><div class="cap">1 · การ์ดในแชทหลังจอง — สรุปอย่างเดียว ไม่มี QR · แตะการ์ด = เปิดรายละเอียดเต็ม</div>
+<div class="ph chat">
+ <div class="t">14:34</div>
+ <div class="bub"><div class="bh"><small>พบรักรีสอร์ท</small><b>รับการจองแล้ว ✓</b><small>BK6910110</small></div>
+  <div class="bb"><div class="sr"><span>เข้าพัก</span><span>อ. 27 ต.ค. – พ. 28 ต.ค. (1 คืน)</span></div>
+   <div class="sr"><span>ห้อง</span><span>ตึกใหม่ · เตียงเดี่ยว</span></div><div class="sr"><span>ผู้จอง</span><span>Weerawit S.</span></div>
+   <div class="sr"><span>ชำระ</span><span style="color:#9A6A10;font-weight:600">รอโอน ฿870</span></div></div>
+  <div class="btn p">ดูรายละเอียดการจอง</div></div>
+ <div class="flow">ลูกค้ายังไม่โอน → ปุ่ม "ชำระเงิน / แนบสลิป" อยู่ในหน้ารายละเอียด (ไม่อยู่ในการ์ด)<br>ส่งสลิปแล้ว → การ์ดเขียว "ได้รับสลิปแล้ว" เหมือนเดิม</div>
+</div></div>
+
+<!-- 2 detail page -->
+<div><div class="cap">2 · หน้ารายละเอียดการจอง (LIFF) — เปิดจากการ์ดได้ตลอด</div><div class="ph">
+<div class="hero" style="padding-bottom:46px"><div class="logo"><img src="mark_w.png"><div class="nm">พบรักรีสอร์ท<small>POBRAK GROUP · อุบลรัตน์</small></div></div>
+<div class="ttl">การจองของคุณ<small>BK6910110 · จองผ่าน LINE 27 ต.ค. 14:33</small></div></div>
+<main style="padding-bottom:20px">
+ <div class="pass"><div class="ph1"><span>BK6910110</span><b>พบรักรีสอร์ท</b></div>
+  <div class="ptop"><div><div class="k">เช็คอิน</div><div class="d">27 ต.ค.</div><div class="w">อังคาร · 14:00</div></div><div class="mid">1 คืน<i></i>1 ห้อง</div><div style="text-align:right"><div class="k">เช็คเอาท์</div><div class="d">28 ต.ค.</div><div class="w">พุธ · ก่อน 12:00</div></div></div>
+  <div class="tear"></div><div class="pl">
+   <div class="st2"><span class="pill">รอชำระ</span><span class="pill">เงินประกันจ่ายที่เคาน์เตอร์</span></div>
+   <div class="sr who"><span>ผู้เข้าพัก</span><span>Weerawit Sakphisutthikul · 2 ท่าน</span></div>
+   <div class="sr"><span>ตึกใหม่ · เตียงเดี่ยว × 1</span><span>฿700</span></div><div class="sr"><span>อาหารเช้า 1 ท่าน</span><span>฿170</span></div>
+   <div class="sr"><span>เงินประกันห้อง (คืนได้)</span><span>฿200 ที่เคาน์เตอร์</span></div>
+   <div class="sr t"><span>ยอดโอน</span><span>฿870</span></div></div></div>
+ <button class="go" style="width:100%;margin-bottom:12px">ชำระเงิน / แนบสลิป</button>
+ <div class="card"><div class="kv"><span>เช็คอิน</span><span>ตั้งแต่ 14:00 น.</span><span>เช็คเอาท์</span><span>ไม่เกิน 12:00 น.</span><span>อาหารเช้า</span><span>[เวลา]</span><span>โทร</span><span>[เบอร์โรงแรม]</span></div></div>
+ <div class="map">📍 แผนที่ · กดเปิด Google Maps</div>
+</main></div></div>
+
+<!-- 3 stay messages -->
+<div><div class="cap">3 · ข้อความอัตโนมัติระหว่างพัก (ใช้ข้อความ/สวิตช์จากเมนู "ข้อความอัตโนมัติ")</div>
+<div class="ph chat">
+ <div class="t">วันเข้าพัก 09:00 · ก่อนเข้าพัก</div>
+ <div class="bub"><div class="bh b"><small>พบรักรีสอร์ท</small><b>วันนี้พบกันนะคะ 🌿</b></div>
+  <div class="bb"><p>คุณ Weerawit เช็คอินได้ตั้งแต่ 14:00 น. · ห้องตึกใหม่ เตียงเดี่ยว 1 ห้อง</p></div><div class="btn">ดูแผนที่</div><div class="btn">ดูรายละเอียดการจอง</div></div>
+ <div class="t">11:20 · แม่บ้านกดทำความสะอาดเสร็จ + ห้องว่าง</div>
+ <div class="bub"><div class="bh gr"><small>พบรักรีสอร์ท</small><b>ห้องพร้อมแล้ว ✓</b></div>
+  <div class="bb"><p>ห้องของคุณทำความสะอาดเรียบร้อย มาถึงเมื่อไหร่เช็คอินได้เลยค่ะ ไม่ต้องรอ 14:00</p></div></div>
+ <div class="t">หลังพนักงานกดเช็คอิน</div>
+ <div class="bub"><div class="bh"><small>พบรักรีสอร์ท · ห้อง A06</small><b>ยินดีต้อนรับค่ะ</b></div>
+  <div class="bb"><div class="sr"><span>📶 Wi-Fi</span><span>[ชื่อ] / [รหัส]</span></div><div class="sr"><span>🍳 อาหารเช้า</span><span>[07:00–09:30]</span></div>
+   <div class="sr"><span>🕛 เช็คเอาท์</span><span>ไม่เกิน 12:00 น.</span></div><p style="margin-top:6px;font-size:12px;color:#7D7090">มีอะไรให้ช่วย พิมพ์ในแชทนี้ได้เลยค่ะ</p></div>
+  <div class="btn">ขอของใช้</div><div class="btn">แจ้งปัญหาในห้อง</div></div>
+</div></div>
+
+<!-- 4 checkout + review -->
+<div><div class="cap">4 · หลังพนักงานกดเช็คเอาท์ → ขอบคุณ + ให้คะแนน</div>
+<div class="ph chat">
+ <div class="t">เช็คเอาท์ 11:40 · +30 นาที</div>
+ <div class="bub"><div class="bh"><small>พบรักรีสอร์ท</small><b>เช็คเอาท์เรียบร้อยค่ะ</b></div>
+  <div class="bb"><p>ขอบคุณที่พักกับพบรักรีสอร์ทนะคะ เดินทางปลอดภัยค่ะ 🙏<br>ช่วยให้คะแนนการพักครั้งนี้หน่อยนะคะ</p></div>
+  <div class="stars"><span>1</span><span>2</span><span>3</span><span>4</span><span>5</span></div>
+  <div class="btn">จองอีกครั้ง</div></div>
+ <div class="flow">กดดาว = บันทึกคะแนนทันที (ไม่ต้องเปิดหน้าใหม่) แล้วระบบตอบกลับ:<br>
+ <b>4–5 ดาว</b> → "ขอบคุณค่ะ ช่วยรีวิวใน Google ได้ไหมคะ" + ปุ่มเปิดหน้ารีวิว Google<br>
+ <b>1–3 ดาว</b> → "ขอโทษค่ะ บอกเราหน่อยว่าเรื่องอะไร" + ส่งต่อผู้จัดการทันที (ขึ้นในแชทลูกค้า LINE)<br>
+ คะแนนทุกครั้งเข้าเมนู CRM › ความพึงพอใจ (ช่อง LINE OA)</div>
+ <div class="t">ลูกค้ากด 5</div>
+ <div class="bub"><div class="bh o"><small>พบรักรีสอร์ท</small><b>ขอบคุณสำหรับ 5 ดาว ⭐</b></div>
+  <div class="bb"><p>ช่วยเล่าให้คนอื่นรู้จักเราใน Google สักนิดได้ไหมคะ</p></div><div class="btn p">เขียนรีวิวใน Google</div></div>
+</div></div>
+
+</div></body></html>
