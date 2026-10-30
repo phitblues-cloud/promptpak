@@ -93,6 +93,8 @@ assert.notEqual(mods.stamp, stamp0);
 assert.deepEqual(Object.keys(mods.mods).sort(), ['book', 'cust', 'fin', 'hk', 'home', 'linechat', 'rep']);
 assert.ok(mods.mods.book.includes(bk[0].booking_no), 'การจองต้องอยู่ในโมดูลการจอง');
 assert.ok(mods.mods.linechat.includes('จองสำเร็จค่ะ'), 'แชทจริงต้องอยู่ในโมดูลแชท');
+assert.ok(mods.mods.cust.includes('function csFace') && mods.mods.cust.includes('ไม่มีบริการเสริม') && mods.mods.cust.includes('stcs'), 'หน้ายิ้ม/บริการเสริม/กล่องความพึงพอใจต้องอยู่ในโมดูลลูกค้า');
+assert.ok(mods.mods.linechat.includes('csFace(c.cs'), 'หัวแชทต้องมีหน้ายิ้ม'); ok('ความพึงพอใจรายคน: โมดูลลูกค้าและแชทมีหน้ายิ้ม');
 const same = (await call('/api/app?part=mods&since=' + encodeURIComponent(mods.stamp))).body;
 assert.equal(same.mods, undefined);
 ok('การจองจาก LINE เข้าโมดูลการจองและแชทเดิม · ข้อมูลไม่เปลี่ยนก็ไม่ส่งซ้ำ');

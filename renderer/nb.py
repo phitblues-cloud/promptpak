@@ -202,3 +202,27 @@ for r in m['reviews']:
         nm = ca.split('T12:00')[0] if 'T12:00' in ca else ''
         d = (datetime.date(2026, 10, 17) + datetime.timedelta(days=_gi % 7)).isoformat(); _gi += 1
     REVIEWS.append(dict(r, created_at=d + 'T12:00:00+07:00', reviewer_name=nm if isinstance(nm, str) else ''))
+
+# ---------------- ความพึงพอใจรายคน/รายการจอง (หน้ายิ้ม) · คำนวณจากรีวิวทั้งหมดที่ผูกกับแขก/การจอง ----------------
+def _build_csat():
+    grp = collections.defaultdict(list)
+    for b in m['bookings']:
+        if b.get('group_id'):
+            grp[b['group_id']].append(b['booking_id'])
+    by_g, by_b, tp_b = collections.defaultdict(list), collections.defaultdict(list), {}
+    for r in REVIEWS:
+        sc = int(r.get('rating_5') or 0)
+        if not 1 <= sc <= 5:
+            continue
+        if r.get('guest_id'):
+            by_g[r['guest_id']].append(sc)
+        bk = r.get('booking_id') or ''
+        for x in (grp.get(bk) or ([bk] if bk else [])):
+            by_b[x].append(sc)
+            if r.get('topic_levels'):
+                tp_b[x] = r['topic_levels']
+    cg = {k: [round(sum(v) / len(v), 1), len(v)] for k, v in by_g.items()}
+    cb = {k: round(sum(v) / len(v), 1) for k, v in by_b.items()}
+    return cg, cb, tp_b
+import collections
+CSAT_G, CSAT_B, CSAT_TP = _build_csat()

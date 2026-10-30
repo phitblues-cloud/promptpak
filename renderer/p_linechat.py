@@ -100,7 +100,8 @@ def build():
             BKN[str(i)] = b['no']; BD[str(i)] = bd_of(b)
         else:
             BD[str(i)] = {'k': 'none'}
-        PF[str(i)] = {'real': g['first_name'] + ' ' + g['last_name'], 'mem': 1 if g['is_member'] else 0, 'seg': seg_of(n_st)}
+        PF[str(i)] = {'real': g['first_name'] + ' ' + g['last_name'], 'mem': 1 if g['is_member'] else 0, 'seg': seg_of(n_st),
+                    'cs': (CSAT_G.get(g['guest_id']) or [0, 0])[0], 'nocs': bool(g.get('is_group_chat'))}
         LCX[str(i)] = {'line': t['line_display_name'], 'co': co, 'stays': n_st}
     purp = {str(i): (BKBY[t['linked_booking_id']]['purpose'] if t['linked_booking_id'] in BKBY else '') for i, t in enumerate(sorted(m['line_chats'], key=lambda x: x['thread_id']), 1)}
     return CV, BKN, BD, PF, LCX, purp
@@ -108,7 +109,8 @@ def build():
 def patch(h):
     CV, BKN, BD, PF, LCX, purp = build()
     i = h.index('const CV=['); j = h.index("const stageOf=")
-    h = h[:i] + 'const CV=' + J(CV) + ';\nconst BKN=' + J(BKN) + ';\n' + h[j:]
+    from p_cust import FACE_JS
+    h = h[:i] + FACE_JS + 'const CV=' + J(CV) + ';\nconst BKN=' + J(BKN) + ';\n' + h[j:]
     # ลบ CV.push(id 10) ... ถึงก่อน BS
     i = h.index("CV.push({id:10,"); j = h.index("const BS={")
     h = h[:i] + 'const BD=' + J(BD) + ';\nconst PF=' + J(PF) + ';\nconst LCX=' + J(LCX) + ';\nconst PURP=' + J(purp) + ';\n' + \

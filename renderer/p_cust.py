@@ -26,7 +26,7 @@ def build_cu():
                    'memberNo': mb['member_id'] if mb else '', 'memberSince': dno(mb['joined_at']) if mb else None,
                    'added': first_made.get(gid, D0), 'bias': bias_of(g),
                    'bday': g['birth_date'], 'nid': re.sub(r'\D', '', g['id_card_no'] or ''), 'email': g['email'],
-                   'gender': ''})
+                   'gender': '', 'cs': (CSAT_G.get(gid) or [0, 0])[0], 'csn': (CSAT_G.get(gid) or [0, 0])[1]})
     # ข้อมูลที่พนักงานแก้/สมัครในโมดูลลูกค้า (ตาราง cust_state)
     cs = m.get('cust_state') or {}
     byid = {c['id']: c for c in cu}
@@ -37,7 +37,7 @@ def build_cu():
                 continue
             c = {'id': gid, 'name': '', 'phone': '', 'line': '', 'addr': '', 'prov': '', 'company': '', 'special': '',
                  'memberNo': '', 'memberSince': None, 'added': dno(d['added']) if d.get('added') else D0, 'bias': '',
-                 'bday': '', 'nid': '', 'email': '', 'gender': ''}
+                 'bday': '', 'nid': '', 'email': '', 'gender': '', 'cs': 0, 'csn': 0}
             cu.append(c); byid[gid] = c
         for k in ('name', 'phone', 'line', 'addr', 'prov', 'bday', 'special', 'gender', 'purpose'):
             if k in d:
@@ -104,13 +104,26 @@ def build_co():
                    'cdecide': (c.get('contact_decide') == '1') if c.get('contact_decide') else bool(cc and 'ผู้ตัดสินใจ' in (cc.get('decision') or ''))})
     return co
 
+def _svc_of(no, room):
+    """บริการเสริมของการจอง (จากเมนูการเงิน fin_state) → (ยอดรวม, [[ชื่อ, จำนวน, ราคา]])"""
+    st = m.get('fin_state') or {}
+    x = (st.get('bills') or {}).get(f'{no}|{room}') or {}
+    its = [[str(i.get('name') or ''), int(i.get('qty') or 0), int(i.get('price') or 0)] for i in (x.get('items') or [])]
+    return sum(q * p for _, q, p in its), its
+
 def build_st():
-    return [{'no': b['no'], 'cust': b['gid'], 'room': b['room'], 'start': b['start'], 'nights': b['nights'], 'purpose': b['purpose'],
-             'amount': b['total'], 'ch': b['ch'], 'madeAt': b['madeAt']} for b in BK]
+    out = []
+    for b in BK:
+        tot, its = _svc_of(b['no'], b['room'])
+        out.append({'no': b['no'], 'cust': b['gid'], 'room': b['room'], 'start': b['start'], 'nights': b['nights'], 'purpose': b['purpose'],
+                    'amount': b['total'], 'ch': b['ch'], 'madeAt': b['madeAt'], 'svc': tot, 'svcI': its,
+                    'rate': CSAT_B.get(b['no'], 0), 'tp': CSAT_TP.get(b['no'], [])})
+    return out
 
 def build_rev():
     return [{'src': r['source'], 'r': r['rating_5'], 'sent': r['sentiment'], 'topics': r['topics'], 'text': r['text'],
-             'bk': r['booking_id'] or '', 'reply': r['reply_status'], 'at': r['created_at'][:10]} for r in REVIEWS]
+             'bk': r['booking_id'] or '', 'reply': r['reply_status'], 'at': r['created_at'][:10],
+             'tl': {a: b for a, b in (r.get('topic_levels') or [])}} for r in REVIEWS]
 
 def data_block():
     cu = build_cu()
@@ -150,7 +163,7 @@ def apply_common(h):
 
 REVJS = r'''
 function revStat(){const n=REV.length,avg=n?REV.reduce((a,r)=>a+r.r,0)/n:0;const pos=REV.filter(r=>r.sent==='บวก').length,neg=REV.filter(r=>r.sent==='ลบ').length;
-  const tp={};REV.forEach(r=>r.topics.forEach(t=>{(tp[t]=tp[t]||[]).push(r.r)}));
+  const tp={};REV.forEach(r=>r.topics.forEach(t=>{(tp[t]=tp[t]||[]).push(r.tl&&r.tl[t]!=null?r.tl[t]:r.r)}));
   const tops=Object.entries(tp).sort((a,b)=>b[1].length-a[1].length||a[0].localeCompare(b[0],'th')).slice(0,5);
   return {n,avg,pos,neg,mid:n-pos-neg,tops}}
 '''
@@ -194,3 +207,32 @@ _old_patch = patch
 def patch(h):
     h = _old_patch(h)
     return analytics_fixes(h)
+
+
+FACE_JS = r"""
+/* ============ หน้ายิ้มความพึงพอใจ (1-5) ============ */
+const FACE_LV=[[1.8,'#C2264B','M10 23c2-3.2 10-3.2 12 0','ไม่พอใจมาก'],[2.6,'#E0762F','M10.5 22.5c2-2 9-2 11 0','ไม่พอใจ'],[3.5,'#C9961F','M10.5 21.5h11','กลางๆ'],[4.5,'#7DA84A','M10.5 19.5c2 2 9 2 11 0','พอใจ'],[9,'#14865C','M9.5 18.5c2.2 4 10.8 4 13 0z','ดีเยี่ยม']];
+function csFace(sc,sz,txt){sz=sz||24;
+  if(!sc)return `<span title="ยังไม่เคยตอบแบบสอบถาม" aria-label="ยังไม่เคยตอบแบบสอบถาม" style="display:inline-grid;place-items:center;width:${sz}px;height:${sz}px;border-radius:50%;border:1.5px dashed #BDB1CC;color:#BDB1CC;font-size:${Math.round(sz*.45)}px;vertical-align:middle;flex:none">–</span>`;
+  const f=FACE_LV.find(x=>sc<x[0]);
+  const mouth=f[0]===9?`<path d="${f[2]}" fill="#fff"/>`:f[0]===3.5?`<path d="${f[2]}" stroke="#fff" stroke-width="2" stroke-linecap="round"/>`:`<path d="${f[2]}" stroke="#fff" stroke-width="2" fill="none" stroke-linecap="round"/>`;
+  return `<span title="ความพึงพอใจ ${sc.toFixed(1)}/5 · ${f[3]}" aria-label="ความพึงพอใจ ${f[3]}" style="display:inline-flex;align-items:center;gap:5px;vertical-align:middle;flex:none"><svg width="${sz}" height="${sz}" viewBox="0 0 32 32" aria-hidden="true"><circle cx="16" cy="16" r="14" fill="${f[1]}"/><circle cx="11" cy="13" r="1.8" fill="#fff"/><circle cx="21" cy="13" r="1.8" fill="#fff"/>${mouth}</svg>${txt?`<b style="font-size:.85rem">${sc.toFixed(1)}</b>`:''}</span>`}
+const csLabel=sc=>sc?FACE_LV.find(x=>sc<x[0])[3]:'';
+const TPCLS={5:['ประทับใจ','#E3F4E8','#17603A'],3:['พอใช้','#F3EEF8','#5B4A73'],1:['ปรับปรุง','#FBE5E8','#9A1B33']};
+const tpChips=a=>(a||[]).map(([n,l])=>{const t=TPCLS[l]||TPCLS[3];return `<span style="font-size:.7rem;padding:1px 8px;border-radius:99px;background:${t[1]};color:${t[2]};white-space:nowrap">${n} ${t[0]}</span>`}).join('');
+"""
+
+def csat_ui(h):
+    # ฟังก์ชันหน้ายิ้ม
+    h = R(h, "function histTable(ss,withName){", FACE_JS + "function histTable(ss,withName){", 1, 'cust-face-js')
+    # ประวัติการพัก: บริการเสริมใต้ค่าใช้จ่าย + หน้ายิ้ม/หัวข้อที่ตอบ ในช่องช่องทาง
+    h = R(h, '<div class="right num">${fmt(s.amount)} ฿</div><div class="h-d">${esc(s.ch)}</div>\n      <div class="h-meta">${s.room} · ${rng}',
+          '<div class="right num">${fmt(s.amount)} ฿<small class="hint" style="display:block;text-align:right">${s.svc?`บริการเสริม ${fmt(s.svc)} ฿`:\'ไม่มีบริการเสริม\'}</small>${s.svc?`<small class="hint" style="display:block;text-align:right">${s.svcI.map(x=>esc(x[0])+\' \'+x[1]).join(\' · \')}</small>`:\'\'}</div><div class="h-d">${esc(s.ch)}<div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-top:4px">${csFace(s.rate,24,1)}${tpChips(s.tp)}</div></div>\n      <div class="h-meta">${s.room} · ${rng}', 1, 'cust-hist-cs')
+    # ลิสต์ลูกค้าและสมาชิก: หน้ายิ้มต่อท้ายชื่อ
+    h = R(h, '<div class="c-name"><span class="name">${esc(c.name)}</span></div>',
+          '<div class="c-name" style="display:flex;align-items:center;gap:8px"><span class="name">${esc(c.name)}</span>${csFace(c.cs,24)}</div>', 1, 'cust-list-cs')
+    return h
+
+_prev_patch = patch
+def patch(h):
+    return csat_ui(_prev_patch(h))
