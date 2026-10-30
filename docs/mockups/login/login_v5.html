@@ -1,0 +1,287 @@
+<!doctype html><html lang="th"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Login v5 — พบรักรีสอร์ท</title>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Thai:wght@400;600;700&family=Noto+Sans+Thai:wght@900&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#2A1750;--name:#4A3382;--low:#E7D8F8;--road:#D2BDF0;--ink:#2A1750;--pur:#6A3AA2;--hot:#C2287F;--yel:#FFD66B;--body:'IBM Plex Sans Thai',sans-serif;--disp:'Noto Sans Thai','IBM Plex Sans Thai',sans-serif;--bar:64px}
+*{box-sizing:border-box}html,body{margin:0;height:100%}
+body{font-family:var(--body);color:var(--ink);background:var(--bg);overflow:hidden;-webkit-tap-highlight-color:transparent}
+.stage{position:relative;height:100vh;height:100dvh;overflow:hidden;overflow:clip;background:radial-gradient(ellipse at 50% 30%,#3A2270 0,var(--bg) 70%)}
+/* ===== แถบขาว ชื่อระบบ ===== */
+.bar{position:absolute;left:0;right:0;top:0;height:var(--bar);background:#fff;display:flex;align-items:center;gap:.8rem;padding:0 1.4rem;z-index:30;box-shadow:0 5px 0 rgba(0,0,0,.2)}
+.bar .mk{width:40px;height:40px;border-radius:12px;background:linear-gradient(135deg,#6A3AA2,#C2287F);display:grid;place-items:center;flex:none}
+.bar b{font:700 1.55rem var(--body);letter-spacing:.07em;color:var(--ink)}
+.bar i{font:700 .9rem var(--body);font-style:normal;color:#fff;background:var(--hot);padding:.2rem .8rem;border-radius:99px;letter-spacing:.2em}
+/* ===== เลเยอร์บน : ชื่อโรงแรมนิ่ง + ของลอย ===== */
+.name{position:absolute;left:0;right:0;top:calc(var(--bar) + 2vh);text-align:center;font:900 clamp(3.6rem,17vh,11rem)/1.35 var(--disp);color:var(--name);white-space:nowrap;user-select:none;z-index:1}
+.stars i{position:absolute;width:3px;height:3px;border-radius:50%;background:#A78BE0;opacity:.2;animation:tw 4s ease-in-out infinite}
+@keyframes tw{50%{opacity:.85}}
+.float{position:absolute;z-index:2;pointer-events:none}
+.plane{top:calc(var(--bar) + 1.5vh);left:0;width:130px;animation:fly 34s linear infinite;animation-delay:-8s}
+@keyframes fly{from{transform:translateX(-160px)}to{transform:translateX(calc(100vw + 40px))}}
+.balloon{left:5%;top:36vh;width:92px;animation:bl 6s ease-in-out infinite;transform-origin:50% 0}
+@keyframes bl{0%,100%{transform:translateY(0) rotate(-3deg)}50%{transform:translateY(-16px) rotate(3deg)}}
+.moon{right:6%;top:calc(var(--bar) + 6vh);width:70px;animation:bl 8s ease-in-out infinite}
+/* ===== เลเยอร์ล่าง ===== */
+.stage,.sky{contain:paint}
+.sky{position:absolute;left:0;right:0;bottom:30%;height:min(25vh,210px);z-index:2;overflow:hidden;pointer-events:none}
+.sky .trk{display:flex;height:100%;width:max-content;animation:run 150s linear infinite}
+.sky svg{height:100%;width:auto;flex:none;display:block}
+.low{position:absolute;left:0;right:0;bottom:0;height:30%;background:linear-gradient(var(--low) 0 74%,var(--road) 74%);z-index:2}
+.tape{position:absolute;left:0;bottom:.6vh;display:flex;width:max-content;animation:run 78s linear infinite;z-index:4}
+.tape>svg{height:min(35vh,300px);width:auto;flex:none;overflow:visible;display:block}
+@keyframes run{to{transform:translateX(-50%)}}
+.sw{fill:#CDB6EE}.sw.l{fill:var(--yel);animation:lit 8s ease-in-out infinite;animation-delay:var(--d)}
+@keyframes lit{0%,100%{opacity:.2}50%{opacity:1}}
+.wel .sw{fill:var(--yel);animation:none;opacity:1}
+.fw{transform-box:fill-box;transform-origin:center;animation:spn 60s linear infinite}
+@keyframes spn{to{transform:rotate(360deg)}}
+/* ตัวละคร + ของเคลื่อนไหว */
+.wk1,.wk2{transform-box:fill-box;transform-origin:50% 0;animation:wk .55s ease-in-out infinite alternate}.wk2{animation-direction:alternate-reverse}
+@keyframes wk{from{transform:rotate(-24deg)}to{transform:rotate(24deg)}}
+.arm{transform-box:fill-box;transform-origin:50% 8%}.as{animation:as .55s ease-in-out infinite alternate}.as.b{animation-direction:alternate-reverse}
+@keyframes as{from{transform:rotate(-22deg)}to{transform:rotate(22deg)}}
+.wave{animation:wv .45s ease-in-out infinite alternate}@keyframes wv{from{transform:rotate(145deg)}to{transform:rotate(195deg)}}
+.br{transform-box:fill-box;transform-origin:50% 100%;animation:br 3s ease-in-out infinite}@keyframes br{50%{transform:scaleY(1.025)}}
+.bump{transform-box:fill-box;transform-origin:50% 100%;animation:bp 1.3s ease-in-out infinite}@keyframes bp{0%,100%{transform:rotate(-1.5deg)}50%{transform:rotate(1.5deg) translateY(-2px)}}
+.wob{transform-box:fill-box;transform-origin:50% 100%;animation:wb 1.3s ease-in-out infinite}.wob.d{animation-delay:-.4s}@keyframes wb{0%,100%{transform:rotate(-3deg)}50%{transform:rotate(3deg)}}
+.sway{transform-box:fill-box;transform-origin:50% 100%;animation:sy 4.5s ease-in-out infinite}@keyframes sy{50%{transform:rotate(4deg)}}
+.whl{transform-box:fill-box;transform-origin:center;animation:spn .45s linear infinite}
+.hd{transform-box:fill-box;transform-origin:50% 100%;animation:spn 12s linear infinite}.hd.h{animation-duration:140s}
+.dl,.dr{transform-box:fill-box;animation:dor 9s ease-in-out infinite}.dl{transform-origin:0 50%}.dr{transform-origin:100% 50%}
+@keyframes dor{0%,15%{transform:scaleX(1)}27%,62%{transform:scaleX(.07)}74%,100%{transform:scaleX(1)}}
+.stp{animation:stp 9s ease-in-out infinite}@keyframes stp{0%,28%{transform:translateX(0)}42%,54%{transform:translateX(66px)}68%,100%{transform:translateX(0)}}
+.led{animation:led 1.4s steps(1) infinite}@keyframes led{50%{opacity:.2}}
+.glow{animation:gl 3s ease-in-out infinite;transform-box:fill-box;transform-origin:center}@keyframes gl{50%{opacity:.35;transform:scale(1.15)}}
+.scr{animation:sc 2.4s steps(1) infinite}@keyframes sc{0%{fill:#7FD6EE}30%{fill:#FFD66B}60%{fill:#F29AC1}}
+.ring{transform-box:fill-box;transform-origin:center;opacity:0;animation:rg 3.4s ease-out infinite}@keyframes rg{0%,40%{opacity:0;transform:scale(.4)}46%{opacity:.9}100%{opacity:0;transform:scale(2.6)}}
+.ding{transform-box:fill-box;transform-origin:50% 100%;animation:dn 3.4s ease-in-out infinite}@keyframes dn{0%,40%,100%{transform:none}44%{transform:rotate(-10deg)}50%{transform:rotate(8deg)}56%{transform:rotate(-4deg)}}
+.hop{animation:hop .9s ease-in-out infinite}@keyframes hop{0%,100%{transform:translateY(0)}45%{transform:translateY(-16px)}}
+.trunk{animation:tr 5s ease-in-out infinite;transform-box:fill-box;transform-origin:100% 100%}@keyframes tr{0%,100%{transform:rotate(-75deg)}}
+.lift{animation:lf 3.6s ease-in-out infinite}@keyframes lf{0%,100%{transform:translate(0,0)}45%{transform:translate(-20px,-26px) rotate(-8deg)}70%{transform:translate(10px,0)}}
+.runk{animation:rk 1.8s ease-in-out infinite alternate}@keyframes rk{to{transform:translateX(-34px)}}
+.balx{transform-box:fill-box;transform-origin:50% 100%;animation:bx 2.2s ease-in-out infinite}@keyframes bx{50%{transform:rotate(9deg) translateY(-5px)}}
+.rip{animation:rp 3s linear infinite}@keyframes rp{to{transform:translateX(30px)}}
+.dive{animation:dv 5s ease-in infinite;transform-box:fill-box;transform-origin:center}
+@keyframes dv{0%{transform:translate(0,0) rotate(0);opacity:1}30%{transform:translate(-44px,-52px) rotate(180deg)}58%{transform:translate(-100px,10px) rotate(380deg);opacity:1}60%,100%{transform:translate(-100px,16px) rotate(380deg);opacity:0}}
+.spl{opacity:0;transform-box:fill-box;transform-origin:50% 100%;animation:sp 5s ease-out infinite}@keyframes sp{0%,58%{opacity:0;transform:scale(.2)}64%{opacity:1;transform:scale(1)}80%,100%{opacity:0;transform:scale(1.5) translateY(-10px)}}
+.steam{animation:st 2.4s ease-in infinite;opacity:0}.steam.b{animation-delay:.8s}.steam.c{animation-delay:1.6s}
+@keyframes st{0%{opacity:0;transform:translateY(6px)}30%{opacity:.9}100%{opacity:0;transform:translateY(-14px)}}
+.cloud{animation:cd 14s linear infinite}@keyframes cd{from{transform:translateX(-60px)}to{transform:translateX(230px)}}
+.sprk{transform-box:fill-box;transform-origin:center;animation:tw2 1.8s ease-in-out infinite}@keyframes tw2{0%,100%{transform:scale(.3) rotate(0);opacity:.2}50%{transform:scale(1) rotate(30deg);opacity:1}}
+/* ===== การ์ดคีย์การ์ดห้อยจากแถบขาว ===== */
+.boxes{position:absolute;top:var(--bar);left:50%;transform:translateX(-50%);display:flex;gap:2.1rem;z-index:8;align-items:flex-start}
+.hang{display:flex;flex-direction:column;align-items:center;transform-origin:50% 0;animation:swing 5.2s ease-in-out infinite;animation-delay:var(--sd);cursor:pointer;-webkit-user-select:none;user-select:none}
+@keyframes swing{0%,100%{transform:rotate(2.8deg)}50%{transform:rotate(-2.8deg)}}
+.lan{width:11px;height:min(19vh,160px);background:repeating-linear-gradient(135deg,var(--c1) 0 6px,rgba(255,255,255,.55) 6px 9px);border-radius:0 0 2px 2px}
+.clip{width:24px;height:16px;border-radius:5px;background:linear-gradient(#E6ECF2,#9AA7B5);margin-top:-2px;margin-bottom:-9px;z-index:2;position:relative}
+.clip::after{content:'';position:absolute;left:50%;top:50%;width:8px;height:8px;border-radius:50%;background:#6C7886;transform:translate(-50%,-50%)}
+.card{--c1:#7B3FE4;--c2:#C2287F;position:relative;width:min(26vw,196px);height:min(36vh,292px);border-radius:20px;background:linear-gradient(160deg,var(--c1),var(--c2));color:#fff;display:flex;flex-direction:column;align-items:center;padding:0 .9rem 1rem;overflow:hidden;box-shadow:0 10px 0 rgba(0,0,0,.28),inset 0 0 0 5px rgba(255,255,255,.18);transition:transform .35s cubic-bezier(.2,1.4,.4,1)}
+.hang:hover .card{transform:translateY(-4px) rotate(-2deg)}
+.card::before{content:'';position:absolute;inset:0;background:radial-gradient(circle at 0 0,rgba(255,255,255,.22) 0 2px,transparent 3px) 0 0/16px 16px;opacity:.5;pointer-events:none}
+.card::after{content:'';position:absolute;top:-30%;left:-60%;width:40%;height:160%;background:linear-gradient(90deg,transparent,rgba(255,255,255,.45),transparent);transform:rotate(18deg);animation:shine 5.5s ease-in-out infinite;animation-delay:var(--sd);pointer-events:none}
+@keyframes shine{0%,60%{left:-60%}85%,100%{left:140%}}
+.slot{position:absolute;top:11px;left:50%;width:40px;height:9px;border-radius:5px;background:rgba(0,0,0,.4);transform:translateX(-50%)}
+.stripe{position:absolute;left:0;right:0;top:30px;height:30px;background:#1A0E33}
+.wm2{position:absolute;right:-6px;bottom:-16px;font:900 5.6rem/1 var(--disp);color:transparent;-webkit-text-stroke:2px rgba(255,255,255,.28);pointer-events:none}
+.av{position:relative;margin-top:44px;width:min(21vw,86px);height:min(21vw,86px);border-radius:50%;background:#fff;border:4px solid rgba(255,255,255,.95);box-shadow:0 5px 0 rgba(0,0,0,.25);overflow:hidden;flex:none;display:grid;place-items:center;transition:transform .3s}
+.hang:hover .av{transform:scale(1.08) rotate(-5deg)}
+.card b{position:relative;margin-top:.7rem;font:700 1.02rem/1.25 var(--body);text-align:center;text-shadow:0 2px 0 rgba(0,0,0,.2)}
+.role{position:relative;margin-top:.35rem;font:600 .72rem var(--body);letter-spacing:.1em;background:rgba(255,255,255,.22);border-radius:99px;padding:.15rem .7rem}
+.deco{position:absolute;left:.9rem;right:.9rem;bottom:.9rem;display:flex;align-items:flex-end;justify-content:space-between;pointer-events:none}
+.chipg{width:40px;height:30px;border-radius:7px;background:linear-gradient(135deg,#FFE9A0,#E0A82E);display:grid;grid-template-columns:1fr 1fr;gap:2px;padding:4px;box-shadow:inset 0 0 0 1.5px rgba(0,0,0,.2)}
+.chipg i{background:rgba(0,0,0,.18);border-radius:2px}
+.sprk2{width:26px;animation:tw2 2.2s ease-in-out infinite}
+.pw{display:none;position:relative;margin-top:auto;width:100%;flex-direction:column;align-items:center;gap:.55rem}
+.hang.on .pw{display:flex}.hang.on .deco,.hang.on .role,.hang.on .wm2{display:none}
+.dots{display:flex;gap:7px;position:relative;padding:.35rem}
+.dots i{width:15px;height:15px;border-radius:50%;border:2.5px solid #fff;background:rgba(255,255,255,.2);transition:.15s}
+.dots i.f{background:var(--yel);border-color:var(--yel);transform:scale(1.2)}
+.dots input{position:absolute;inset:0;width:100%;opacity:0;font-size:16px;border:0;background:none}
+.user{width:100%;border:0;border-radius:99px;background:rgba(255,255,255,.9);padding:.5rem .8rem;font:600 .9rem var(--body);text-align:center;color:var(--ink);outline:0}
+.go{border:0;cursor:pointer;background:var(--yel);color:var(--ink);font:700 .95rem var(--body);border-radius:99px;padding:.55rem 1.2rem;box-shadow:0 4px 0 rgba(0,0,0,.28);transition:.12s;display:flex;align-items:center;gap:.4rem}
+.go:active{transform:translateY(3px);box-shadow:0 1px 0 rgba(0,0,0,.28)}
+.go.rdy{animation:pls .7s ease-in-out infinite alternate}@keyframes pls{to{transform:scale(1.08)}}
+.hang.on{animation:none!important;transform:rotate(0)}
+.hang.on .card{transform:translateY(14px) scale(1.07);box-shadow:0 0 0 4px var(--yel),0 18px 0 rgba(0,0,0,.28),inset 0 0 0 5px rgba(255,255,255,.18)}
+.hang.on .av{transform:none}
+.card.plus{--c1:#FFF3D6;--c2:#FFE0C0;color:var(--ink)}.card.plus .stripe{background:#CDB89A}.card.plus .role{background:rgba(42,23,80,.1)}.card.plus b{text-shadow:none}
+.card.plus .dots i{border-color:var(--ink);background:rgba(42,23,80,.08)}.card.plus .dots i.f{background:var(--hot);border-color:var(--hot)}
+.card.plus .wm2{-webkit-text-stroke:2px rgba(42,23,80,.12)}
+.okb{display:none;position:absolute;inset:0;background:linear-gradient(160deg,#2EC27E,#1B8F5C);flex-direction:column;align-items:center;justify-content:center;gap:.7rem;text-align:center;z-index:5}
+.okb svg{width:74px;height:74px}.okb path{stroke-dasharray:40;stroke-dashoffset:40}
+.okb em{font:700 1.15rem var(--body);font-style:normal;color:#fff}.okb a{color:#fff;font:600 .82rem var(--body);opacity:.85;text-decoration:underline;padding:.3rem}
+.hang.ok .okb{display:flex}.hang.ok .okb path{animation:dr .5s .2s ease-out forwards}@keyframes dr{to{stroke-dashoffset:0}}
+.hang.ok .card{animation:tap .6s ease-out}@keyframes tap{0%{transform:translateY(14px) scale(1.07)}30%{transform:translateY(60px) scale(1.07)}100%{transform:translateY(14px) scale(1.07)}}
+.wel .hang:not(.ok){animation:fall 1.1s cubic-bezier(.5,0,.9,.4) forwards!important}
+@keyframes fall{0%{transform:rotate(0)}30%{transform:rotate(-14deg)}100%{transform:translateY(60vh) rotate(26deg);opacity:0}}
+.cf{position:absolute;z-index:40;width:30px;pointer-events:none;animation:cfa 1.3s ease-out forwards}
+@keyframes cfa{from{opacity:1;transform:translate(0,0) scale(.3)}to{opacity:0;transform:translate(var(--tx),var(--ty)) scale(1.3) rotate(160deg)}}
+@media (max-width:700px){.boxes{gap:.5rem}.card{width:30vw;padding:0 .4rem .7rem}.card b{font-size:.82rem}.av{width:56px;height:56px}.wm2{font-size:3.6rem}.balloon,.moon{display:none}}
+@media (prefers-reduced-motion:reduce){*{animation:none!important}}
+</style></head><body>
+<div class="stage" id="stage">
+ <div class="bar"><div class="mk"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 18V8M3 14h18v4M21 14v-2a3 3 0 0 0-3-3h-7v5"/><circle cx="7" cy="11" r="1.6" fill="#fff"/></svg></div><b>PROMPT PAK</b><i>PMS</i></div>
+ <div class="stars" id="stars"></div>
+ <div class="name">พบรักรีสอร์ท</div>
+
+ <svg class="float moon" viewBox="-40 -40 80 80"><circle r="26" fill="#FFF3C9"/><circle cx="11" cy="-6" r="23" fill="#2F1A5E"/><circle cx="-12" cy="10" r="4" fill="#EBDDA0"/></svg>
+ <svg class="float plane" viewBox="0 0 130 40"><path d="M70 20l42-6 10 6-10 6z" fill="#fff"/><path d="M88 18l-12-14h8l14 14zM88 22l-12 14h8l14-14z" fill="#E6DAF8"/><path d="M-10 20h74" stroke="#fff" stroke-width="2" stroke-dasharray="7 7" opacity=".6"/></svg>
+ <svg class="float balloon" viewBox="-50 -10 100 150"><path d="M0 0C-52 0-54 56 0 78C54 56 52 0 0 0z" fill="#F29AC1"/><path d="M0 0C-20 12-20 60 0 78C20 60 20 12 0 0z" fill="#FFD66B"/><path d="M-20 70h40l-6 14h-28z" fill="#6A3AA2"/><path d="M-12 84L-8 104h16l4-20" fill="#B07A45"/></svg>
+
+ <div class="sky"><div class="trk" id="skytrk"></div></div>
+ <div class="low"></div>
+ <div class="tape" id="tape"></div>
+
+ <div class="boxes" id="boxes">
+  <div class="hang" data-k="o" style="--sd:-1s"><div class="lan" style="--c1:#7B3FE4"></div><div class="clip"></div>
+   <div class="card" style="--c1:#7B3FE4;--c2:#C2287F"><div class="slot"></div><div class="stripe"></div><div class="wm2">001</div>
+    <div class="av"><svg viewBox="0 0 100 100"><rect width="100" height="100" fill="#E8DAFB"/><path d="M16 100q2-30 34-30t34 30z" fill="#2A1750"/><path d="M42 72l8 16 8-16z" fill="#fff"/><path d="M50 74l-4 6 4 16 4-16z" fill="#C2287F"/><circle cx="50" cy="46" r="20" fill="#F2C9A5"/><path d="M30 44q-2-24 20-24t20 24q-8-12-20-12t-20 12z" fill="#2A1750"/><circle cx="43" cy="48" r="2.2" fill="#2A1750"/><circle cx="57" cy="48" r="2.2" fill="#2A1750"/><path d="M44 57q6 5 12 0" stroke="#2A1750" stroke-width="2.4" fill="none" stroke-linecap="round"/><path d="M70 74l3 7 7 1-5 5 1 7-6-4-6 4 1-7-5-5 7-1z" fill="#FFD66B"/></svg></div>
+    <b>เจ้าของรีสอร์ท</b><span class="role">OWNER</span>
+    <div class="deco"><div class="chipg"><i></i><i></i><i></i><i></i></div><svg class="sprk2" viewBox="-1.2 -1.2 2.4 2.4"><path d="M0-1C.12-.3.3-.12 1 0C.3.12.12.3 0 1C-.12.3-.3.12-1 0C-.3-.12-.12-.3 0-1Z" fill="#FFD66B"/></svg></div>
+    <div class="pw"><div class="dots"><i></i><i></i><i></i><i></i><i></i><i></i><input class="pin" inputmode="numeric" maxlength="6" autocomplete="off" aria-label="รหัส 6 หลัก"></div><button class="go">เข้าสู่ระบบ <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#2A1750" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg></button></div>
+    <div class="okb"><svg viewBox="0 0 80 80"><circle cx="40" cy="40" r="34" fill="none" stroke="#fff" stroke-width="5" opacity=".4"/><path d="M22 41l13 13 24-26" fill="none" stroke="#fff" stroke-width="7" stroke-linecap="round" stroke-linejoin="round"/></svg><em>ยินดีต้อนรับ</em><a href="#" class="out">ออกจากระบบ</a></div>
+   </div></div>
+
+  <div class="hang" data-k="s" style="--sd:-3s"><div class="lan" style="--c1:#FF9F43"></div><div class="clip"></div>
+   <div class="card" style="--c1:#FF9F43;--c2:#E94E77"><div class="slot"></div><div class="stripe"></div><div class="wm2">101</div>
+    <div class="av"><svg viewBox="0 0 100 100"><rect width="100" height="100" fill="#FFE3D6"/><path d="M14 100q2-28 36-28t36 28z" fill="#E94E77"/><rect x="58" y="80" width="18" height="10" rx="2" fill="#fff"/><circle cx="50" cy="26" r="9" fill="#2A1750"/><circle cx="50" cy="46" r="20" fill="#D9A27A"/><path d="M30 46q-2-26 20-26t20 26q-6-14-20-14t-20 14z" fill="#2A1750"/><path d="M28 46q0-30 22-30t22 30" stroke="#6A3AA2" stroke-width="3.5" fill="none"/><rect x="24" y="42" width="7" height="14" rx="3.5" fill="#6A3AA2"/><path d="M28 56q2 12 16 12" stroke="#6A3AA2" stroke-width="3" fill="none" stroke-linecap="round"/><circle cx="44" cy="68" r="3" fill="#6A3AA2"/><circle cx="43" cy="49" r="2.2" fill="#2A1750"/><circle cx="57" cy="49" r="2.2" fill="#2A1750"/><path d="M44 57q6 5 12 0" stroke="#2A1750" stroke-width="2.4" fill="none" stroke-linecap="round"/></svg></div>
+    <b>พนักงานต้อนรับ</b><span class="role">FRONT DESK</span>
+    <div class="deco"><div class="chipg"><i></i><i></i><i></i><i></i></div><svg class="sprk2" viewBox="-1.2 -1.2 2.4 2.4" style="animation-delay:-1s"><path d="M0-1C.12-.3.3-.12 1 0C.3.12.12.3 0 1C-.12.3-.3.12-1 0C-.3-.12-.12-.3 0-1Z" fill="#fff"/></svg></div>
+    <div class="pw"><div class="dots"><i></i><i></i><i></i><i></i><i></i><i></i><input class="pin" inputmode="numeric" maxlength="6" autocomplete="off" aria-label="รหัส 6 หลัก"></div><button class="go">เข้าสู่ระบบ <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#2A1750" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg></button></div>
+    <div class="okb"><svg viewBox="0 0 80 80"><circle cx="40" cy="40" r="34" fill="none" stroke="#fff" stroke-width="5" opacity=".4"/><path d="M22 41l13 13 24-26" fill="none" stroke="#fff" stroke-width="7" stroke-linecap="round" stroke-linejoin="round"/></svg><em>ยินดีต้อนรับ</em><a href="#" class="out">ออกจากระบบ</a></div>
+   </div></div>
+
+  <div class="hang" data-k="x" style="--sd:-2s"><div class="lan" style="--c1:#B9A3DB"></div><div class="clip"></div>
+   <div class="card plus"><div class="slot" style="background:rgba(0,0,0,.25)"></div><div class="stripe"></div><div class="wm2">+</div>
+    <div class="av" style="background:#FFF8EC"><svg viewBox="0 0 100 100"><circle cx="50" cy="50" r="30" fill="none" stroke="#B9A3DB" stroke-width="4" stroke-dasharray="9 8"/><path d="M50 36v28M36 50h28" stroke="#8B6FC0" stroke-width="7" stroke-linecap="round"/></svg></div>
+    <b>เพิ่มบัญชีอื่น</b><span class="role">NEW KEY</span>
+    <div class="deco"><div class="chipg" style="opacity:.55"><i></i><i></i><i></i><i></i></div><svg class="sprk2" viewBox="-1.2 -1.2 2.4 2.4" style="animation-delay:-.4s"><path d="M0-1C.12-.3.3-.12 1 0C.3.12.12.3 0 1C-.12.3-.3.12-1 0C-.3-.12-.12-.3 0-1Z" fill="#C2287F"/></svg></div>
+    <div class="pw"><input class="user" placeholder="ชื่อผู้ใช้" autocomplete="off"><div class="dots"><i></i><i></i><i></i><i></i><i></i><i></i><input class="pin" inputmode="numeric" maxlength="6" autocomplete="off" aria-label="รหัส 6 หลัก"></div><button class="go">เข้าสู่ระบบ <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#2A1750" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg></button></div>
+    <div class="okb"><svg viewBox="0 0 80 80"><circle cx="40" cy="40" r="34" fill="none" stroke="#fff" stroke-width="5" opacity=".4"/><path d="M22 41l13 13 24-26" fill="none" stroke="#fff" stroke-width="7" stroke-linecap="round" stroke-linejoin="round"/></svg><em>ยินดีต้อนรับ</em><a href="#" class="out">ออกจากระบบ</a></div>
+   </div></div>
+ </div>
+</div>
+<script>
+const $=s=>document.querySelector(s),$$=s=>[...document.querySelectorAll(s)];
+$('#stars').innerHTML=Array.from({length:24},(_,i)=>`<i style="left:${(i*37+11)%100}%;top:${(i*53+7)%46+10}%;animation-delay:${(i%7)*.6}s"></i>`).join('');
+
+/* ================= เงาฉากหลัง (เลื่อนช้า) : ศาลาไทย ตึกโรงแรม บังกะโล ปาล์ม ชิงช้าสวรรค์ ร่มชายหาด ================= */
+(function(){
+ const N='#E7D8F8',Fr='#D5BFF0',Dk='#CDB6EE';let h='',n=0;
+ const win=(x,y,w,hh,l)=>`<rect class="sw${l?' l':''}" style="--d:${(n++*.9%7).toFixed(1)}s" x="${x}" y="${y}" width="${w}" height="${hh}" rx="2"/>`;
+ const palm=(x,hh,lean)=>`<g fill="none" stroke="${N}" stroke-linecap="round"><path d="M${x} 222Q${x+lean} ${222-hh/2} ${x+lean*1.4} ${222-hh}" stroke-width="10"/><g class="sway" stroke-width="8"><path d="M${x+lean*1.4} ${222-hh}q-44-10-66 20M${x+lean*1.4} ${222-hh}q44-10 66 20M${x+lean*1.4} ${222-hh}q-34-38-70-24M${x+lean*1.4} ${222-hh}q34-38 70-24M${x+lean*1.4} ${222-hh}q0-36-4-46"/></g></g>`;
+ // ฉากไกล
+ h+=`<path d="M0 222V150Q100 106 200 138T400 130T600 146T800 114T1000 142T1200 124T1400 146T1600 150V222z" fill="${Fr}"/>`;
+ [[90,100,40],[470,92,56],[740,110,46],[1060,96,60],[1500,100,42]].forEach(([x,y,w])=>h+=`<rect x="${x}" y="${y+60}" width="${w}" height="${162-y}" fill="${Fr}"/>`);
+ // ศาลาไทย
+ h+=`<rect x="64" y="150" width="112" height="72" fill="${N}"/><path d="M26 152Q120 86 214 152Q120 130 26 152z" fill="${N}"/><path d="M62 120Q120 54 178 120Q120 100 62 120z" fill="${N}"/><path d="M120 66V38Q130 34 127 24" stroke="${N}" stroke-width="5" fill="none" stroke-linecap="round"/><path d="M26 152q-10-6-8-16M214 152q10-6 8-16" stroke="${N}" stroke-width="5" fill="none" stroke-linecap="round"/>`;
+ h+=win(84,166,18,32,1)+win(138,166,18,32);
+ h+=palm(262,118,10);
+ // ตึกโรงแรมใหญ่
+ h+=`<rect x="330" y="40" width="190" height="182" fill="${N}"/><rect x="362" y="24" width="126" height="22" rx="8" fill="${N}"/><rect x="422" y="-4" width="4" height="30" fill="${N}"/><path d="M426 -4l26 8-26 8z" fill="${N}"/><rect x="376" y="52" width="98" height="24" rx="9" fill="${Dk}"/><text x="425" y="70" text-anchor="middle" font-size="16" font-weight="700" letter-spacing="3" fill="${N}" font-family="Chakra Petch,sans-serif">HOTEL</text>`;
+ for(let r=0;r<5;r++)for(let c=0;c<6;c++){h+=win(346+c*28,90+r*24,17,14,(r*6+c)%4===0)}
+ for(let r=0;r<2;r++)h+=`<rect x="340" y="${103+r*48}" width="170" height="3" fill="${Dk}"/>`;
+ h+=`<rect x="404" y="196" width="42" height="26" rx="4" fill="${Dk}"/>`;for(let i=0;i<5;i++)h+=`<path d="M${398+i*13} 186h13l-3 12h-7z" fill="${i%2?Dk:N}"/>`;
+ // ปีกตึกเตี้ย + บังกะโลหลังคามุงจาก
+ h+=`<rect x="520" y="112" width="150" height="110" fill="${N}"/>`;for(let c=0;c<5;c++)h+=win(534+c*27,128,16,18,c%2)+win(534+c*27,164,16,18,(c+1)%3===0);
+ h+=`<path d="M700 150L790 70 880 150z" fill="${N}"/><path d="M730 140L790 86M760 144L800 100M790 148L826 114M820 148L848 124" stroke="${Dk}" stroke-width="3" fill="none"/><rect x="722" y="150" width="136" height="72" fill="${N}"/><rect x="772" y="170" width="34" height="52" rx="17" fill="${Dk}"/>`;
+ h+=palm(930,100,-10)+palm(990,132,12);
+ // ชิงช้าสวรรค์
+ h+=`<g transform="translate(1130 112)"><path d="M0 0L-36 110M0 0L36 110" stroke="${N}" stroke-width="7" stroke-linecap="round"/><g class="fw"><circle r="70" fill="none" stroke="${N}" stroke-width="6"/><circle r="8" fill="${N}"/><path d="M-70 0H70M0-70V70M-50-50L50 50M-50 50L50-50" stroke="${N}" stroke-width="3.5"/>`+[0,45,90,135,180,225,270,315].map(a=>`<circle cx="${(Math.cos(a*Math.PI/180)*70).toFixed(1)}" cy="${(Math.sin(a*Math.PI/180)*70).toFixed(1)}" r="9" fill="${N}"/>`).join('')+`</g></g>`;
+ // ร่มชายหาด 2 คัน เอียง
+ h+=`<g transform="rotate(-12 1290 222)"><path d="M1240 150a50 42 0 0 1 100 0z" fill="${N}"/><rect x="1288" y="150" width="6" height="72" fill="${N}"/></g><g transform="rotate(9 1380 222)"><path d="M1340 160a40 34 0 0 1 80 0z" fill="${N}"/><rect x="1377" y="160" width="6" height="62" fill="${N}"/></g>`;
+ // บังกะโล 2 + ปาล์ม
+ h+=`<path d="M1440 150L1500 92 1560 150z" fill="${N}"/><rect x="1450" y="150" width="100" height="72" fill="${N}"/>`+win(1466,170,20,22,1)+win(1514,170,20,22)+palm(1584,96,-8);
+ const svg=`<svg viewBox="0 0 1600 222" preserveAspectRatio="xMinYMax meet" style="overflow:visible">${h}</svg>`;
+ $('#skytrk').innerHTML=svg+svg})();
+
+/* ================= ฉากด้านล่าง : หลายฉากซ้อนทับกัน ================= */
+const D='#2A1750',PU='#5B3A9E',CO='#FF8C7A',CD='#E0584A',CR='#FFD0C4',OR='#FF9F43',PK='#F29AC1',Y='#FFD66B',GR='#4CB782',BL='#6EC3E8',BRN='#B07A45',W='#fff';
+const P=(x,y,o={})=>{const {s=1,sk='#F2C9A5',hr=D,sh=PU,pt=D,hs='short',walk=0,wave=0,rot=0,fl=1,skirt=0,tie='',cap='',ex='',arms=1,cls=''}=o;
+ let h=`<g transform="translate(${x} ${y}) rotate(${rot}) scale(${s*fl} ${s})"><g class="${cls}">`;
+ if(hs==='long')h+=`<path d="M-15 -104a15 15 0 0 1 30 0v22q-15 9-30 0z" fill="${hr}"/>`;
+ if(skirt){h+=`<rect x="-8" y="-40" width="7" height="40" rx="3.5" fill="${sk}" class="${walk?'wk1':''}"/><rect x="1" y="-40" width="7" height="40" rx="3.5" fill="${sk}" class="${walk?'wk2':''}"/>`}
+ else h+=`<rect x="-10" y="-46" width="10" height="46" rx="5" fill="${pt}" class="${walk?'wk1':''}"/><rect x="0" y="-46" width="10" height="46" rx="5" fill="${pt}" class="${walk?'wk2':''}"/>`;
+ if(arms)h+=`<g class="arm ${walk?'as b':''}"><rect x="-21" y="-88" width="8" height="38" rx="4" fill="${sh}"/><circle cx="-17" cy="-48" r="4.5" fill="${sk}"/></g>`;
+ h+=`<rect x="-14" y="-92" width="28" height="50" rx="12" fill="${sh}"/>`;
+ if(skirt)h+=`<path d="M-14 -52h28l6 26h-40z" fill="${pt}"/>`;
+ if(tie)h+=`<path d="M0 -88l-4 8 4 24 4-24z" fill="${tie}"/>`;
+ if(arms)h+=`<g class="arm ${wave?'wave':walk?'as':''}"><rect x="13" y="-88" width="8" height="38" rx="4" fill="${sh}"/><circle cx="17" cy="-48" r="4.5" fill="${sk}"/></g>`;
+ h+=`<circle cy="-106" r="13.5" fill="${sk}"/>`;
+ if(hs==='short')h+=`<path d="M-14 -108a14 14 0 0 1 28 0q-14-7-28 0z" fill="${hr}"/>`;
+ if(hs==='long')h+=`<path d="M-14 -108a14 14 0 0 1 28 0q-14-8-28 0z" fill="${hr}"/>`;
+ if(hs==='bun')h+=`<circle cy="-124" r="8" fill="${hr}"/><path d="M-14 -108a14 14 0 0 1 28 0q-14-8-28 0z" fill="${hr}"/>`;
+ if(hs==='white')h+=`<path d="M-14 -108a14 14 0 0 1 28 0q-14-7-28 0z" fill="#EEE"/>`;
+ if(cap)h+=`<rect x="-15" y="-124" width="30" height="12" rx="6" fill="${cap}"/><rect x="2" y="-116" width="20" height="5" rx="2.5" fill="${cap}"/>`;
+ h+=`<circle cx="5" cy="-106" r="1.7" fill="${D}"/><circle cx="-4" cy="-106" r="1.7" fill="${D}"/>`+ex+`</g></g>`;return h};
+const star=(x,y,r,c,d)=>`<path class="sprk" style="animation-delay:${d||0}s" transform="translate(${x} ${y}) scale(${r})" d="M0-1C.12-.3.3-.12 1 0C.3.12.12.3 0 1C-.12.3-.3.12-1 0C-.3-.12-.12-.3 0-1Z" fill="${c}"/>`;
+const plant=(x,y,s)=>`<g transform="translate(${x} ${y}) scale(${s})"><g class="sway"><ellipse cx="-14" cy="-42" rx="9" ry="24" transform="rotate(-24 -14 -42)" fill="${GR}"/><ellipse cx="14" cy="-44" rx="9" ry="26" transform="rotate(22 14 -44)" fill="#3A9E6B"/><ellipse cx="0" cy="-54" rx="8" ry="28" fill="#5BC48D"/><ellipse cx="-26" cy="-26" rx="8" ry="18" transform="rotate(-58 -26 -26)" fill="#3A9E6B"/><ellipse cx="27" cy="-27" rx="8" ry="18" transform="rotate(58 27 -27)" fill="${GR}"/></g><path d="M-18 -22h36l-6 22h-24z" fill="${OR}"/></g>`;
+let T='';
+/* --- A: เคาน์เตอร์ต้อนรับ (ช่างแต่งตัว 2 คนหลังเคาน์เตอร์ แขกเข้าคิว) --- */
+T+=`<path d="M-30 190C-40 120 40 60 150 90C220 10 380 30 410 110C500 130 500 232 400 232L10 232C-20 232 -20 215 -30 190z" fill="#BFE9F5"/>`;
+T+=`<g transform="translate(250 66)"><circle r="24" fill="#fff" stroke="${PU}" stroke-width="6"/><rect class="hd h" x="-1.5" y="-13" width="3" height="13" fill="${D}"/><rect class="hd" x="-1.5" y="-18" width="3" height="18" fill="${CD}"/><circle r="3" fill="${D}"/></g>`;
+T+=P(238,226,{sh:W,pt:D,hr:'#7A3E1D',hs:'bun',wave:1,cls:'br'})+P(318,226,{sh:CO,hr:D,hs:'long',sk:'#D9A27A',cls:'br'});
+T+=`<rect x="168" y="152" width="212" height="80" rx="6" fill="${CO}"/><rect x="156" y="142" width="236" height="14" rx="7" fill="${CD}"/><rect x="168" y="178" width="212" height="20" fill="${CR}"/>`+[0,1,2,3,4].map(i=>star(210+i*30,168,6,Y,i*.2)).join('');
+T+=`<rect x="332" y="104" width="44" height="30" rx="4" fill="${D}"/><rect class="scr" x="336" y="108" width="36" height="22" rx="2"/><rect x="348" y="134" width="12" height="8" fill="${D}"/>`;
+T+=`<g class="ding"><path d="M196 142a14 14 0 0 1 28 0z" fill="${Y}"/><rect x="192" y="142" width="36" height="5" rx="2.5" fill="#E0A82E"/><circle class="ring" cx="210" cy="136" r="16" fill="none" stroke="${Y}" stroke-width="3"/></g>`;
+T+=P(92,232,{sh:PU,hr:D,hs:'long',skirt:1,sk:'#F2C9A5',pt:'#E0584A',rot:-3})+P(138,232,{s:.6,sh:Y,pt:PU,rot:4})+`<g transform="rotate(10 176 232)"><rect x="168" y="190" width="30" height="44" rx="6" fill="${PU}"/><rect x="172" y="170" width="3" height="22" fill="#B7C0CC"/><rect x="171" y="168" width="14" height="4" rx="2" fill="#B7C0CC"/><circle cx="176" cy="236" r="4" fill="${D}"/><circle cx="192" cy="236" r="4" fill="${D}"/></g>`;
+T+=P(442,232,{sh:D,pt:D,tie:'#C2287F',hr:'#7A3E1D',rot:3,sk:'#D9A27A'})+`<rect x="458" y="196" width="32" height="24" rx="4" fill="${BRN}" transform="rotate(4 474 208)"/><rect x="468" y="190" width="12" height="7" rx="2" fill="none" stroke="${BRN}" stroke-width="3" transform="rotate(4 474 194)"/>`;
+T+=plant(504,232,.9)+star(120,60,9,Y,.3)+star(400,40,7,'#fff',.9);
+/* --- B: ลิฟต์ (ประตูเปิด-ปิด ชายสูงวัยลากกระเป๋าเดินออก) --- */
+T+=`<rect x="590" y="8" width="196" height="224" rx="8" fill="${PU}"/><rect x="602" y="26" width="172" height="206" fill="#FFF1DC"/><rect x="602" y="26" width="172" height="12" fill="#FFE2BC"/>`;
+T+=`<g class="stp">${P(690,232,{sh:D,pt:'#E96A5C',hs:'white',s:.98,cls:'br'})}<g transform="rotate(6 726 232)"><rect x="714" y="196" width="28" height="38" rx="6" fill="#6A3AA2"/><rect x="726" y="176" width="3" height="22" fill="#B7C0CC"/><circle cx="720" cy="236" r="4" fill="${D}"/><circle cx="736" cy="236" r="4" fill="${D}"/></g></g>`;
+T+=`<rect class="dl" x="602" y="26" width="86" height="206" fill="${OR}"/><rect class="dl" x="670" y="26" width="18" height="206" fill="#FF8A1F"/><rect class="dr" x="688" y="26" width="86" height="206" fill="${OR}"/><rect class="dr" x="688" y="26" width="18" height="206" fill="#FF8A1F"/>`;
+T+=`<rect x="640" y="-10" width="96" height="24" rx="5" fill="${D}"/><text class="flr" x="688" y="8" text-anchor="middle" font-size="16" font-weight="700" fill="${Y}" font-family="Chakra Petch,sans-serif">15</text><path d="M722 3l4-5 4 5z" fill="${Y}"/>`;
+T+=`<rect x="800" y="112" width="18" height="44" rx="5" fill="${D}"/><circle class="led" cx="809" cy="124" r="4.5" fill="${OR}"/><circle cx="809" cy="142" r="4" fill="#8B6FC0"/>`;
+T+=plant(850,232,1.05);
+/* --- C: ล็อบบี้ (หน้าต่างเมือง โซฟา คนเล่นมือถือ นาฬิกา โคมไฟ) --- */
+T+=`<svg x="900" y="6" width="226" height="138" viewBox="0 0 226 138" class="clipsvg"><rect width="226" height="138" rx="10" fill="#CFEFFB"/><g fill="#8EC9E4"><rect x="10" y="70" width="30" height="68"/><rect x="48" y="46" width="26" height="92"/><rect x="82" y="84" width="34" height="54"/><rect x="124" y="56" width="28" height="82"/><rect x="160" y="78" width="30" height="60"/><rect x="196" y="40" width="22" height="98"/></g><g class="cloud"><ellipse cx="30" cy="30" rx="26" ry="10" fill="#fff"/><ellipse cx="48" cy="24" rx="16" ry="9" fill="#fff"/></g><rect width="226" height="138" rx="10" fill="none" stroke="#fff" stroke-width="7"/><path d="M113 0V138" stroke="#fff" stroke-width="4"/></svg>`;
+T+=`<g transform="translate(1160 54)"><circle r="22" fill="#fff" stroke="${PU}" stroke-width="5"/><rect class="hd h" x="-1.5" y="-11" width="3" height="11" fill="${D}"/><rect class="hd" x="-1.5" y="-16" width="3" height="16" fill="${CD}"/><circle r="2.6" fill="${D}"/></g>`;
+T+=`<circle class="glow" cx="920" cy="150" r="46" fill="${Y}" opacity=".5"/><rect x="918" y="104" width="5" height="120" fill="${D}"/><path d="M896 110l14-34h24l14 34z" fill="${Y}"/>`;
+T+=`<rect x="932" y="148" width="214" height="74" rx="18" fill="${CO}"/><rect x="920" y="168" width="32" height="56" rx="13" fill="${CD}"/><rect x="1126" y="168" width="32" height="56" rx="13" fill="${CD}"/><rect x="944" y="188" width="190" height="36" rx="12" fill="${CD}"/><rect x="950" y="222" width="10" height="10" rx="3" fill="${D}"/><rect x="1118" y="222" width="10" height="10" rx="3" fill="${D}"/>`;
+T+=`<g class="br"><rect x="1008" y="118" width="32" height="68" rx="13" fill="${PU}"/><circle cx="1024" cy="102" r="14" fill="#F2C9A5"/><path d="M1008 106a16 16 0 0 1 32 0v14q-16 8-32 0z" fill="${D}" opacity=".0"/><path d="M1009 104a15 15 0 0 1 30 0q-15-8-30 0z" fill="${D}"/><path d="M1008 100q-6 22 4 34l8-8z" fill="${D}"/><rect x="1018" y="178" width="58" height="14" rx="7" fill="${D}"/><rect x="1066" y="178" width="13" height="46" rx="6" fill="${D}"/><rect x="1032" y="140" width="34" height="9" rx="4.5" fill="${PU}" transform="rotate(-18 1032 144)"/><rect x="1056" y="124" width="12" height="20" rx="3" fill="${D}" transform="rotate(8 1062 134)"/><rect class="scr" x="1058" y="126" width="8" height="14" rx="1" transform="rotate(8 1062 134)"/></g>`;
+T+=plant(1190,232,1.15)+star(1090,70,8,Y,.5)+star(960,38,6,'#fff',1.2);
+/* --- D: พนักงานเข็นรถกระเป๋า --- */
+T+=`<g class="bump"><path d="M1394 214V104Q1394 52 1480 52Q1566 52 1566 104V214" stroke="#E0A82E" stroke-width="7" fill="none"/><path d="M1426 214V72M1480 214V52M1534 214V72" stroke="#E0A82E" stroke-width="3.5"/><circle cx="1480" cy="48" r="7" fill="none" stroke="#E0A82E" stroke-width="4"/><rect x="1380" y="208" width="200" height="12" rx="6" fill="${D}"/>`;
+T+=`<g class="wob"><rect x="1404" y="158" width="74" height="52" rx="9" fill="${PK}"/><rect x="1432" y="150" width="18" height="9" rx="3" fill="none" stroke="${PK}" stroke-width="4"/></g><g class="wob d"><rect x="1486" y="176" width="72" height="34" rx="8" fill="${PU}"/></g><g class="wob"><rect x="1418" y="124" width="52" height="34" rx="8" fill="#2EC4B6"/><rect x="1436" y="117" width="16" height="8" rx="3" fill="none" stroke="#2EC4B6" stroke-width="4"/></g>`;
+T+=`<g><circle cx="1404" cy="230" r="10" fill="${D}"/><circle cx="1404" cy="230" r="4" fill="#fff"/><circle cx="1556" cy="230" r="10" fill="${D}"/><circle cx="1556" cy="230" r="4" fill="#fff"/></g></g>`;
+T+=P(1344,232,{sh:PU,pt:D,hr:D,cap:PU,walk:1,arms:0,rot:7,s:1.04,ex:`<rect x="8" y="-88" width="54" height="9" rx="4.5" fill="${PU}" transform="rotate(8 8 -84)"/><circle cx="62" cy="-78" r="5" fill="#F2C9A5"/>`})+star(1600,80,8,Y,.2)+star(1370,60,6,'#fff',.8);
+/* --- E: รถรับส่ง ท้ายรถเปิด คนขับยกกระเป๋า ครอบครัวลงจากรถ เด็กวิ่งถือลูกโป่ง --- */
+T+=`<path d="M1640 200C1620 140 1700 100 1790 118C1860 70 2000 90 2040 150C2100 160 2110 232 2040 232L1680 232C1640 232 1650 218 1640 200z" fill="#FFE0D2"/>`;
+T+=`<g class="bump"><rect x="1700" y="140" width="226" height="74" rx="20" fill="${PK}"/><path d="M1740 140l12-24h104l22 24z" fill="${PK}"/><path d="M1758 140l9-18h40v18zM1816 140V122h36l14 18z" fill="#CFEFFB"/><rect x="1770" y="102" width="62" height="14" rx="5" fill="${Y}"/><rect x="1700" y="188" width="226" height="8" fill="${CD}"/><rect x="1916" y="164" width="12" height="14" rx="4" fill="${Y}"/><rect x="1700" y="158" width="22" height="30" fill="${D}"/></g>`;
+T+=`<g class="trunk"><rect x="1626" y="150" width="76" height="9" rx="4.5" fill="${CD}"/></g>`;
+T+=[1752,1878].map(x=>`<circle cx="${x}" cy="216" r="19" fill="${D}"/><g class="whl"><circle cx="${x}" cy="216" r="8" fill="#fff"/><path d="M${x} 208v16M${x-8} 216h16" stroke="${D}" stroke-width="2.5"/></g>`).join('');
+T+=P(1654,232,{sh:OR,pt:D,hr:'#7A3E1D',cap:OR,sk:'#D9A27A'})+`<g class="lift"><rect x="1668" y="184" width="32" height="42" rx="7" fill="${PU}"/><rect x="1678" y="176" width="12" height="8" rx="3" fill="none" stroke="${PU}" stroke-width="4"/></g>`;
+T+=`<g transform="rotate(8 1980 232)">`+P(1976,232,{sh:'#E96A5C',pt:'#2A1750',skirt:1,hs:'long',walk:1,sk:'#D9A27A'})+`<g transform="rotate(6 1930 232)"><rect x="1914" y="192" width="30" height="40" rx="6" fill="${GR}"/><rect x="1926" y="172" width="3" height="22" fill="#B7C0CC"/><circle cx="1922" cy="236" r="4" fill="${D}"/><circle cx="1938" cy="236" r="4" fill="${D}"/></g></g>`;
+T+=`<g class="runk">`+`<g class="hop">`+P(2060,232,{s:.64,sh:Y,pt:PU,walk:1,hs:'short',rot:6})+`</g><path d="M2068 168Q2072 138 2080 104" stroke="#8B6FC0" stroke-width="2" fill="none"/><g class="balx"><ellipse cx="2082" cy="82" rx="20" ry="25" fill="#FF5A6E"/><path d="M2078 106l4 8 4-8z" fill="#FF5A6E"/><ellipse cx="2074" cy="74" rx="5" ry="9" fill="#fff" opacity=".5" transform="rotate(20 2074 74)"/></g></g>`;
+T+=star(1860,60,9,'#fff',.4)+star(2000,40,7,Y,1);
+/* --- F: สระ + ร่ม + ปาล์ม + โต๊ะอาหารเช้า + สลัดน้ำ --- */
+T+=palm2=`<g><path d="M2140 232Q2154 170 2132 100" stroke="${BRN}" stroke-width="12" fill="none" stroke-linecap="round"/><g class="sway" fill="${GR}"><ellipse cx="2096" cy="108" rx="44" ry="11" transform="rotate(-22 2096 108)"/><ellipse cx="2170" cy="106" rx="44" ry="11" transform="rotate(22 2170 106)"/><ellipse cx="2104" cy="84" rx="38" ry="10" transform="rotate(-52 2104 84)"/><ellipse cx="2162" cy="82" rx="38" ry="10" transform="rotate(52 2162 82)"/><ellipse cx="2132" cy="70" rx="10" ry="34"/><circle cx="2124" cy="116" r="6" fill="${BRN}"/><circle cx="2140" cy="118" r="6" fill="${BRN}"/></g></g>`;
+T+=`<rect x="2180" y="170" width="214" height="62" rx="18" fill="${BL}"/><g class="rip" opacity=".75" clip-path="inset(0)"><path d="M2160 192q10-8 20 0t20 0t20 0t20 0t20 0t20 0t20 0t20 0t20 0t20 0t20 0t20 0t20 0t20 0" stroke="#fff" stroke-width="3" fill="none"/><path d="M2150 214q10-8 20 0t20 0t20 0t20 0t20 0t20 0t20 0t20 0t20 0t20 0t20 0t20 0t20 0t20 0" stroke="#fff" stroke-width="3" fill="none"/></g>`;
+T+=`<rect x="2376" y="150" width="30" height="8" rx="4" fill="#B7C0CC"/><rect x="2394" y="150" width="6" height="82" fill="#B7C0CC"/>`;
+T+=`<g class="dive"><circle cx="2380" cy="136" r="9" fill="#F2C9A5"/><rect x="2371" y="143" width="18" height="16" rx="7" fill="${K=PK}"/><path d="M2368 134a12 12 0 0 1 24 0q-12-6-24 0z" fill="${D}"/></g>`;
+T+=`<g class="spl"><path d="M2276 172q-8-26-2-40M2286 172q2-30 12-38M2296 172q10-22 24-26" stroke="#fff" stroke-width="4" fill="none" stroke-linecap="round"/><circle cx="2270" cy="130" r="4" fill="#fff"/><circle cx="2304" cy="128" r="4" fill="#fff"/></g>`;
+T+=`<g transform="rotate(-9 2480 232)"><rect x="2476" y="96" width="6" height="136" fill="${BRN}"/><path d="M2420 100a60 48 0 0 1 120 0z" fill="${PK}"/><path d="M2440 100q0-34 40-48q-6 30-6 48zM2540 100q0-34-40-48q6 30 6 48z" fill="#fff" opacity=".9"/><rect x="2410" y="206" width="104" height="14" rx="7" fill="${Y}"/><path d="M2410 206l-26-26" stroke="${Y}" stroke-width="14" stroke-linecap="round"/><rect x="2420" y="220" width="7" height="12" fill="${BRN}"/><rect x="2500" y="220" width="7" height="12" fill="${BRN}"/></g>`;
+T+=star(2200,110,8,Y,.6)+star(2330,70,6,'#fff',1.4);
+const ONE=`<svg viewBox="0 0 2600 262">${T}</svg>`;
+$('#tape').innerHTML=ONE+ONE;
+// เลขชั้นลิฟต์
+let fl=13;setInterval(()=>{fl=fl>=18?13:fl+1;$$('.flr').forEach(t=>t.textContent=fl)},2600);
+
+/* ================= ล็อกอิน (จำลอง) ================= */
+const STAR='M0-1C.12-.3.3-.12 1 0C.3.12.12.3 0 1C-.12.3-.3.12-1 0C-.3-.12-.12-.3 0-1Z';
+function burst(el){const r=el.getBoundingClientRect(),cx=r.left+r.width/2,cy=r.top+r.height/2;const c=['#FFD66B','#fff','#F29AC1','#7BC47F'];
+ for(let i=0;i<16;i++){const a=i/16*Math.PI*2,d=110+Math.random()*130;const s=document.createElementNS('http://www.w3.org/2000/svg','svg');s.setAttribute('viewBox','-1.2 -1.2 2.4 2.4');s.classList.add('cf');s.style.cssText=`left:${cx-15}px;top:${cy-15}px;--tx:${Math.cos(a)*d}px;--ty:${Math.sin(a)*d}px`;s.innerHTML=`<path d="${STAR}" fill="${c[i%4]}" stroke="#2A1750" stroke-width=".1"/>`;document.body.appendChild(s);setTimeout(()=>s.remove(),1400)}}
+$$('.hang').forEach(hg=>{
+ const pin=hg.querySelector('.pin'),dots=[...hg.querySelectorAll('.dots i')],go=hg.querySelector('.go');
+ const upd=()=>{pin.value=pin.value.replace(/\D/g,'');dots.forEach((d,i)=>d.classList.toggle('f',i<pin.value.length));go.classList.toggle('rdy',pin.value.length===6)};
+ pin.addEventListener('input',upd);
+ pin.addEventListener('keydown',e=>{if(e.key==='Enter')go.click()});
+ hg.addEventListener('click',e=>{if(hg.classList.contains('ok')||e.target.closest('.pw'))return;
+  $$('.hang').forEach(x=>x.classList.toggle('on',x===hg));setTimeout(()=>{const f=hg.querySelector('.user')||pin;f.focus()},80)});
+ go.addEventListener('click',e=>{e.stopPropagation();
+  if(pin.value.length<6){go.animate([{transform:'translateX(-6px)'},{transform:'translateX(6px)'},{transform:'none'}],{duration:260});pin.focus();return}
+  hg.classList.add('ok');$('#stage').classList.add('wel');burst(hg.querySelector('.card'))});
+ hg.querySelector('.out').addEventListener('click',e=>{e.preventDefault();e.stopPropagation();hg.classList.remove('ok','on');$('#stage').classList.remove('wel');pin.value='';upd();hg.querySelectorAll('.user').forEach(u=>u.value='')});
+});
+</script></body></html>
