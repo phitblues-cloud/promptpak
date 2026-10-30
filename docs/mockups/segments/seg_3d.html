@@ -1,0 +1,114 @@
+<!doctype html><html lang="th"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>กลุ่มลูกค้า — วันของลูกค้าแบบ 3 มิติ</title>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:wght@600&family=Noto+Sans+Thai:wght@300;400;500;600;700&family=Noto+Serif+Thai:wght@600;700&display=swap" rel="stylesheet">
+<style>
+:root{--cream:#FBF6EF;--ink:#2B1B3A;--mut:#7D7090;--line:#EADFEF;--pur:#4B2477;--pink:#B02A86;--red:#C2264B}
+*{box-sizing:border-box}body{margin:0;background:var(--cream);color:var(--ink);font:15px/1.6 'Noto Sans Thai',sans-serif;padding:18px 14px 50px}.w{max-width:900px;margin:0 auto}
+h1{font:700 1.4rem 'Noto Serif Thai',serif;color:var(--pur);margin:0}.tag{display:inline-block;background:#FFF1C7;color:#7A5A00;border-radius:99px;font-size:.75rem;padding:2px 12px;font-weight:600}
+.sub{color:var(--mut);font-size:.86rem;margin:4px 0 12px}
+.row{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px}.btn{border:1.5px solid #D9CBE6;background:#fff;border-radius:99px;padding:6px 15px;font:600 .85rem 'Noto Sans Thai';color:var(--pur);cursor:pointer;display:flex;align-items:center;gap:7px}.btn.on{background:var(--pur);color:#fff;border-color:var(--pur)}.btn i{width:10px;height:10px;border-radius:50%;display:inline-block}
+.stage{position:relative;border-radius:22px;overflow:hidden;background:linear-gradient(#FFF8EE,#F4EAF7);border:1px solid var(--line);touch-action:none}
+#cv{width:100%;height:430px;display:block;cursor:grab}#cv:active{cursor:grabbing}
+.lb{position:absolute;transform:translate(-50%,-100%);background:rgba(255,255,255,.96);border:1px solid var(--line);border-radius:12px;padding:3px 10px 4px;font-size:.74rem;line-height:1.3;text-align:center;box-shadow:0 4px 14px #4B247722;pointer-events:none;white-space:nowrap;transition:opacity .4s,transform .4s}
+.lb b{display:block;font-size:.8rem}.lb span{color:var(--mut)}.lb.off{opacity:.35}.lb.now{border-color:var(--pur);box-shadow:0 0 0 3px #4B247722,0 4px 14px #4B247733}
+.lb.care{border-color:var(--red);background:#FFF3F5}.lb em{display:none;font-style:normal;color:var(--red);font-weight:700;font-size:.68rem}.lb.care em{display:block}
+.hint{position:absolute;left:12px;bottom:10px;font-size:.72rem;color:var(--mut);background:#ffffffaa;border-radius:99px;padding:1px 10px}
+.play{position:absolute;right:12px;bottom:10px}
+.panel{background:#fff;border:1px solid var(--line);border-radius:18px;padding:16px;margin-top:12px;animation:up .4s ease}
+@keyframes up{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+.ph{display:flex;align-items:center;gap:10px;margin-bottom:6px}.ph .dot{width:14px;height:14px;border-radius:50%}.ph b{font:700 1.15rem 'Noto Serif Thai',serif}.ph .sm{margin-left:auto;text-align:right;color:var(--mut);font-size:.8rem}.ph .sm b{display:block;font:700 1.1rem 'Fraunces',serif;color:var(--ink)}
+.nums{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin:10px 0}.nums div{background:#FAF5FD;border-radius:12px;padding:8px 10px}.nums small{display:block;color:var(--mut);font-size:.72rem}.nums b{font:700 1.05rem 'Fraunces',serif}
+.ai{background:linear-gradient(135deg,#FFF6F8,#F6F0FC);border-radius:14px;padding:10px 14px;font-size:.9rem;margin-bottom:8px}.ai h4,.how h4{margin:0 0 3px;font-size:.78rem;color:var(--pink)}
+.cbox{background:#FBE5E8;border-radius:14px;padding:10px 14px;font-size:.9rem;margin-bottom:8px;min-height:44px}.cbox h4{margin:0 0 3px;font-size:.78rem;color:var(--red)}
+.how ul{margin:2px 0 0;padding-left:18px;font-size:.9rem}.foot{color:var(--mut);font-size:.76rem;margin-top:10px}
+@media(max-width:620px){#cv{height:360px}.nums{grid-template-columns:1fr 1fr}.lb{font-size:.66rem;padding:2px 6px}}
+</style></head><body><div class="w">
+<h1>วันของลูกค้าแต่ละกลุ่ม · มุมมอง 3 มิติ</h1>
+<p class="sub"><span class="tag">ภาพตัวอย่าง · ตัวเลขสมมติ</span> &nbsp; เลือกกลุ่ม แล้วดูลูกค้าเดินในรีสอร์ทจริงๆ ช่วงที่ควรดูแลจะมีวงแดงกระพริบ · ลากฉากเพื่อหมุนดูได้</p>
+<div class="row" id="tabs"></div>
+<div class="stage" id="stage"><canvas id="cv"></canvas><span class="hint">ลากเพื่อหมุน</span><button class="btn play" id="replay">▶ เล่นอีกครั้ง</button></div>
+<div class="panel" id="panel"></div>
+</div>
+<script>
+const G=[
+ {n:'ช่างและผู้รับเหมาพักยาว',c:'#6B3AA8',cnt:28,pct:32,nights:'9.2 คืน',spend:'11,200 ฿',rep:'78%',sat:'4.6',people:4,
+  steps:[['ถึงรีสอร์ท','เย็น ~17:30'],['เช็คอิน','~17:45'],['อาหารเช้า','ยังไม่เก็บเวลา'],['ซักรีด / ห้องพัก','ระหว่างสัปดาห์']],care:3,
+  note:'พักเป็นสัปดาห์ ช่วงกลางสัปดาห์คือจุดที่ควรเช็คเรื่องซักรีดและอาหารเช้า ก่อนที่ความเหนื่อยสะสมกลายเป็นความไม่พอใจ',
+  ai:'ส่วนใหญ่มากับบริษัทผู้รับเหมาหรือโรงงานในพื้นที่ จองล่วงหน้านานและพักเป็นสัปดาห์ ชอบห้องเดิม ซักรีดและอาหารเช้าใช้บ่อย',
+  how:['เสนอราคารายสัปดาห์และห้องเดิมให้ก่อน','จัดซักรีดและอาหารเช้าเป็นแพ็กเกจ','ถามความพึงพอใจกลางสัปดาห์']},
+ {n:'พนักงานบริษัทเดินทางด่วน',c:'#C2264B',cnt:24,pct:28,nights:'2.1 คืน',spend:'4,300 ฿',rep:'61%',sat:'4.3',people:3,
+  steps:[['ถึงรีสอร์ท','ค่ำ ~20:30'],['เช็คอิน','~20:40'],['อาหารเช้า','ยังไม่เก็บเวลา'],['เช็คเอาท์','~08:00 + ขอใบกำกับ']],care:1,
+  note:'มาดึกและเหนื่อย อยากเช็คอินเร็ว ถ้าต้องรอที่เคาน์เตอร์คือจุดที่เสียคะแนนมากที่สุด ควรเตรียมห้องและกุญแจไว้ก่อนถึง',
+  ai:'จองก่อนวันพักไม่ถึง 2 วัน เบิกบริษัทเป็นหลัก ต้องการใบกำกับภาษีเร็ว เช็คอินดึกบ่อย',
+  how:['ส่งใบกำกับภาษีให้ภายในวันเช็คเอาท์','มีช่องเช็คอินดึกที่ไม่ต้องรอ','เสนอวางบิลรายเดือนให้ลูกค้าบริษัท']},
+ {n:'ครอบครัวพักผ่อนสุดสัปดาห์',c:'#E0762F',cnt:21,pct:24,nights:'2.0 คืน',spend:'5,100 ฿',rep:'38%',sat:'4.1',people:5,
+  steps:[['ถึงรีสอร์ท','ศุกร์เย็น ~18:00'],['เช็คอิน','~18:15'],['อาหารเช้า','เสาร์เช้า'],['พักผ่อน / เช็คเอาท์','อาทิตย์ ~11:00']],care:2,
+  note:'ครอบครัวให้ความสำคัญกับอาหารเช้าและความสะอาด ช่วงอาหารเช้าคือจังหวะที่พนักงานทักทายเด็กๆ ได้ผลที่สุด',
+  ai:'พักศุกร์–อาทิตย์ มากันหลายคนและมีเด็ก จองผ่าน LINE ให้ความสำคัญกับความสะอาดและอาหารเช้า',
+  how:['ย้ำเรื่องเตียงเสริมและอาหารเช้าตอนยืนยัน','ส่งข้อความชวนกลับมาก่อนวันหยุดยาว','ให้พนักงานทักทายเด็กๆ ตอนเช็คอิน']},
+ {n:'แวะพักระหว่างทาง',c:'#2E8B7A',cnt:14,pct:16,nights:'1.1 คืน',spend:'1,300 ฿',rep:'9%',sat:'3.7',people:2,
+  steps:[['ถึงรีสอร์ท','บ่าย/เย็น ~16:00'],['เช็คอิน','~16:10'],['อาหารเช้า','ยังไม่เก็บเวลา'],['เช็คเอาท์','~09:00']],care:3,
+  note:'พักคืนเดียวแล้วไปต่อ ตอนเช็คเอาท์คือโอกาสเดียวที่จะขอ LINE และเชิญเป็นสมาชิก ก่อนที่เขาจะขับต่อไป',
+  ai:'มาหน้าร้านหรือโทรมาวันเดียวกัน พักคืนเดียวแล้วไปต่อ ราคาและเวลาเช็คอินมีผลกับการตัดสินใจ',
+  how:['บอกราคาและเวลาเช็คอินชัดตั้งแต่ประโยคแรก','ขอเบอร์/LINE ตอนเช็คอินเพื่อทักกลับมา','เสนอสมาชิกถ้าเดินทางเส้นนี้บ่อย']}];
+/* ---------- 3D (เขียนเอง · ภาพเฉียงมุมสูง หมุนได้) ---------- */
+const cv=document.getElementById('cv'),cx=cv.getContext('2d'),stage=document.getElementById('stage');let W=0,H=0,S=30,dpr=Math.min(2,devicePixelRatio||1);
+let az=.6,azT=.6,drag=null;
+function size(){const r=cv.getBoundingClientRect();W=r.width;H=r.height;cv.width=W*dpr;cv.height=H*dpr;cx.setTransform(dpr,0,0,dpr,0,0);S=Math.min(W/31,H/21.5)}
+function P(x,y,z){const c=Math.cos(az),s=Math.sin(az),X=x*c-z*s,Z=x*s+z*c;return [W/2+(X-Z)*.866*S,H*.6+(X+Z)*.5*S-y*S*1.0,X+Z]}
+const sh=(hex,k)=>{const n=parseInt(hex.slice(1),16);let r=n>>16,g=n>>8&255,b=n&255;const f=v=>Math.max(0,Math.min(255,Math.round(v*k)));return `rgb(${f(r)},${f(g)},${f(b)})`};
+function box(o){ // {x,z,w,d,h,y0,c}
+ const x0=o.x-o.w/2,x1=o.x+o.w/2,z0=o.z-o.d/2,z1=o.z+o.d/2,y0=o.y0||0,y1=y0+o.h;
+ const faces=[ {n:[0,1,0],v:[[x0,y1,z0],[x1,y1,z0],[x1,y1,z1],[x0,y1,z1]],k:1.08},{n:[1,0,0],v:[[x1,y0,z0],[x1,y1,z0],[x1,y1,z1],[x1,y0,z1]],k:.86},{n:[-1,0,0],v:[[x0,y0,z0],[x0,y1,z0],[x0,y1,z1],[x0,y0,z1]],k:.86},
+  {n:[0,0,1],v:[[x0,y0,z1],[x0,y1,z1],[x1,y1,z1],[x1,y0,z1]],k:.72},{n:[0,0,-1],v:[[x0,y0,z0],[x0,y1,z0],[x1,y1,z0],[x1,y0,z0]],k:.72}];
+ const c=Math.cos(az),s=Math.sin(az);
+ return {depth:P(o.x,y0+o.h/2,o.z)[2]+(o.bias||0),draw(){faces.forEach(f=>{const nx=f.n[0]*c-f.n[2]*s,nz=f.n[0]*s+f.n[2]*c;if(f.n[1]!==1&&nx+nz<=0)return;
+   cx.beginPath();f.v.forEach((p,i)=>{const q=P(...p);i?cx.lineTo(q[0],q[1]):cx.moveTo(q[0],q[1])});cx.closePath();cx.fillStyle=sh(o.c,f.k);cx.fill();if(o.edge){cx.strokeStyle='#0000000d';cx.stroke()}})}}}
+const PATH=[[-8,2.6],[-3.2,2.6],[-3.2,-1.4],[2.2,-1.4],[6.6,-1.4]],SPT=[0,1,3,4];
+function scene(){const it=[];
+ it.push(box({x:0,z:0,w:21,d:13,h:.5,y0:-.5,c:'#E8DCCB',bias:-99}));it.push(box({x:0,z:0,w:20,d:12,h:.12,y0:0,c:'#CFE3C2',bias:-98}));
+ for(let i=0;i<PATH.length-1;i++){const a=PATH[i],b=PATH[i+1];it.push(box({x:(a[0]+b[0])/2,z:(a[1]+b[1])/2,w:Math.abs(b[0]-a[0])+1.1,d:Math.abs(b[1]-a[1])+1.1,h:.05,y0:.12,c:'#E9DDC9',bias:-90}))}
+ it.push(box({x:-3.2,z:5,w:3.6,d:2,h:1.7,c:'#8B3FA8',edge:1}));it.push(box({x:-3.2,z:5,w:3.9,d:2.3,h:.28,y0:1.7,c:'#4B2477'}));
+ it.push(box({x:2.2,z:-4.2,w:4,d:2.2,h:1.5,c:'#F0C27B',edge:1}));it.push(box({x:2.2,z:-4.2,w:4.3,d:2.5,h:.28,y0:1.5,c:'#E0762F'}));
+ [5.2,7,8.8].forEach((x,i)=>{it.push(box({x,z:-4.4,w:1.4,d:1.5,h:1.1,c:i==1?'#F6C9D6':'#FBE3EA',edge:1}));it.push(box({x,z:-4.4,w:1.6,d:1.7,h:.22,y0:1.1,c:'#C2264B'}))});
+ it.push(box({x:-8.6,z:1.5,w:.45,d:.45,h:1.8,c:'#4B2477'}));it.push(box({x:-8.6,z:3.7,w:.45,d:.45,h:1.8,c:'#4B2477'}));it.push(box({x:-8.6,z:2.6,w:.4,d:2.6,h:.35,y0:1.8,c:'#B02A86'}));
+ [[-7,5],[-6,-4],[-1,-4.8],[6,3],[8,1],[-9,-3],[9,4.5],[0,4.2]].forEach(t=>{it.push({depth:P(t[0],0,t[1])[2],draw(){const b=P(t[0],0,t[1]),h=P(t[0],1.9,t[1]);cx.fillStyle='#8A6A4A';cx.fillRect(b[0]-2,b[1]-S*.5,4,S*.5);[[0,1],[.45,.78],[.9,.55]].forEach(([dy,k])=>{cx.beginPath();cx.ellipse(b[0],b[1]-S*(.7+dy*1.1),S*(.62-dy*.28),S*.42,0,0,6.28);cx.fillStyle=sh('#5FA66B',1.05-dy*.12);cx.fill()})}})});
+ return it}
+const SC=scene();
+let cur=0,T0=0,prog=0,doneAt=null;
+function pos(p){const i=Math.min(Math.floor(p),PATH.length-2),f=p-i;return [PATH[i][0]+(PATH[i+1][0]-PATH[i][0])*f,PATH[i][1]+(PATH[i+1][1]-PATH[i][1])*f]}
+function timeline(t){ // วินาที → ตำแหน่งบนเส้นทาง, สถานีล่าสุดที่ถึง
+ let p=0,st=-1,tt=t;const mv=1.5,dw=1.1;
+ for(let k=0;k<4;k++){const a=SPT[k-1]??0,b=SPT[k];if(k>0){if(tt<mv){p=a+(b-a)*(tt/mv);return {p,st:k-1,moving:true}}tt-=mv}else{ }
+  if(tt<dw){return {p:b,st:k,moving:false}}tt-=dw}return {p:SPT[3],st:3,moving:false,end:true}}
+function figs(g,tl,el){const out=[];const [x,z]=pos(tl.p);const sx=[[0,0],[.5,.3],[-.4,.35],[.3,-.45],[-.5,-.3]];
+ for(let i=0;i<g.people;i++){const o=sx[i],bob=tl.moving?Math.abs(Math.sin(el*9+i))*.12:Math.sin(el*2+i)*.03,kid=g.n.includes('ครอบครัว')&&i>=3;const px=x+o[0],pz=z+o[1];
+  out.push({depth:P(px,0,pz)[2]+.2,draw(){const b=P(px,bob,pz),h=kid?.8:1.1;cx.fillStyle='#0002';cx.beginPath();cx.ellipse(b[0],b[1]+3,S*.28,S*.14,0,0,6.28);cx.fill();
+   cx.fillStyle=sh(g.c,.92);cx.beginPath();cx.roundRect?cx.roundRect(b[0]-S*.2,b[1]-S*h,S*.4,S*h,S*.15):cx.rect(b[0]-S*.2,b[1]-S*h,S*.4,S*h);cx.fill();
+   cx.fillStyle='#FBE0CC';cx.beginPath();cx.arc(b[0],b[1]-S*h-S*.2,S*.2,0,6.28);cx.fill()}})}return out}
+const STP=[[-8,2.6],[-3.2,2.6],[2.2,-1.4],[6.6,-1.4]];
+const lbs=[0,1,2,3].map(()=>{const d=document.createElement('div');d.className='lb';stage.appendChild(d);return d});
+function ring(g,tl,el){if(!(tl.st>=g.care&&!(tl.st===g.care&&tl.moving)))return null;const c=STP[g.care];const k=(el*1.2)%1;
+ return {depth:P(c[0],0,c[1])[2]-50,draw(){cx.strokeStyle=`rgba(194,38,75,${1-k})`;cx.lineWidth=3;cx.beginPath();for(let i=0;i<=40;i++){const a=i/40*6.28,q=P(c[0]+Math.cos(a)*(1+k*1.6),.2,c[1]+Math.sin(a)*(1+k*1.6));i?cx.lineTo(q[0],q[1]):cx.moveTo(q[0],q[1])}cx.stroke();
+   cx.fillStyle='rgba(194,38,75,.18)';cx.beginPath();for(let i=0;i<=40;i++){const a=i/40*6.28,q=P(c[0]+Math.cos(a)*1,.2,c[1]+Math.sin(a)*1);i?cx.lineTo(q[0],q[1]):cx.moveTo(q[0],q[1])}cx.fill()}}}
+let raf;function loop(ts){if(!T0)T0=ts;const el=(ts-T0)/1000;az+=(azT-az)*.12;if(!drag)azT+=0;
+ cx.clearRect(0,0,W,H);const g=G[cur],tl=timeline(el);const items=[...SC,...figs(g,tl,el)];const r=ring(g,tl,el);if(r)items.push(r);
+ items.sort((a,b)=>a.depth-b.depth).forEach(i=>i.draw());
+ STP.forEach((s,i)=>{const q=P(s[0],2.6,s[1]);const l=lbs[i];l.style.left=q[0]+'px';l.style.top=q[1]+'px';
+  l.innerHTML=`<b>${g.steps[i][0]}</b><span>${g.steps[i][1]}</span><em>ควรดูแล</em>`;l.classList.toggle('now',tl.st===i&&!tl.end);l.classList.toggle('off',i>tl.st);l.classList.toggle('care',i===g.care&&tl.st>=g.care&&!tl.moving)});
+ const nt=document.getElementById('cnote');if(nt)nt.textContent=tl.end?g.note:'กำลังเล่น…';
+ raf=requestAnimationFrame(loop)}
+/* ---------- UI ---------- */
+function setG(i){cur=i;T0=0;document.querySelectorAll('#tabs .btn').forEach((b,j)=>b.classList.toggle('on',j===i));
+ const g=G[i];document.getElementById('panel').innerHTML=`<div class="ph"><span class="dot" style="background:${g.c}"></span><b>${g.n}</b><div class="sm"><b>${g.cnt} คน</b>${g.pct}% ของลูกค้าที่พักจริง</div></div>
+ <div class="nums"><div><small>พักเฉลี่ย</small><b>${g.nights}</b></div><div><small>ยอดใช้จ่ายเฉลี่ย/ครั้ง</small><b>${g.spend}</b></div><div><small>กลับมาซ้ำ</small><b>${g.rep}</b></div><div><small>ความพึงพอใจ</small><b>${g.sat} / 5</b></div></div>
+ <div class="cbox"><h4>จุดที่ควรดูแล</h4><span id="cnote">กำลังเล่น…</span></div>
+ <div class="ai"><h4>✦ AI เล่าให้ฟัง</h4>${g.ai}</div><div class="how"><h4>วิธีดูแลที่ควรทำ</h4><ul>${g.how.map(x=>`<li>${x}</li>`).join('')}</ul></div>
+ <p class="foot">ชื่อกลุ่ม เรื่องเล่า และวิธีดูแลเขียนโดย AI · จำนวนคน ค่าเฉลี่ย และความพึงพอใจคำนวณโดยระบบ · เวลาแต่ละช่วงมาจากเวลาเช็คอิน/เช็คเอาท์จริง (เวลาอาหารเช้ายังไม่ได้เก็บ)</p>`}
+document.getElementById('tabs').innerHTML=G.map((g,i)=>`<button class="btn"><i style="background:${g.c}"></i>${g.n}</button>`).join('');
+document.getElementById('tabs').onclick=e=>{const b=e.target.closest('.btn');if(b)setG([...b.parentNode.children].indexOf(b))};
+document.getElementById('replay').onclick=()=>{T0=0};
+cv.addEventListener('pointerdown',e=>{drag=e.clientX;cv.setPointerCapture(e.pointerId)});cv.addEventListener('pointermove',e=>{if(drag!=null){azT+=(e.clientX-drag)*.008;drag=e.clientX}});
+['pointerup','pointercancel'].forEach(ev=>cv.addEventListener(ev,()=>drag=null));
+addEventListener('resize',size);size();setG(0);raf=requestAnimationFrame(loop);
+</script></body></html>
