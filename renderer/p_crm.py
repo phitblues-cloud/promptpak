@@ -54,6 +54,48 @@ def build_fb():
         out.append(['G' if r['source'] == 'Google' else 'L', dno(r['created_at']) - BASE, r['rating_5'], r['text'], areas, pol, gi, [r['text']] * len(areas)])
     return out
 
+
+def build_funnel():
+    """เส้นทางลูกค้า (กล่อง "การจอง" ในแดชบอร์ด): [ดัชนีแขก, วันที่ทักครั้งแรก, จองไหม, เข้าพักจริงไหม, กลับมาซ้ำไหม] ต่อแชท LINE ที่ผูกกับแขก"""
+    by = collections.defaultdict(list)
+    for b in BK + BC:
+        by[b['gid']].append(b)
+    out, seen = [], set()
+    for t in m.get('line_chats') or []:
+        gid = t.get('guest_id')
+        if gid not in GIDX or gid in seen:
+            continue
+        cm = [x['at'] for x in t.get('messages') or [] if x.get('from') == 'ลูกค้า']
+        if not cm:
+            continue
+        seen.add(gid)
+        d0 = dno(min(cm))
+        bs = by.get(gid, [])
+        booked = any(b['madeAt'] // 86400000 >= d0 - 1 for b in bs if b.get('madeAt'))
+        stays = [b for b in bs if b['stage'] in ('now', 'outdone') or b['ci']]
+        st = bool(booked and stays)   # นับเป็นกลุ่มเดียวกันทุกขั้น (ขั้นหลังต้องผ่านขั้นก่อน)
+        out.append([GIDX[gid], d0 - BASE, 1 if booked else 0, 1 if st else 0, 1 if st and len([b for b in bs if b['stage'] is not None]) >= 2 else 0])
+    return out
+
+FUN_JS = r"""
+  // เส้นทางลูกค้า: ทักมา → จอง → เข้าพักจริง → กลับมาซ้ำ (นับจากคนที่ทักทาง LINE ในช่วงที่เลือก · เป็นกลุ่มคนเดียวกัน)
+  const funnel=(a,b)=>{const F=FUN.filter(x=>x[1]>=a&&x[1]<=b);const n0=F.length;
+    if(!n0)return `<div class="blk"><h3>เส้นทางลูกค้า</h3><p class="hl">ยังไม่มีคนทักมาทาง LINE ในช่วงนี้</p></div>`;
+    const c=[n0,F.filter(x=>x[2]).length,F.filter(x=>x[3]).length,F.filter(x=>x[4]).length],L=['ทักมา','จอง','เข้าพักจริง','กลับมาซ้ำ'],N=['ทักทาง LINE','มีการจอง','เข้าพักจริง','พักตั้งแต่ 2 ครั้งขึ้นไป'];
+    const dr=c.map((v,i)=>i&&c[i-1]?(1-v/c[i-1])*100:0);let wi=1;dr.forEach((v,i)=>{if(i&&v>dr[wi])wi=i});
+    return `<div class="blk fnl"><h3>เส้นทางลูกค้า</h3><p class="hl">จากทักมาจนกลับมาพักซ้ำ ตรงไหนที่ลูกค้าหายไป · นับจากคนที่ทักมาในช่วงที่เลือก</p>
+     ${c.map((v,i)=>`<div class="fst"><span>${L[i]}</span><div class="ftr${i===wi&&dr[i]>0?' bad':''}"><i style="width:${v/n0*100}%"></i></div><b>${(v/n0*100).toFixed(0)}%</b></div>
+      <div class="fdr">${fmt(v)} คน${i&&dr[i]>0?` · หายไประหว่างทาง <em>−${dr[i].toFixed(0)}%</em>`:''}</div>`).join('')}
+     ${dr[wi]>0?`<div class="fnote"><b>ตรงที่หายเยอะที่สุด:</b> จาก${L[wi-1]}ไป${L[wi]} (หาย ${dr[wi].toFixed(0)}%)</div>`:''}
+     <p class="fms">ระบบนับจากคนที่ทักมาทาง LINE การจอง การเข้าพัก และการกลับมาซ้ำ · ยังไม่มีข้อมูลคนที่ "เห็นเรา" (เปิดดูเพจ/แผนที่) จึงเริ่มนับตั้งแต่ทักมา</p></div>`};
+"""
+FUN_CSS = """.fnl .fst{display:grid;grid-template-columns:6.2rem 1fr 3.4rem;gap:.6rem;align-items:center;margin:.5rem 0 0}.fnl .fst span{font-size:.88rem;font-weight:600}
+.fnl .ftr{height:1.3rem;border-radius:8px;background:var(--grid)}.fnl .ftr i{display:block;height:100%;border-radius:8px;background:linear-gradient(90deg,var(--t5),var(--brand))}.fnl .ftr.bad i{background:linear-gradient(90deg,#E0762F,var(--accent))}
+.fnl .fst b{text-align:right;font-family:var(--serif);font-size:1rem}.fnl .fdr{margin:0 0 0 6.8rem;font-size:.76rem;color:var(--mute)}.fnl .fdr em{font-style:normal;font-weight:700;color:var(--accent)}
+.fnl .fnote{background:var(--rose-t);border-radius:12px;padding:.5rem .8rem;font-size:.85rem;margin-top:.7rem}.fnl .fms{font-size:.74rem;color:var(--mute);margin:.6rem 0 0}
+@media(max-width:560px){.fnl .fst{grid-template-columns:4.6rem 1fr 3rem}.fnl .fdr{margin-left:5.2rem}}
+"""
+
 def lit(s):
     return json.dumps(s, ensure_ascii=False).replace('</', '<\\/')
 
@@ -74,6 +116,12 @@ def regen_embedded(s, ovp):
     if ovp:   # ป้ายกล่อง "สถานการณ์ลูกค้าตอนนี้": บอกตามจริงว่า AI วิเคราะห์ข้อมูลจากฐานข้อมูลแล้วหรือยัง
         s = R(s, "'<span class=\"o\">AI สรุปและแนะนำ</span><span class=\"o mk\">ข้อมูลจำลอง</span>'",
               "(window.__AISUM&&window.__AISUM.length?'<span class=\"o\">AI สรุปและแนะนำ</span><span class=\"o\">วิเคราะห์จากฐานข้อมูลจริง</span>':'<span class=\"o\">AI สรุปและแนะนำ</span><span class=\"o mk\">ข้อมูลจำลอง</span>')", 1, 'emb-sumbadge')
+    if "box('occa'" in s:   # กล่อง "การจอง" ในแดชบอร์ด: เพิ่มเส้นทางลูกค้า (ส่วนเดิมไม่แตะ)
+        s = R(s, "  // occasions\n", "  // occasions\n" + FUN_JS, 1, 'emb-fun1')
+        s = R(s, "cnt(S,s=>lb(s.ld),6),hasP?cnt(R,s=>lb(s.ld),6):null,null,'pu')}</div>`,",
+              "cnt(S,s=>lb(s.ld),6),hasP?cnt(R,s=>lb(s.ld),6):null,null,'pu')}</div>${funnel(P.a,P.b)}`,", 1, 'emb-fun2')
+        assert '<style>' in s; s = s.replace('<style>', '<style>' + FUN_CSS, 1)
+        s = R(s, "const D0=new Date(2026,0,1);", "const FUN=" + J(build_funnel()) + ";const D0=new Date(2026,0,1);", 1, 'emb-fun4')
     if ovp:   # ป๊อปอัปกลุ่มลูกค้าแบบเส้นทางลูกค้า (ข้อมูลจริงจาก p_seg · AI เล่าตัวตนผ่าน /api/segment)
         import p_seg, os
         pop = open(os.path.join(os.path.dirname(__file__), 'seg_popup.html'), encoding='utf-8').read()

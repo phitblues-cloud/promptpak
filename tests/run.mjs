@@ -491,6 +491,7 @@ ok('AI สรุปกล่อง CRM: กันโค้ดแปลกปล�
 // 11n2) กลุ่มลูกค้า: ป๊อปอัปเส้นทางลูกค้าใช้ข้อมูลจริง (SEGX) · AI เล่าตัวตนจากตัวเลขที่ส่งไป · กรองแท็ก/ไม่มีชื่อบริษัท
 {
   const crm = (await call('/')).body;   // หน้าหลักมีทุกโมดูล รวมกลุ่มลูกค้าใน CRM
+  assert.ok(crm.includes('const FUN=') && crm.includes('เส้นทางลูกค้า'), 'แดชบอร์ดกล่องการจองต้องมีเส้นทางลูกค้า');
   assert.ok(crm && crm.includes('const SEGX=') && crm.includes('sg3trk') && crm.includes('/api/segment'), 'โมดูล CRM ต้องมีป๊อปอัปเส้นทางลูกค้า + ข้อมูลจริง');
   const segs = { B: { n: 12, ng: 5, enough: true, share: 40, facts: { age: 35, prov: 'ชลบุรี', provPct: 22, company: 'บริษัท ลับ จำกัด' } }, X: { n: 1 } };
   script.push(p => { const u = JSON.parse(p.messages[0].content); assert.deepEqual(Object.keys(u), ['B']); assert.ok(!JSON.stringify(u).includes('ลับ'), 'ห้องส่งชื่อบริษัทให้ AI');
