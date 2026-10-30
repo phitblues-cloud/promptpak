@@ -1,0 +1,164 @@
+<!doctype html><html lang="th"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>กลุ่มลูกค้า — ป๊อบอัพเส้นทางลูกค้า (ร่างหยาบ)</title>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:wght@600&family=Noto+Sans+Thai:wght@300;400;500;600;700&family=Noto+Serif+Thai:wght@600;700&display=swap" rel="stylesheet">
+<style>
+:root{--cream:#FBF6EF;--ink:#2B1B3A;--mut:#7D7090;--line:#EADFEF;--pur:#4B2477}
+*{box-sizing:border-box}body{margin:0;background:var(--cream);color:var(--ink);font:15px/1.6 'Noto Sans Thai',sans-serif;padding:18px 14px 50px}.w{max-width:820px;margin:0 auto}
+.tag{display:inline-block;background:#FFF1C7;color:#7A5A00;border-radius:99px;font-size:.75rem;padding:2px 12px;font-weight:600}
+.sub{color:var(--mut);font-size:.84rem;margin:6px 0 12px}
+.box{background:#fffdf9;border:1px solid var(--line);border-radius:22px;padding:18px}
+.bt{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:12px}.bt h2{font:700 1.4rem 'Noto Serif Thai',serif;margin:0}
+.pill{font-size:.7rem;font-weight:600;border-radius:99px;padding:1px 10px;background:#EFE3F7;color:#5B2A86}.pill.y{background:#FFF1C7;color:#7A5A00}
+.pc{display:block;width:100%;text-align:left;border:1px solid var(--line);border-left:5px solid var(--c);border-radius:16px;background:#fff;padding:12px 16px;margin-bottom:10px;cursor:pointer;font:inherit;color:inherit;transition:transform .2s,box-shadow .2s}
+.pc:hover{transform:translateY(-2px);box-shadow:0 8px 20px #4B247718}
+.pc .r{display:flex;align-items:center;gap:10px}.pc b{font-size:1.05rem}.pc small{color:var(--mut);display:block}.pc .dot{width:11px;height:11px;border-radius:50%;background:var(--c)}
+.pc .pct{margin-left:auto;font:700 2rem 'Fraunces',serif}.pc .pct small{display:inline;font-size:.8rem;font-weight:400}
+.tr{height:8px;border-radius:9px;background:#F1EAE0;margin-top:8px}.tr i{display:block;height:100%;border-radius:9px;background:var(--c)}
+.foot{color:var(--mut);font-size:.75rem;margin-top:6px}
+/* popup */
+.ov{position:fixed;inset:0;background:#2B1B3A88;display:none;align-items:center;justify-content:center;padding:14px;z-index:9;overflow:auto}.ov.on{display:flex}
+.pop{background:#fff;border-radius:24px;width:100%;max-width:760px;max-height:94vh;overflow:auto;padding:18px 20px 22px;animation:up .35s ease;position:relative}
+@keyframes up{from{opacity:0;transform:translateY(14px) scale(.98)}to{opacity:1;transform:none}}
+.x{position:absolute;right:14px;top:12px;border:1.5px solid #D9CBE6;background:#fff;border-radius:99px;width:34px;height:34px;font-size:1.1rem;cursor:pointer;color:var(--pur)}
+.ph{display:flex;align-items:center;gap:10px;padding-right:40px}.ph .dot{width:14px;height:14px;border-radius:50%}.ph h3{font:700 1.3rem 'Noto Serif Thai',serif;margin:0}.ph small{color:var(--mut)}
+.stagewrap{border-radius:18px;overflow:hidden;border:1px solid var(--line);margin:12px 0 6px;position:relative}
+svg{display:block;width:100%;height:auto}
+.cap{position:absolute;left:12px;top:10px;background:#fffffff0;border-radius:99px;padding:2px 14px;font-weight:700;font-size:.85rem;box-shadow:0 3px 10px #4B247722}
+.dots{display:flex;justify-content:space-between;gap:4px;margin:6px 4px 12px}.dots span{flex:1;text-align:center;font-size:.72rem;color:var(--mut);border-top:4px solid #EFE8F3;padding-top:3px;transition:all .4s}.dots span.on{color:var(--ink);font-weight:700;border-color:var(--c)}
+.replay{border:1.5px solid #D9CBE6;background:#fff;border-radius:99px;padding:4px 14px;font:600 .8rem 'Noto Sans Thai';color:var(--pur);cursor:pointer;float:right;margin-top:-4px}
+.sec{margin-top:10px}.sec h4{margin:0 0 3px;font-size:.8rem;color:#B02A86}.sec ul{margin:0;padding-left:20px}
+.me{background:linear-gradient(135deg,#FFF6F8,#F6F0FC);border-radius:14px;padding:10px 14px;font-size:.9rem}
+.id{display:flex;gap:14px;background:#FAF5FD;border-radius:16px;padding:14px 16px;margin:12px 0 8px;font-size:.92rem;align-items:center}.id h4{margin:0 0 4px;font-size:.8rem;color:#B02A86}.idl{flex:1}
+.fc{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}.fc span{background:#fff;border:1px solid var(--line);border-radius:99px;font-size:.76rem;padding:1px 10px}
+.big{text-align:center;min-width:120px}.big b{display:block;font:700 3.6rem/1 'Fraunces',serif;color:var(--c)}.big b small{font-size:1.6rem}.big span{font-size:.75rem;color:var(--mut)}
+.trk{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:8px 0}.trk div{background:#fff;border:1px solid var(--line);border-radius:14px;padding:8px 12px;position:relative}.trk small{display:block;color:var(--mut);font-size:.72rem}.trk b{font:700 1.2rem 'Fraunces',serif}.trk em{display:block;font-style:normal;font-size:.72rem;font-weight:700}.trk em.up{color:#14865C}.trk em.dn{color:#C2264B}.trk svg{position:absolute;right:10px;top:14px;width:70px;height:26px}.cbx svg{width:34px;height:34px;flex:none}
+.stagewrap{border-radius:20px;overflow:hidden;border:1px solid var(--line);margin:10px 0;position:relative;background:#FDF3E3}
+.prog{position:absolute;left:0;right:0;bottom:0;display:flex;gap:2px;background:#ffffffd9;padding:5px 6px}.prog span{flex:1;text-align:center;font-size:.72rem;color:var(--mut);padding:2px 0;border-radius:99px;transition:all .3s}.prog span i{font-style:normal;margin-right:3px}.prog span.on{background:var(--c);color:#fff;font-weight:700}.prog span.done{color:var(--ink)}
+.cbx{width:max-content;max-width:230px;position:absolute;top:44px;left:0;box-sizing:border-box;transform:translateX(-50%);background:#fff;border:2px solid var(--c);border-radius:16px;padding:8px 14px;min-width:170px;box-shadow:0 8px 22px #4B247730}.cbx:after{content:"";position:absolute;left:50%;bottom:-9px;width:14px;height:14px;background:#fff;border-right:2px solid var(--c);border-bottom:2px solid var(--c);transform:translateX(-50%) rotate(45deg)}
+.cbx h5{margin:0 0 3px;font-size:.92rem;color:var(--c)}.cbx small{display:block;color:var(--mut);font-size:.68rem;line-height:1.2;margin-top:3px}.cbx b{font-size:.92rem}.cbx .sat{display:flex;align-items:center;gap:8px;margin-top:6px;border-top:1px dashed var(--line);padding-top:6px}.cbx .sat b{font:700 1.1rem 'Fraunces',serif}
+.cbx.pop{animation:cop .45s ease}@keyframes cop{from{opacity:0;transform:translateX(-50%) translateY(-10px) scale(.92)}to{opacity:1;transform:translateX(-50%)}}
+.replay{position:absolute;right:10px;top:10px;border:1.5px solid #D9CBE6;background:#fff;border-radius:99px;padding:3px 12px;font:600 .75rem 'Noto Sans Thai';color:var(--pur);cursor:pointer;margin:0;float:none}
+.note{color:var(--mut);font-size:.72rem;margin:10px 0 0}
+@media(max-width:620px){.id{flex-direction:column;align-items:stretch}.big{text-align:left}.trk{grid-template-columns:1fr}.cbx{min-width:140px;padding:6px 10px}.prog span{font-size:.6rem}}
+</style></head><body><div class="w">
+<span class="tag">ร่างหยาบ · ตัวเลขและข้อความสมมติ</span>
+<p class="sub">กล่อง "กลุ่มลูกค้า" หน้าเดิม ไม่เปลี่ยนหน้าตา · <b>แตะการ์ดกลุ่มไหนก็ได้</b> จะเด้งป๊อบอัพเส้นทางของลูกค้ากลุ่มนั้น</p>
+<div class="box"><div class="bt"><h2>กลุ่มลูกค้า</h2><span class="pill">AI แบ่งกลุ่มตามพฤติกรรม</span><span class="pill y">ข้อมูลจำลอง</span></div>
+ <div id="cards"></div><p class="foot">จากลูกค้า 27 คนในช่วงนี้ · แตะการ์ดเพื่อดูรายละเอียด</p></div></div>
+<div class="ov" id="ov"><div class="pop" id="pop"></div></div>
+<script>
+const G=[
+ {id:'B',n:'ลูกค้าบริษัท',one:'มาเป็นทีม · บริษัทจ่าย',c:'#6A3AA2',pct:33,
+  who:'ช่างเทคนิคและหัวหน้าทีมจากบริษัทในพื้นที่ มาเป็นทีม 3–10 คน หัวหน้าทีมเป็นคนจองให้ทั้งทีม ช่างสำรองจ่ายแล้วขอใบกำกับภาษีไปเบิก',
+  facts:['อายุเฉลี่ย 34 ปี','มาจากขอนแก่น 23%','ทีมละ 7.5 คน'],
+  trk:[['ใช้จ่ายต่อคน','8,897 ฿','+8%',[7.2,7.9,8.2,8.9],1],['กลับมาซ้ำ','74%','+3 จุด',[68,70,71,74],1]],
+  val:['ใบกำกับภาษีถูกต้อง เบิกได้','ห้องทั้งทีมอยู่โซนเดียวกัน','Wi-Fi แรง ที่จอดรถกระบะ'],serve:['คุยกับหัวหน้าทีมผ่าน LINE ก่อนฤดูซ่อมบำรุง','ล็อกห้องทั้งทีมไว้โซนเดียวกัน','ออกใบกำกับภาษีให้ถูกต้องทุกครั้ง'],
+  ch:'phone',veh:'W3',
+  st:[{k:'book',t:'จอง',co:[['ช่องทาง','โทรศัพท์ (หัวหน้าทีมโทรจอง)'],['จองล่วงหน้า','~5 วัน']]},
+      {k:'arrive',t:'ถึง',co:[['รถ','กระบะ/รถตู้ 1–2 คัน'],['ถึง','~17:30']]},
+      {k:'checkin',t:'เช็คอิน',co:[['เวลา','~17:45'],['ทีม','7.5 คน · 4 ห้อง']]},
+      {k:'stay',t:'เข้าพัก',co:[['พักเฉลี่ย','6.4 คืน'],['ห้อง','โซนบ้าน เตียงเดี่ยว']]},
+      {k:'laundry',t:'ซักรีด',co:[['ใช้ซักรีด','62% ของทีม']]},
+      {k:'checkout',t:'เช็คเอาท์',co:[['เวลา','~08:00'],['ใบกำกับภาษี','ขอ 100%']],sat:4.3}]},
+ {id:'W3',n:'ช่างจ่ายเอง',one:'มาคนเดียว · จ่ายเอง',c:'#B8862A',pct:56,
+  who:'ช่างรายย่อย ช่างแอร์ ช่างเชื่อม คนขับรถขนส่ง มาคนเดียว จ่ายเอง ไม่เบิกบริษัท มักเดินเข้ามาถามหน้าเคาน์เตอร์ ไม่ค่อยจองล่วงหน้า',
+  facts:['อายุเฉลี่ย 36 ปี','มาจากขอนแก่น 17%','มาคนเดียว'],
+  trk:[['ใช้จ่ายต่อคน','3,670 ฿','−2%',[3.9,3.8,3.7,3.67],0],['กลับมาซ้ำ','69%','+3 จุด',[63,65,66,69],1]],
+  val:['ราคาถูกและชัดเจน','จ่ายง่าย ยืดวันพักได้','ที่จอดรถ'],serve:['บอกราคาชัดตั้งแต่ต้น','ลดราคาเมื่อพักครบ 5 คืน','ชวนเพิ่มเพื่อน LINE'],
+  ch:'none',veh:'W3',
+  st:[{k:'arrive',t:'ถึง',co:[['การจอง','ไม่จองล่วงหน้า (60% เดินเข้ามาถาม)'],['ถึง','~19:00 หลังเลิกงาน']]},
+      {k:'checkin',t:'เช็คอิน',co:[['เวลา','~19:05'],['จ่าย','เงินสดตอนเช็คอิน']]},
+      {k:'stay',t:'เข้าพัก',co:[['พักเฉลี่ย','4.1 คืน'],['ห้อง','1 คน · โซนบ้าน ฿400']]},
+      {k:'bf',t:'อาหารเช้า',co:[['กินอาหารเช้า','72%'],['เวลา','~06:30']]},
+      {k:'checkout',t:'เช็คเอาท์',co:[['เวลา','~07:15'],['ต่อวันพัก','38%']],sat:4.0}]},
+ {id:'L',n:'ลูกค้าทั่วไป',one:'มาวันหยุด · พักผ่อน',c:'#D9598A',pct:11,
+  who:'ท่องเที่ยว เยี่ยมญาติ แวะพักระหว่างทาง ส่วนใหญ่เป็นครอบครัวในจังหวัด (40%) คู่รักหรือเพื่อนต่างจังหวัด (30%) และคนแวะพักระหว่างทาง (30%) จ่ายเอง',
+  facts:['อายุเฉลี่ย 38 ปี','มาจากขอนแก่น 25%','เฉลี่ย 1.3 คน/กลุ่ม'],
+  trk:[['ใช้จ่ายต่อคน','1,194 ฿','+5%',[1.05,1.1,1.14,1.19],1],['กลับมาซ้ำ','10%','−1 จุด',[12,11,11,10],0]],
+  val:['วิวเขื่อน บรรยากาศ','อาหารอร่อย','ห้องสำหรับครอบครัว'],serve:['ลงรูปสวยใน Google และ Facebook','ทำโปรวันหยุดเติมห้องว่าง','เน้นวิวเขื่อนและอาหาร'],
+  ch:'mobile',veh:'L',
+  st:[{k:'book',t:'จอง',co:[['ช่องทาง','LINE / มือถือ 64%'],['จองล่วงหน้า','~9 วัน']]},
+      {k:'arrive',t:'ถึง',co:[['รถ','รถเก๋ง'],['ถึง','~15:00 วันเสาร์']]},
+      {k:'checkin',t:'เช็คอิน',co:[['เวลา','~15:10'],['กลุ่ม','2–4 คน (มีเด็ก)']]},
+      {k:'stay',t:'เข้าพัก',co:[['พักเฉลี่ย','1.2 คืน'],['ห้อง','โซนตึก เตียงคู่ 70%']]},
+      {k:'bf',t:'อาหารเช้า',co:[['กินอาหารเช้า','85%'],['เวลา','~08:30']]},
+      {k:'checkout',t:'เช็คเอาท์',co:[['เวลา','~11:00']],sat:4.2}]}];
+const ICO={book:'📱',arrive:'🚗',checkin:'🔑',stay:'🛏️',laundry:'🧺',bf:'🍳',checkout:'👋'};
+document.getElementById('cards').innerHTML=G.map((g,i)=>`<button class="pc" style="--c:${g.c}" data-i="${i}"><div class="r"><span class="dot"></span><div><b>${g.n}</b><small>${g.one}</small></div><div class="pct">${g.pct}<small>% ของลูกค้า</small></div></div><div class="tr"><i style="width:${g.pct}%"></i></div></button>`).join('');
+const VW=900,VT=-110,VH=410;
+const FL=[[1.8,'#C2264B','M10 23c2-3.2 10-3.2 12 0'],[2.6,'#E0762F','M10.5 22.5c2-2 9-2 11 0'],[3.5,'#C9961F','M10.5 21.5h11'],[4.5,'#7DA84A','M10.5 19.5c2 2 9 2 11 0'],[9,'#14865C','M9.5 18.5c2.2 4 10.8 4 13 0z']];
+function face(sc,sz){const f=FL.find(x=>sc<x[0]);const m=f[0]===9?`<path d="${f[2]}" fill="#fff"/>`:`<path d="${f[2]}" stroke="#fff" stroke-width="2" fill="none" stroke-linecap="round"/>`;return `<svg width="${sz}" height="${sz}" viewBox="0 0 32 32"><circle cx="16" cy="16" r="14" fill="${f[1]}"/><circle cx="11" cy="13" r="1.8" fill="#fff"/><circle cx="21" cy="13" r="1.8" fill="#fff"/>${m}</svg>`}
+function spark(a,up){const mn=Math.min(...a),mx=Math.max(...a),pts=a.map((v,i)=>`${i*22},${22-(v-mn)/(mx-mn||1)*20}`).join(' ');return `<svg width="70" height="26" viewBox="-2 -2 70 26"><polyline points="${pts}" fill="none" stroke="${up?'#14865C':'#C2264B'}" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/><circle cx="66" cy="${22-(a[a.length-1]-mn)/(mx-mn||1)*20}" r="3.5" fill="${up?'#14865C':'#C2264B'}"/></svg>`}
+function person(c,kind,sc=1){ // ตัวละคร · ฐานเท้าอยู่ y=0
+ const skin='#F2C9A5',dk='#2B1B3A';let s='';
+ if(kind==='B'){s+=`<g><ellipse cx="0" cy="2" rx="14" ry="4" fill="#0002"/><rect x="-11" y="-44" width="22" height="30" rx="8" fill="${c}"/><rect x="-3" y="-42" width="6" height="14" rx="2" fill="#fff"/><rect x="-5" y="-30" width="10" height="7" rx="2" fill="#FFD66B"/><rect x="-9" y="-16" width="7" height="16" rx="3" fill="${dk}"/><rect x="2" y="-16" width="7" height="16" rx="3" fill="${dk}"/><circle cx="0" cy="-54" r="10" fill="${skin}"/><path d="M-10 -56a10 10 0 0 1 20 0z" fill="${dk}"/><rect x="9" y="-28" width="14" height="10" rx="2" fill="#4B2477"/></g>`}
+ if(kind==='W3'){s+=`<g><ellipse cx="0" cy="2" rx="14" ry="4" fill="#0002"/><rect x="-11" y="-44" width="22" height="30" rx="8" fill="${c}"/><rect x="-9" y="-16" width="7" height="16" rx="3" fill="#5C4A2A"/><rect x="2" y="-16" width="7" height="16" rx="3" fill="#5C4A2A"/><circle cx="0" cy="-54" r="10" fill="${skin}"/><path d="M-12 -56a12 11 0 0 1 24 0z" fill="#FFC21A"/><rect x="-13" y="-57" width="26" height="4" rx="2" fill="#E5A400"/><rect x="9" y="-24" width="16" height="12" rx="2" fill="#B33"/><rect x="13" y="-27" width="8" height="4" rx="2" fill="#555"/></g>`}
+ if(kind==='L'){s+=`<g><ellipse cx="0" cy="2" rx="14" ry="4" fill="#0002"/><rect x="-11" y="-44" width="22" height="30" rx="8" fill="${c}"/><rect x="-9" y="-16" width="7" height="16" rx="3" fill="#3C5A8A"/><rect x="2" y="-16" width="7" height="16" rx="3" fill="#3C5A8A"/><circle cx="0" cy="-54" r="10" fill="${skin}"/><ellipse cx="0" cy="-60" rx="17" ry="4" fill="#E8B04B"/><path d="M-9 -60a9 8 0 0 1 18 0z" fill="#E8B04B"/><rect x="-16" y="-40" width="8" height="18" rx="3" fill="#7A5CC0"/>
+  <g transform="translate(24,0) scale(.7)"><ellipse cx="0" cy="2" rx="12" ry="4" fill="#0002"/><rect x="-10" y="-40" width="20" height="26" rx="7" fill="#F7B5CB"/><rect x="-8" y="-16" width="6" height="16" rx="3" fill="#3C5A8A"/><rect x="2" y="-16" width="6" height="16" rx="3" fill="#3C5A8A"/><circle cx="0" cy="-50" r="10" fill="${skin}"/></g></g>`}
+ return `<g transform="scale(${sc})">${s}</g>`}
+function car(c,kind){const body=kind==='W3'?`<rect x="-42" y="-30" width="70" height="20" rx="6" fill="${c}"/><rect x="-10" y="-46" width="36" height="18" rx="6" fill="${c}"/><rect x="-4" y="-42" width="26" height="12" rx="3" fill="#CFE6F5"/><rect x="-60" y="-24" width="22" height="14" rx="2" fill="#9A8466"/>`:
+  `<rect x="-50" y="-30" width="100" height="22" rx="8" fill="${c}"/><rect x="-26" y="-48" width="54" height="22" rx="9" fill="${c}"/><rect x="-20" y="-44" width="18" height="14" rx="3" fill="#CFE6F5"/><rect x="2" y="-44" width="22" height="14" rx="3" fill="#CFE6F5"/>`;
+ return `<ellipse cx="0" cy="2" rx="52" ry="6" fill="#0002"/>${body}<circle cx="-28" cy="-8" r="9" fill="#2B1B3A"/><circle cx="28" cy="-8" r="9" fill="#2B1B3A"/><circle cx="-28" cy="-8" r="3" fill="#ccc"/><circle cx="28" cy="-8" r="3" fill="#ccc"/>`}
+function bookVis(g,t){ // ภาพขั้นจอง ก่อนถึงโรงแรม
+ const kind=g.ch,x=110,wave=(Math.sin(t*5)+1)/2;let o='';
+ if(kind==='phone'){o+=`<g transform="translate(${x},232)">${person(g.c,g.id,1.15)}<rect x="-18" y="-76" width="9" height="16" rx="3" fill="#2B1B3A" transform="rotate(-18 -14 -68)"/></g>`;
+  [0,1,2].forEach(i=>o+=`<path d="M${x+28+i*12} ${150-i*4}q10 ${14} 0 ${28}" stroke="#B02A86" stroke-width="3" fill="none" opacity="${(wave+i*.3)%1}"/>`);}
+ if(kind==='mobile'||kind==='line'){o+=`<g transform="translate(${x},176) scale(1.5)">${icon('mobile')}</g>`;
+  o+=`<g opacity="${wave}"><rect x="${x+44}" y="104" width="64" height="26" rx="13" fill="#06C755"/><text x="${x+76}" y="122" text-anchor="middle" font-size="12" font-weight="700" fill="#fff" font-family="Noto Sans Thai">จองห้อง</text></g><g opacity="${1-wave}"><rect x="${x+44}" y="140" width="76" height="26" rx="13" fill="#fff" stroke="#E3D8EC"/><text x="${x+82}" y="158" text-anchor="middle" font-size="12" font-weight="700" fill="#2B1B3A" font-family="Noto Sans Thai">ยืนยันแล้ว ✓</text></g>`}
+ // ข้อความวิ่งไปที่โรงแรม
+ const k=(t*.45)%1;o+=`<circle cx="${x+60+(300-x-60)*k}" cy="${120-Math.sin(k*3.14)*40}" r="6" fill="#B02A86"/>`;return o}
+function icon(ch){return `<g><rect x="-26" y="-48" width="52" height="92" rx="9" fill="#2B1B3A"/><rect x="-21" y="-40" width="42" height="72" rx="4" fill="#fff"/><rect x="-14" y="-30" width="26" height="12" rx="6" fill="#06C755"/><rect x="-6" y="-12" width="22" height="12" rx="6" fill="#E3D8EC"/><rect x="-14" y="6" width="26" height="12" rx="6" fill="#06C755"/><circle cx="0" cy="38" r="3" fill="#ccc"/></g>`}
+let g0=null,XS={},T0=0,raf,plan=[],lastCur=-1;
+function buildPlan(g){const ks=g.st.map(s=>s.k);const mids=ks.filter(k=>['stay','laundry','bf'].includes(k));
+ XS={checkin:275};mids.forEach((k,i)=>XS[k]=mids.length==1?520:430+i*(310/(mids.length-1)));XS.checkout=836;XS.arrive=130;
+ plan=[];let t=0;g.st.forEach((s,i)=>{const d=s.k==='book'?3.6:s.k==='arrive'?2.6:s.k==='checkout'?3.4:2.8;plan.push({s,i,t0:t,t1:t+d});t+=d});return t}
+const ease=x=>x<.5?2*x*x:1-Math.pow(-2*x+2,2)/2,cl=x=>Math.max(0,Math.min(1,x)),lerp=(a,b,x)=>a+(b-a)*cl(x);
+function bgScene(g){const ks=g.st.map(s=>s.k);let o=`
+ <defs><linearGradient id="sky" x1="0" y1="0" x2="0" y2="1"><stop id="s1" offset="0" stop-color="#FFE9C9"/><stop id="s2" offset="1" stop-color="#FDF3E3"/></linearGradient></defs>
+ <rect y="${VT}" width="${VW}" height="${VH}" fill="url(#sky)"/><circle id="sun" cx="850" cy="-50" r="26" fill="#FFC857"/><g id="moon" opacity="0"><circle cx="560" cy="-52" r="22" fill="#FFF6D6"/><circle cx="571" cy="-58" r="20" fill="#2C2150"/></g>
+ <g id="stars" opacity="0" fill="#FFF">${[[470,-70],[520,-20],[620,-76],[660,-10],[700,-60],[420,-30],[780,-30]].map(p=>`<circle cx="${p[0]}" cy="${p[1]}" r="2"/>`).join('')}</g>
+ <rect y="232" width="${VW}" height="68" fill="#CFE3C2"/><rect y="236" width="${VW}" height="40" fill="#8E8A9A"/><g stroke="#fff" stroke-width="3" stroke-dasharray="26 22"><line x1="0" y1="256" x2="${VW}" y2="256"/></g>
+ <g transform="translate(200,0)"><rect x="0" y="92" width="150" height="140" rx="6" fill="#8B3FA8"/><rect x="-8" y="82" width="166" height="16" rx="4" fill="#4B2477"/>${[0,1,2].map(r=>[0,1,2].map(c=>`<rect x="${14+c*44}" y="${112+r*38}" width="28" height="24" rx="3" fill="#FFE9A8"/>`).join('')).join('')}<rect x="56" y="188" width="38" height="44" rx="4" fill="#4B2477"/><text x="75" y="76" text-anchor="middle" font-size="14" font-weight="700" fill="#4B2477" font-family="Noto Sans Thai">พบรักรีสอร์ท</text></g>`;
+ if(ks.includes('stay'))o+=`<g transform="translate(${XS.stay-70},0)"><rect x="0" y="170" width="150" height="62" rx="8" fill="#FFF" stroke="#E3D8EC"/><rect x="0" y="146" width="12" height="86" rx="4" fill="#6B4A2A"/><rect x="12" y="188" width="130" height="30" rx="8" fill="#E6D3F2"/><rect x="18" y="172" width="38" height="18" rx="8" fill="#fff" stroke="#E3D8EC"/><rect x="60" y="186" width="82" height="26" rx="8" fill="#B02A86" opacity=".85"/></g>`;
+ if(ks.includes('laundry'))o+=`<g transform="translate(${XS.laundry-35},0)"><rect x="0" y="170" width="70" height="62" rx="8" fill="#E8EEF5" stroke="#C9D5E3"/><circle cx="35" cy="204" r="20" fill="#9CC4E6" stroke="#fff" stroke-width="4"/><path d="M24 204q5-8 11 0t11 0" stroke="#fff" stroke-width="3" fill="none"/><rect x="8" y="176" width="14" height="6" rx="3" fill="#B02A86"/></g>`;
+ if(ks.includes('bf'))o+=`<g transform="translate(${XS.bf-60},0)"><rect x="0" y="196" width="120" height="10" rx="4" fill="#B98A5A"/><rect x="14" y="206" width="8" height="26" fill="#8C6840"/><rect x="98" y="206" width="8" height="26" fill="#8C6840"/><ellipse cx="30" cy="192" rx="18" ry="5" fill="#fff" stroke="#E3D8EC"/><ellipse cx="30" cy="188" rx="8" ry="4" fill="#FFC857"/><ellipse cx="86" cy="192" rx="18" ry="5" fill="#fff" stroke="#E3D8EC"/><path d="M80 184q6-8 12 0z" fill="#E0762F"/><rect x="52" y="176" width="14" height="18" rx="3" fill="#E0762F"/><path d="M56 170q-3-8 2-12M62 170q-3-8 2-12" stroke="#B9AEC9" fill="none" stroke-width="2"/></g>`;
+ return o}
+function openG(i){g0=G[i];const g=g0;const pop=document.getElementById('pop');pop.style.setProperty('--c',g.c);
+ pop.innerHTML=`<button class="x" id="cl" aria-label="ปิด">✕</button><div class="ph"><span class="dot" style="background:${g.c}"></span><div><h3>${g.n}</h3><small>${g.one}</small></div></div>
+ <div class="id"><div class="idl"><h4>กลุ่มนี้คือใคร</h4>${g.who}<div class="fc">${g.facts.map(f=>`<span>${f}</span>`).join('')}</div></div>
+  <div class="big"><b>${g.pct}<small>%</small></b><span>ของลูกค้าทั้งหมดตอนนี้</span></div></div>
+ <div class="trk">${g.trk.map(x=>`<div><small>${x[0]}</small><b>${x[1]}</b><em class="${x[4]?'up':'dn'}">${x[4]?'▲':'▼'} ${x[2]} จากไตรมาสก่อน</em>${spark(x[3],x[4])}</div>`).join('')}</div>
+ <div class="stagewrap"><svg id="sv" viewBox="0 ${VT} ${VW} ${VH}"></svg><div class="prog" id="prog">${g.st.map(s=>`<span><i>${ICO[s.k]}</i>${s.t}</span>`).join('')}</div><div class="cbx" id="co"></div><button class="replay" id="rp">▶ เล่นอีกครั้ง</button></div>
+ <div class="sec"><h4>ความต้องการของเขา</h4><ul>${g.val.map(v=>`<li>${v}</li>`).join('')}</ul></div>
+ <div class="sec"><h4>วิธีดูแลที่ควรทำ</h4><ul>${g.serve.map(v=>`<li>${v}</li>`).join('')}</ul></div>
+ <p class="note">ตัวเลขและเวลาทั้งหมดเป็นตัวอย่างสมมติ · ของจริงคำนวณจากการจอง เวลาเช็คอิน/เช็คเอาท์ ประเภทห้อง บริการเสริม และแบบสอบถามของลูกค้ากลุ่มนี้ · ช่วงไหนที่กลุ่มนี้ไม่ทำส่วนใหญ่ (เช่น ไม่จองล่วงหน้า ไม่กินอาหารเช้า) จะไม่แสดง</p>`;
+ g.tot=buildPlan(g);document.getElementById('sv').innerHTML=bgScene(g)+'<g id="dyn"></g>';lastCur=-1;
+ document.getElementById('ov').classList.add('on');document.getElementById('cl').onclick=closeG;document.getElementById('rp').onclick=()=>{T0=0;lastCur=-1};
+ T0=0;cancelAnimationFrame(raf);raf=requestAnimationFrame(loop)}
+function closeG(){document.getElementById('ov').classList.remove('on');cancelAnimationFrame(raf)}
+document.getElementById('ov').onclick=e=>{if(e.target.id==='ov')closeG()};
+document.getElementById('cards').onclick=e=>{const b=e.target.closest('.pc');if(b)openG(+b.dataset.i)};
+function setCo(s,x){const el=document.getElementById('co');const f=s.sat?`<div class="sat">${face(s.sat,34)}<div><small>ความพึงพอใจ</small><b>${s.sat.toFixed(1)} / 5</b></div></div>`:'';
+ el.innerHTML=`<h5>${ICO[s.k]} ${s.t}</h5>${s.co.map(r=>`<div><small>${r[0]}</small><b>${r[1]}</b></div>`).join('')}${f}`;
+ const pct=Math.max(16,Math.min(84,x/VW*100));el.style.left=pct+'%';el.classList.remove('pop');void el.offsetWidth;el.classList.add('pop')}
+function loop(ts){if(!T0)T0=ts;const t=(ts-T0)/1000,g=g0,c=g.c;
+ let cur=plan.findIndex(p=>t>=p.t0&&t<p.t1);if(cur<0)cur=plan.length-1;const p=plan[cur],s=p.s,lt=cl((t-p.t0)/(p.t1-p.t0));
+ const tA=plan.find(x=>x.s.k==='arrive'),tC=plan.find(x=>x.s.k==='checkout');
+ const carA=t<tA.t0?-100:t<tA.t0+1.9?lerp(-100,120,ease((t-tA.t0)/1.9)):120;
+ let cx=null,walk=false,prev=150;
+ if(t>=tA.t0+1.9){let x=150;for(const q of plan.filter(x=>['checkin','stay','laundry','bf','checkout'].includes(x.s.k))){if(t>=q.t0){const tgt=q.s.k==='checkout'?XS.checkout-30:XS[q.s.k];const wd=Math.min(1.5,(q.t1-q.t0)*.5);if(t<q.t0+wd){x=lerp(prev,tgt,ease((t-q.t0)/wd));walk=true}else{x=tgt;walk=false}prev=tgt}}cx=x}
+ let carBx=null;if(t>=tC.t0+1.5&&t<tC.t1)carBx=836;if(t>=tC.t1)carBx=836+(t-tC.t1)*260;
+ const n=g.id==='B'?3:1,bob=walk?Math.abs(Math.sin(t*10))*3:0;let ppl='';
+ if(cx!=null&&!(carBx!=null&&t>=tC.t0+1.5)){for(let k=0;k<n;k++)ppl+=`<g transform="translate(${cx-k*26},${s.k==='stay'&&!walk?210:232-bob*(k%2?.6:1)})">${person(c,g.id,.95)}</g>`}
+ const night=s.k==='stay'?Math.min(1,lt*3):(plan[cur-1]&&plan[cur-1].s.k==='stay'?Math.max(0,1-lt*3):0);
+ const book=s.k==='book'?bookVis(g,t):'';
+ const showCar=!(s.k==='book');
+ const cars=showCar?`<g transform="translate(${carA},258)">${car(c,g.veh)}</g>${carBx!=null?`<g transform="translate(${carBx},258)">${car(c,g.veh)}</g>`:''}`:'';
+ document.getElementById('dyn').innerHTML=book+cars+ppl;
+ document.getElementById('s1').setAttribute('stop-color',`rgb(${255-night*205|0},${233-night*180|0},${201-night*120|0})`);document.getElementById('s2').setAttribute('stop-color',`rgb(${253-night*190|0},${243-night*190|0},${227-night*130|0})`);
+ document.getElementById('moon').setAttribute('opacity',night);document.getElementById('stars').setAttribute('opacity',night);document.getElementById('sun').setAttribute('opacity',1-night);
+ if(cur!==lastCur){lastCur=cur;const ax=s.k==='book'?150:s.k==='arrive'?170:s.k==='checkin'?XS.checkin:s.k==='checkout'?XS.checkout-60:XS[s.k];setCo(s,ax);
+  document.querySelectorAll('#prog span').forEach((e,k)=>{e.classList.toggle('on',k===cur);e.classList.toggle('done',k<cur)})}
+ if(t<g.tot+.6)raf=requestAnimationFrame(loop)}
+
+</script></body></html>
