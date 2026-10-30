@@ -68,6 +68,9 @@ def regen_embedded(s, ovp):
           "const prov={},provP={};P.gs.forEach(g=>prov[GU[g].p]=(prov[GU[g].p]||0)+1);Q.gs.forEach(g=>provP[GU[g].p]=(provP[GU[g].p]||0)+1);const pvN=prov['']||0;", 1, 'emb-prov')
     s = R(s, "const provR=Object.entries(prov).sort(", "const provR=Object.entries(prov).filter(([l])=>l!=='').sort(", 1, 'emb-prov2')
     s = R(s, "${hbars(provR,'คน')}</div>", "${hbars(provR,'คน')}${pvN?`<p class=\"note\" style=\"text-align:right;font-size:.72rem;margin:.5rem 0 0\">ไม่ระบุจังหวัด ${fmt(pvN)} คน</p>`:''}</div>", 1, 'emb-prov3')
+    if ovp:   # ป้ายกล่อง "สถานการณ์ลูกค้าตอนนี้": บอกตามจริงว่า AI วิเคราะห์ข้อมูลจากฐานข้อมูลแล้วหรือยัง
+        s = R(s, "'<span class=\"o\">AI สรุปและแนะนำ</span><span class=\"o mk\">ข้อมูลจำลอง</span>'",
+              "(window.__AISUM&&window.__AISUM.length?'<span class=\"o\">AI สรุปและแนะนำ</span><span class=\"o\">วิเคราะห์จากฐานข้อมูลจริง</span>':'<span class=\"o\">AI สรุปและแนะนำ</span><span class=\"o mk\">ข้อมูลจำลอง</span>')", 1, 'emb-sumbadge')
     s = R(s, 'const TODAY=new Date(2026,9,24);', 'const TODAY=new Date(2026,9,24);', 1, 'emb-today')
     s = R(s, "d1:'2026-10-01',d2:'2026-10-24'", "d1:'2026-10-01',d2:'2026-10-24'", 1, 'emb-ps')
     i = s.index('const RT=['); j = s.index('];', i) + 2

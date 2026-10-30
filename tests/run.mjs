@@ -643,6 +643,8 @@ ok('AI สรุปกล่อง CRM: กันโค้ดแปลกปล�
   await webhook([msgEv('Uam1', 'ความเห็นการพัก: ', 'c3')]);
   assert.equal(psql('-c', `select comment from auto_msg_rating where key = '${A}'`).replace(/\s+/g, ' '), 'ห้องสะอาด แม่บ้านน่ารัก ไวไฟช้านิดหน่อย');
   assert.equal(psql('-c', `select needs_staff from chat_threads where line_user_id = 'Uam1'`), 'f', 'ลูกค้าพอใจ ไม่ต้องแจ้งพนักงาน');
+  const Mc = (await call('/api/app?part=mods&since=x')).body.mods;   // ผลแบบสอบถามเข้าหน้า CRM เป็นรีวิวจริง (แหล่ง LINE) พร้อมความเห็น
+  assert.ok(JSON.stringify(Mc).includes('ห้องสะอาด แม่บ้านน่ารัก'), 'ความเห็นจากแบบสอบถามต้องไปอยู่ในข้อมูล CRM');
   // ไม่พอใจ: ภาพรวม 4 แต่เลือก "ปรับปรุง" เรื่องอาหาร (B สั่งอาหารเช้า) → ขอโทษ + แจ้งผู้จัดการ · ตอบไม่ครบแล้วกด "ข้าม"
   psql('-c', `update bookings set details = details || '{"bf":170}'::jsonb where booking_no = '${B}'`);
   await act({ k: 'checkin', no: B }); await act({ k: 'checkout', no: B });

@@ -405,6 +405,18 @@ def build(base, export, now):
         d['by_company'] = bc
         d['general'] = gen
 
+    # ผลแบบสอบถามความพึงพอใจทาง LINE → รีวิวจริง (แหล่ง "LINE OA") · หัวข้อที่ตอบ = ป้ายหัวข้อของแถว
+    TOPIC_TH = {'room': 'ห้องพัก', 'facility': 'สิ่งอำนวยความสะดวก', 'service': 'พนักงาน', 'food': 'อาหารเช้า', 'value': 'ราคา'}
+    for sv in export.get('survey_rows') or []:
+        sc = int(sv.get('score') or 0)
+        if not 1 <= sc <= 5:
+            continue
+        tps = [TOPIC_TH[k] for k in (sv.get('topics') or {}) if k in TOPIC_TH]
+        m['reviews'].append({'review_id': 'SV-' + str(sv['key']), 'source': 'LINE OA', 'guest_id': line_to_gid.get(sv.get('line_user_id')) or '',
+                             'booking_id': '', 'reviewer_name': '', 'rating_5': sc, 'text': (sv.get('comment') or '(ให้คะแนนอย่างเดียว ไม่ได้พิมพ์ความเห็น)'),
+                             'topics': tps, 'sentiment': 'บวก' if sc >= 4 else ('กลาง' if sc == 3 else 'ลบ'),
+                             'created_at': _bkk(sv['at'])[:10] + 'T12:00:00+07:00', 'reply_status': 'ยังไม่ตอบ', 'is_generated': False})
+
     # แชท LINE จริง
     n = len(m['line_chats'])
     for t in export.get('threads', []):

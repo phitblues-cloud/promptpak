@@ -266,6 +266,10 @@ def _daily():
 def _build(now, role='owner'):
     _daily()
     export = rpc('pp_export')
+    try:   # ผลแบบสอบถามความพึงพอใจทาง LINE → นับเป็นรีวิวจริงใน CRM (ข้ามได้ถ้ายังไม่ได้รัน 25_survey_rows.sql)
+        export['survey_rows'] = rpc('pp_survey_rows') or []
+    except Exception:
+        export['survey_rows'] = []
     try:   # สถานะแชท (ข้ามได้ถ้ายังไม่ได้รัน 07_chat.sql)
         export['chat_state'] = rpc('pp_chat_state') or {}
     except Exception:
