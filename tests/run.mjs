@@ -488,6 +488,20 @@ ok('AI สรุปกล่อง CRM: กันโค้ดแปลกปล�
   ok('แผนการตลาดจาก AI: กรองเฉพาะกลุ่ม/ช่องทางที่มีจริง · ใช้ซ้ำเมื่อเลือกชุดเดิม');
 }
 
+// 11n2) กลุ่มลูกค้า: ป๊อปอัปเส้นทางลูกค้าใช้ข้อมูลจริง (SEGX) · AI เล่าตัวตนจากตัวเลขที่ส่งไป · กรองแท็ก/ไม่มีชื่อบริษัท
+{
+  const crm = (await call('/')).body;   // หน้าหลักมีทุกโมดูล รวมกลุ่มลูกค้าใน CRM
+  assert.ok(crm && crm.includes('const SEGX=') && crm.includes('sg3trk') && crm.includes('/api/segment'), 'โมดูล CRM ต้องมีป๊อปอัปเส้นทางลูกค้า + ข้อมูลจริง');
+  const segs = { B: { n: 12, ng: 5, enough: true, share: 40, facts: { age: 35, prov: 'ชลบุรี', provPct: 22, company: 'บริษัท ลับ จำกัด' } }, X: { n: 1 } };
+  script.push(p => { const u = JSON.parse(p.messages[0].content); assert.deepEqual(Object.keys(u), ['B']); assert.ok(!JSON.stringify(u).includes('ลับ'), 'ห้องส่งชื่อบริษัทให้ AI');
+    return { stop_reason: 'end_turn', content: [{ type: 'text', text: JSON.stringify({ segs: { B: { who: 'กลุ่ม <script>x</script>ทดสอบ 12 ครั้ง', val: ['a'], serve: ['b', 'c'] }, Z: { who: 'ไม่มีกลุ่มนี้' } } }) }] }; });
+  let r = await call('/api/segment', { method: 'POST', body: JSON.stringify({ segs }) });
+  assert.deepEqual(Object.keys(r.body.segs), ['B']); assert.ok(!/[<>]/.test(r.body.segs.B.who) && r.body.segs.B.serve.length === 2);
+  r = await call('/api/segment', { method: 'POST', body: JSON.stringify({ segs }) }); assert.ok(r.body.segs.B.who.includes('ทดสอบ 12'));   // ชุดเดิมใช้ซ้ำ ไม่เรียก AI อีก
+  assert.equal((await fetch(base + '/api/segment', { method: 'POST', body: '{}' })).status, 401);
+  ok('กลุ่มลูกค้า: ข้อมูลจริงในป๊อปอัป · AI เล่าตัวตน (กรองแท็ก ไม่ส่งชื่อบริษัท ใช้ซ้ำเมื่อข้อมูลเดิม)');
+}
+
 // 11o) ลูกค้าจองเองผ่านหน้าจอ LINE (LIFF): จองหลายประเภท · อาหารเช้ารายห้อง · การ์ด + QR พร้อมเพย์ · ส่งรูปในแชท = สลิป
 {
   process.env.LIFF_ID = '2000000000-testliff';

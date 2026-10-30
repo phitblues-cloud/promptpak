@@ -74,6 +74,12 @@ def regen_embedded(s, ovp):
     if ovp:   # ป้ายกล่อง "สถานการณ์ลูกค้าตอนนี้": บอกตามจริงว่า AI วิเคราะห์ข้อมูลจากฐานข้อมูลแล้วหรือยัง
         s = R(s, "'<span class=\"o\">AI สรุปและแนะนำ</span><span class=\"o mk\">ข้อมูลจำลอง</span>'",
               "(window.__AISUM&&window.__AISUM.length?'<span class=\"o\">AI สรุปและแนะนำ</span><span class=\"o\">วิเคราะห์จากฐานข้อมูลจริง</span>':'<span class=\"o\">AI สรุปและแนะนำ</span><span class=\"o mk\">ข้อมูลจำลอง</span>')", 1, 'emb-sumbadge')
+    if ovp:   # ป๊อปอัปกลุ่มลูกค้าแบบเส้นทางลูกค้า (ข้อมูลจริงจาก p_seg · AI เล่าตัวตนผ่าน /api/segment)
+        import p_seg, os
+        pop = open(os.path.join(os.path.dirname(__file__), 'seg_popup.html'), encoding='utf-8').read()
+        pop = pop.replace('__SEGX__', J(p_seg.build()).replace('</', '<\\/'))
+        k = s.rindex('</body>')
+        s = s[:k] + pop + s[k:]
     s = R(s, 'const TODAY=new Date(2026,9,24);', 'const TODAY=new Date(2026,9,24);', 1, 'emb-today')
     s = R(s, "d1:'2026-10-01',d2:'2026-10-24'", "d1:'2026-10-01',d2:'2026-10-24'", 1, 'emb-ps')
     i = s.index('const RT=['); j = s.index('];', i) + 2
