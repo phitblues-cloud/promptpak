@@ -684,6 +684,23 @@ ok('AI สรุปกล่อง CRM: กันโค้ดแปลกปล�
   ok('ส่งทดสอบหาบัญชีที่เลือก (ไม่นับเป็นการส่งจริง) · ปิดสวิตช์หลัก = ตัวตั้งเวลาไม่ทำงาน');
 }
 
+// 11b) ข้อความในกลุ่ม LINE ต้องแยกจากแชทส่วนตัว และพนักงานตอบเข้ากลุ่ม
+{
+  const G = 'Cgroup0001', P = 'Uperson0001';
+  const grp = (text) => ({ type: 'message', webhookEventId: 'evg' + (++evn), replyToken: 'rg' + evn, source: { type: 'group', groupId: G, userId: P }, message: { type: 'text', id: 'g' + evn, text } });
+  assert.equal(await webhook([grp('ใครว่างไปเที่ยวบ้าง')]), 200);
+  assert.equal(await webhook([lineEvent(P, 'สอบถามห้องพักส่วนตัว')]), 200);
+  assert.equal(psql('-c', `select count(*) from chat_threads where line_user_id='${G}'`), '1');
+  assert.equal(psql('-c', `select count(*) from chat_messages m join chat_threads t on t.id=m.thread_id where t.line_user_id='${P}' and m.body like '%ใครว่างไปเที่ยว%'`), '0');
+  assert.equal(psql('-c', `select count(*) from chat_messages m join chat_threads t on t.id=m.thread_id where t.line_user_id='${G}' and m.body like 'ผู้ทดสอบ: ใครว่างไปเที่ยว%'`), '1');
+  assert.match(psql('-c', `select display_name from chat_threads where line_user_id='${G}'`), /^👥 /);
+  const key = 'db:' + psql('-c', `select id from chat_threads where line_user_id='${G}'`);
+  assert.equal(psql('-c', `select pp_chat_target('${key}')`), G);   // ปลายทางส่งตอบ = รหัสกลุ่ม ไม่ใช่คนพิมพ์
+  const sr = await call('/api/app?part=chat', { method: 'POST', body: JSON.stringify({ k: 'send', key, body: 'ตอบกลุ่มนะคะ' }) });
+  assert.equal(sr.body.line, 'sent');
+  ok('ข้อความในกลุ่ม LINE แยกเป็นห้องของกลุ่ม ไม่ปนแชทส่วนตัว · พนักงานตอบแล้วส่งเข้ากลุ่ม');
+}
+
 // 12) กันเดา PIN
 for (let i = 0; i < 8; i++) await call('/api/app?part=pin', { method: 'POST', body: JSON.stringify({ role: 'owner', pin: '000000' }) });
 assert.equal((await call('/api/app?part=pin', { method: 'POST', body: JSON.stringify({ role: 'owner', pin: '246810' }) })).status, 429);

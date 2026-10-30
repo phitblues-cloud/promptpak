@@ -1,6 +1,6 @@
 // รับข้อความจาก LINE OA → บันทึก (ข้อความ/สติกเกอร์/รูป/ไฟล์) → แจ้งพนักงานตอบเอง
 // AI ไม่ตอบลูกค้าอัตโนมัติ (เจ้าของไม่ต้องการแชทบอท) · เปิดได้ด้วย AI_AUTOREPLY=1
-import { verifySignature, reply, replyMessages, showLoading, getProfile, getContent } from '../lib/line.js';
+import { verifySignature, reply, replyMessages, showLoading, getProfile, getContent, getGroupName, getMemberName } from '../lib/line.js';
 import { uploadMedia } from '../lib/storage.js';
 import { rpc } from '../lib/db.js';
 import { bookingAgent } from '../lib/ai.js';
@@ -27,7 +27,29 @@ async function mediaOf(m) {
   return { body: `[${m.type || 'ข้อความ'}]`, meta: { type: m.type || 'unknown' } };
 }
 
+// ข้อความในกลุ่ม/ห้องแชท LINE ที่มี OA อยู่ด้วย → แยกเป็นห้องแชทของกลุ่มเอง (คีย์ = รหัสกลุ่ม) ไม่ปนกับแชทส่วนตัวของคนพิมพ์
+// พนักงานตอบจากหน้าแชทแล้วจะส่งเข้ากลุ่ม (push หา groupId) · ไม่มี AI/ปุ่มจอง/สลิป/แบบสอบถามในกลุ่ม
+async function handleGroupEvent(ev) {
+  const src = ev.source, gid = src.groupId || src.roomId;
+  if (!gid) return;
+  if (ev.webhookEventId && (await rpc('pp_event_seen', { p_event_id: ev.webhookEventId }))) return;
+  const gname = (await getGroupName(src)) || (src.type === 'group' ? 'กลุ่ม LINE' : 'ห้องแชทกลุ่ม LINE');
+  const title = '👥 ' + gname;
+  if (ev.type === 'join') {
+    await rpc('pp_chat_log', { p_line_user_id: gid, p_display_name: title, p_sender: 'ระบบ', p_body: '(เชิญบัญชีโรงแรมเข้ากลุ่มนี้)' });
+    return;
+  }
+  if (ev.type !== 'message') return;
+  const who = (await getMemberName(src)) || 'สมาชิกกลุ่ม';
+  let body, meta = null;
+  if (ev.message?.type === 'text') body = ev.message.text;
+  else ({ body, meta } = await mediaOf(ev.message || {}));
+  await rpc('pp_chat_log', { p_line_user_id: gid, p_display_name: title, p_sender: 'ลูกค้า', p_body: `${who}: ${body}`, ...(meta ? { p_meta: { ...meta, group: true, from: who } } : {}) });
+  await rpc('pp_handoff', { p_line_user_id: gid, p_reason: `ข้อความในกลุ่ม "${gname}" · ${who}` });
+}
+
 async function handleEvent(ev) {
+  if (ev.source?.type === 'group' || ev.source?.type === 'room') return handleGroupEvent(ev);
   const userId = ev.source?.userId;
   if (!userId) return;
   if (ev.webhookEventId && (await rpc('pp_event_seen', { p_event_id: ev.webhookEventId }))) return; // ซ้ำ ข้าม
