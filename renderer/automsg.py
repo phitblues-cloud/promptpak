@@ -132,7 +132,6 @@ def _survey_card(key, who, rooms, test=False):
                 {'type': 'text', 'text': '%s · ห้อง %s' % (who, rooms), 'size': 'xs', 'color': '#D9C48A', 'margin': 'xs'}]}
     bub = {'type': 'bubble', 'size': 'mega', 'header': head,
            'body': {'type': 'box', 'layout': 'vertical', 'backgroundColor': IVORY, 'paddingAll': '16px', 'contents': [
-               {'type': 'box', 'layout': 'vertical', 'height': '2px', 'backgroundColor': GOLD, 'contents': [{'type': 'filler'}], 'margin': 'none'},
                {'type': 'text', 'text': 'โดยรวมแล้ว การพักครั้งนี้เป็นอย่างไรบ้างคะ', 'size': 'md', 'weight': 'bold', 'color': DARK, 'wrap': True, 'margin': 'lg'},
                stars, ends]}}
     return {'type': 'flex', 'altText': 'ขอบคุณที่มาพักกับพบรักรีสอร์ท ช่วยให้คะแนนการพักครั้งนี้หน่อยนะคะ', 'contents': bub}

@@ -4,7 +4,7 @@ import { verifySignature, reply, replyMessages, showLoading, getProfile, getCont
 import { uploadMedia } from '../lib/storage.js';
 import { rpc } from '../lib/db.js';
 import { bookingAgent } from '../lib/ai.js';
-import { handleRate } from '../lib/automsg.js';
+import { handleRate, handleComment, isComment } from '../lib/automsg.js';
 
 const AI_ON = () => process.env.AI_AUTOREPLY === '1';
 const WELCOME_AI = 'สวัสดีค่ะ ยินดีต้อนรับสู่ พบรักรีสอร์ท 🙏\nจองห้องได้ทางแชทนี้เลยค่ะ พิมพ์วันเข้าพัก วันออก และจำนวนห้องที่ต้องการ เช่น "ขอห้องตึก 2 ห้อง 27-29 ต.ค."';
@@ -88,6 +88,7 @@ async function handleEvent(ev) {
   }
 
   await rpc('pp_chat_log', { p_line_user_id: userId, p_display_name: name, p_sender: 'ลูกค้า', p_body: ev.message.text });
+  if (isComment(ev.message.text)) return handleComment(ev, userId, name);   // ความเห็นจากช่องพิมพ์ท้ายแบบสอบถาม
 
   // ปุ่ม "จองห้องพัก" จากริชเมนู → ส่งปุ่มเปิดหน้าจอจอง (LIFF) · ไม่สนเว้นวรรค/อีโมจิ
   if (LIFF() && /^(จองห้องพัก|จองห้อง|จองที่พัก|จองเลย|จอง)$/.test(String(ev.message.text).replace(/[^\u0E00-\u0E7F]/g, ''))) return liffButton(ev, userId, name);

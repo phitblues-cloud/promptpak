@@ -632,9 +632,17 @@ ok('AI สรุปกล่อง CRM: กันโค้ดแปลกปล�
   assert.equal(replies().length, r0, 'ยังตอบไม่ครบ ไม่ส่งอะไรเพิ่ม');
   await webhook([postback('Uam1', `pp_topic|${A}|value|5`, 'a4')]);   // ตอบครบ 4 เรื่อง → ขั้น 3 เอง
   rp = lastReply();
-  assert.ok(rp.includes('ขอบคุณมากค่ะ') && rp.includes('https://g.page/r/test') && !rp.includes('★'), rp);
+  assert.ok(rp.includes('ขอบคุณมากค่ะ') && rp.includes('https://g.page/r/test') && rp.includes('openKeyboard') && rp.includes('ความเห็นการพัก:'), rp);
   assert.deepEqual(JSON.parse(psql('-c', `select topics::text from auto_msg_rating where key = '${A}'`)), { room: 5, facility: 3, service: 5, value: 5 });
   const r1 = replies().length; await webhook([postback("Uam1", `pp_done|${A}`, "a5")]); assert.equal(replies().length, r1, 'ขั้น 3 ส่งครั้งเดียว');
+  // ความเห็นที่ลูกค้าพิมพ์จากช่องพิมพ์ท้ายแบบสอบถาม → เก็บคู่กับคะแนน (หลายข้อความต่อกันได้) · ข้อความนำอย่างเดียวไม่เก็บ
+  const msgEv = (uid, t, id) => ({ type: 'message', webhookEventId: id, replyToken: 'rt-' + id, source: { type: 'user', userId: uid }, message: { type: 'text', id, text: t } });
+  await webhook([msgEv('Uam1', 'ความเห็นการพัก: ห้องสะอาด แม่บ้านน่ารัก', 'c1')]);
+  assert.ok(lastReply().includes('ขอบคุณสำหรับความเห็น'));
+  await webhook([msgEv('Uam1', 'ความเห็นการพัก: ไวไฟช้านิดหน่อย', 'c2')]);
+  await webhook([msgEv('Uam1', 'ความเห็นการพัก: ', 'c3')]);
+  assert.equal(psql('-c', `select comment from auto_msg_rating where key = '${A}'`).replace(/\s+/g, ' '), 'ห้องสะอาด แม่บ้านน่ารัก ไวไฟช้านิดหน่อย');
+  assert.equal(psql('-c', `select needs_staff from chat_threads where line_user_id = 'Uam1'`), 'f', 'ลูกค้าพอใจ ไม่ต้องแจ้งพนักงาน');
   // ไม่พอใจ: ภาพรวม 4 แต่เลือก "ปรับปรุง" เรื่องอาหาร (B สั่งอาหารเช้า) → ขอโทษ + แจ้งผู้จัดการ · ตอบไม่ครบแล้วกด "ข้าม"
   psql('-c', `update bookings set details = details || '{"bf":170}'::jsonb where booking_no = '${B}'`);
   await act({ k: 'checkin', no: B }); await act({ k: 'checkout', no: B });
