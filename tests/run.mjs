@@ -698,6 +698,9 @@ ok('AI สรุปกล่อง CRM: กันโค้ดแปลกปล�
   assert.equal(psql('-c', `select pp_chat_target('${key}')`), G);   // ปลายทางส่งตอบ = รหัสกลุ่ม ไม่ใช่คนพิมพ์
   const sr = await call('/api/app?part=chat', { method: 'POST', body: JSON.stringify({ k: 'send', key, body: 'ตอบกลุ่มนะคะ' }) });
   assert.equal(sr.body.line, 'sent');
+  const pg = await call('/'); // หน้าแอปต้องมีห้อง "👥" ในแชท และกลุ่มต้องไม่ถูกนับเป็นลูกค้า
+  assert.ok(pg.body.includes('👥 กลุ่มทดสอบ'));
+  assert.ok(!pg.body.includes('คุณ👥'));
   ok('ข้อความในกลุ่ม LINE แยกเป็นห้องของกลุ่ม ไม่ปนแชทส่วนตัว · พนักงานตอบแล้วส่งเข้ากลุ่ม');
 }
 

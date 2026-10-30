@@ -63,6 +63,11 @@ def regen_embedded(s, ovp):
     s = R(s, 'const D0=new Date(2024,0,1);', 'const D0=new Date(2026,0,1);', 1, 'emb-d0')
     s = R(s, '(c.getFullYear()-2024)*12', '(c.getFullYear()-2026)*12', 1, 'emb-mi')
     s = s.replace('min="2024-01-01" max="2025-12-31"', 'min="2026-01-01" max="2027-12-31"')
+    # ลูกค้าที่ยังไม่มีจังหวัด: ไม่ทำเป็นแท่งกราฟ แสดงเป็นตัวเลขเล็กๆ มุมขวาล่างของกล่อง
+    s = R(s, "const prov={},provP={};P.gs.forEach(g=>prov[GU[g].p]=(prov[GU[g].p]||0)+1);Q.gs.forEach(g=>provP[GU[g].p]=(provP[GU[g].p]||0)+1);",
+          "const prov={},provP={};P.gs.forEach(g=>prov[GU[g].p]=(prov[GU[g].p]||0)+1);Q.gs.forEach(g=>provP[GU[g].p]=(provP[GU[g].p]||0)+1);const pvN=prov['']||0;", 1, 'emb-prov')
+    s = R(s, "const provR=Object.entries(prov).sort(", "const provR=Object.entries(prov).filter(([l])=>l!=='').sort(", 1, 'emb-prov2')
+    s = R(s, "${hbars(provR,'คน')}</div>", "${hbars(provR,'คน')}${pvN?`<p class=\"note\" style=\"text-align:right;font-size:.72rem;margin:.5rem 0 0\">ไม่ระบุจังหวัด ${fmt(pvN)} คน</p>`:''}</div>", 1, 'emb-prov3')
     s = R(s, 'const TODAY=new Date(2026,9,24);', 'const TODAY=new Date(2026,9,24);', 1, 'emb-today')
     s = R(s, "d1:'2026-10-01',d2:'2026-10-24'", "d1:'2026-10-01',d2:'2026-10-24'", 1, 'emb-ps')
     i = s.index('const RT=['); j = s.index('];', i) + 2

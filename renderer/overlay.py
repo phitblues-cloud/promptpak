@@ -419,7 +419,8 @@ def build(base, export, now):
             g.update({'guest_id': gid, 'first_name': first, 'last_name': '', 'full_name': first, 'nickname': first,
                       'birth_date': '1990-01-01', 'line_display_name': first, 'line_user_id': t['line_user_id'],
                       'company_id': None, 'vehicle': None, 'is_member': False, 'tags': [], 'segment': 'ลูกค้าใหม่',
-                      'customer_type_at_ref': 'ลูกค้าใหม่', 'first_stay': None, 'last_stay': None})
+                      'customer_type_at_ref': 'ลูกค้าใหม่', 'first_stay': None, 'last_stay': None,
+                      'is_group_chat': str(t['line_user_id'])[:1] in ('C', 'R')})
             m['guests'].append(g)
             line_to_gid[t['line_user_id']] = gid
         linked = None

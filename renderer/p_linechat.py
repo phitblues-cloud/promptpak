@@ -90,7 +90,7 @@ def build():
             st = 'wait'   # พนักงานตอบล่าสุด รอลูกค้าตอบกลับ
         if cs.get('closed_at') and cs['closed_at'] >= max(cust_at, staff_at):
             st = 'done'
-        c = {'id': i, 'name': 'คุณ' + g['nickname'], 'line': t['line_display_name'], 'ago': ago, 'st': st,
+        c = {'id': i, 'name': (t['line_display_name'] if g.get('is_group_chat') else 'คุณ' + g['nickname']), 'line': t['line_display_name'], 'ago': ago, 'st': st,
              'room': b['room'] if b else '', 'stay': stay_txt(b) if b else '', 'co': co, 'stays': n_st, 'sum': '', 'm': msgs,
              'key': key, 'sn': list(cs.get('notes') or []), 'read': bool(cs.get('read_at') and cs['read_at'] >= cust_at)}
         if cs.get('alias'):

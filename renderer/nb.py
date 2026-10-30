@@ -43,6 +43,8 @@ SN = {'S01': 'เจ้าของ', 'S02': 'ป้าใจ', 'S03': 'ดว�
 
 # ---------------- ลูกค้า / บริษัท ----------------
 G = {g['guest_id']: g for g in m['guests']}
+# ห้องแชทกลุ่ม LINE ไม่ใช่ลูกค้า: ให้หน้าแชทหาเจอ (G) แต่ไม่นับในรายชื่อ/สถิติลูกค้า
+m['guests'] = [g for g in m['guests'] if not g.get('is_group_chat')]
 CO = {c['company_id']: c for c in m['companies']}
 def disp(g):
     return 'คุณ' + g['first_name'] + ' ' + g['last_name']
