@@ -1,0 +1,155 @@
+<!doctype html><html lang="th"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Login v4 — พบรักรีสอร์ท</title>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Thai:wght@400;600;700&family=Noto+Sans+Thai:wght@900&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#2A1750;--name:#4A3382;--low:#E7D8F8;--road:#D2BDF0;--ink:#2A1750;--pur:#6A3AA2;--hot:#C2287F;--yel:#FFD66B;--cream:#FFF8EC;--body:'IBM Plex Sans Thai',sans-serif;--disp:'Noto Sans Thai','IBM Plex Sans Thai',sans-serif}
+*{box-sizing:border-box}html,body{margin:0;height:100%}
+body{font-family:var(--body);color:var(--ink);background:var(--bg);overflow:hidden}
+.stage{position:relative;height:100vh;height:100dvh;overflow:hidden;background:var(--bg)}
+/* ===== เลเยอร์บน 70% : สีเข้ม + ชื่อโรงแรม (นิ่ง) ===== */
+.logo{position:absolute;left:1.2rem;top:1rem;font:700 .95rem var(--body);letter-spacing:.18em;color:#8F78C4;z-index:3}
+.name{position:absolute;left:0;right:0;top:3vh;text-align:center;font:900 clamp(4.2rem,21vh,13rem)/1.35 var(--disp);color:var(--name);white-space:nowrap;user-select:none;z-index:1}
+.stars i{position:absolute;width:3px;height:3px;border-radius:50%;background:#A78BE0;opacity:.2;animation:tw 4s ease-in-out infinite}
+@keyframes tw{50%{opacity:.8}}
+/* ===== เลเยอร์ล่าง 30% : สีอ่อน ขอบบนเป็นเงาตึก/บ้านพัก/ปาล์ม ===== */
+.low{position:absolute;left:0;right:0;bottom:0;height:30%;background:linear-gradient(var(--low) 0 76%,var(--road) 76%);z-index:2}
+.sky{position:absolute;left:0;right:0;bottom:30%;height:15vh;z-index:2}
+.sky svg{display:block;width:100%;height:100%}
+.sky .sw{fill:#CDB6EE;animation:blink 7s ease-in-out infinite;animation-delay:var(--d)}
+.sky .sw.l{fill:var(--yel);animation:lit 9s ease-in-out infinite;animation-delay:var(--d)}
+@keyframes lit{0%,100%{opacity:.25}50%{opacity:1}}@keyframes blink{50%{opacity:.5}}
+.wel .sky .sw{fill:var(--yel);animation:none;opacity:1}
+.belt{position:absolute;left:0;bottom:1.8vh;display:flex;align-items:flex-end;gap:2.5rem;animation:run 80s linear infinite;z-index:3;will-change:transform}
+.belt svg{height:min(17.5vh,150px);width:auto;flex:none;overflow:visible}
+@keyframes run{to{transform:translateX(-50%)}}
+.bob{animation:bob .55s ease-in-out infinite alternate}@keyframes bob{to{transform:translateY(-3px)}}
+.steam{animation:st 2.6s ease-in infinite;opacity:0}.steam:nth-of-type(2){animation-delay:.8s}.steam:nth-of-type(3){animation-delay:1.6s}
+@keyframes st{0%{opacity:0;transform:translateY(6px)}30%{opacity:.8}100%{opacity:0;transform:translateY(-16px)}}
+.rip{animation:rp 3s linear infinite}@keyframes rp{to{transform:translateX(24px)}}
+.flt{animation:fl 3s ease-in-out infinite}@keyframes fl{50%{transform:translateY(-4px) rotate(4deg)}}
+.swgk{transform-box:fill-box;transform-origin:50% 0;animation:sg 3.4s ease-in-out infinite}.swgk:nth-of-type(2){animation-delay:-.9s}.swgk:nth-of-type(3){animation-delay:-1.8s}
+@keyframes sg{0%,100%{transform:rotate(8deg)}50%{transform:rotate(-8deg)}}
+.ring{transform-box:fill-box;transform-origin:center;opacity:0;animation:rg 3.6s ease-out infinite}
+@keyframes rg{0%,45%{opacity:0;transform:scale(.5)}50%{opacity:.8}100%{opacity:0;transform:scale(2.4)}}
+.spin{transform-box:fill-box;transform-origin:center;animation:sp 1.2s linear infinite}@keyframes sp{to{transform:rotate(360deg)}}
+.sway{transform-box:fill-box;transform-origin:50% 100%;animation:sw 5s ease-in-out infinite}@keyframes sw{50%{transform:rotate(3deg)}}
+/* ===== กล่องล็อกอิน 3 ใบ แนวตั้ง แยกกัน ===== */
+.boxes{position:absolute;left:50%;bottom:33%;transform:translateX(-50%);display:flex;gap:1.1rem;z-index:6;align-items:flex-end}
+.bx{width:min(26vw,176px);height:min(33vh,285px);background:var(--cream);border-radius:22px;padding:1.2rem .9rem;display:flex;flex-direction:column;align-items:center;text-align:center;cursor:pointer;position:relative;transition:transform .22s cubic-bezier(.2,1.3,.4,1),box-shadow .22s,opacity .3s;box-shadow:0 8px 0 rgba(0,0,0,.22);animation:rise .7s cubic-bezier(.2,1.2,.4,1) both}
+.bx:nth-child(2){animation-delay:.1s}.bx:nth-child(3){animation-delay:.2s}
+@keyframes rise{from{transform:translateY(40px);opacity:0}}
+.bx:hover{transform:translateY(-6px)}
+.bx.on{transform:translateY(-12px);box-shadow:0 0 0 4px var(--yel),0 14px 0 rgba(0,0,0,.22)}
+.av{width:72px;height:72px;border-radius:20px;display:grid;place-items:center;font:700 1.9rem var(--body);color:#fff;font-style:normal;margin-top:.6rem;flex:none}
+.av.o{background:linear-gradient(135deg,#6A3AA2,#C2287F)}.av.s{background:var(--ink)}
+.av.p{background:transparent;border:2.5px dashed #B9A3DB;color:#8B6FC0;font-weight:400;font-size:2.4rem}
+.bx b{margin-top:.9rem;font:700 1rem/1.3 var(--body)}.bx small{margin-top:.2rem;font:400 .78rem var(--body);opacity:.65}
+.pw{margin-top:auto;width:100%;display:none;flex-direction:column;gap:.45rem}
+.bx.on .pw{display:flex}.bx.on small{display:none}
+.pw input{width:100%;background:#F0E7D2;border:0;border-radius:12px;font:600 1rem var(--body);padding:.6rem .5rem;text-align:center;color:var(--ink);outline:0}
+.pw input.pin{letter-spacing:.4em;font-size:1.05rem}
+.pw input::placeholder{color:#A89BBE;letter-spacing:.3em}.pw input.u::placeholder{letter-spacing:0}
+.go{background:var(--hot);color:#fff;border:0;border-radius:12px;font:700 .95rem var(--body);padding:.6rem;cursor:pointer;transition:.15s}.go:hover{background:var(--pur)}
+.okb{display:none;margin-top:auto;flex-direction:column;align-items:center;gap:.4rem;width:100%}
+.okb .ck{width:44px;height:44px;border-radius:50%;background:#2E9E5E;display:grid;place-items:center}
+.okb em{font:700 .95rem var(--body);font-style:normal}.okb a{font:600 .8rem var(--body);color:var(--ink);opacity:.7}
+.bx.ok .pw,.bx.ok small{display:none!important}.bx.ok .okb{display:flex}
+.wel .bx:not(.ok){opacity:.35;pointer-events:none}
+@media (max-width:640px){.boxes{gap:.5rem}.bx{width:30vw;padding:.9rem .4rem;height:36vh}.av{width:52px;height:52px;font-size:1.4rem}.bx b{font-size:.85rem}}
+@media (prefers-reduced-motion:reduce){*{animation:none!important}}
+</style></head><body>
+<div class="stage" id="stage">
+ <div class="logo">PROMPT PAK</div>
+ <div class="stars" id="stars"></div>
+ <div class="name">พบรักรีสอร์ท</div>
+
+ <!-- เงาตึก บ้านพัก ปาล์ม = เส้นแบ่งของสองเลเยอร์ -->
+ <div class="sky"><svg viewBox="0 0 1600 150" preserveAspectRatio="xMidYMax slice" id="skysvg"></svg></div>
+ <div class="low"></div>
+ <div class="belt" id="belt"></div>
+
+ <div class="boxes">
+  <div class="bx" data-k="o"><i class="av o">จ</i><b>เจ้าของรีสอร์ท</b><small>เจ้าของ</small>
+   <div class="pw"><input class="pin" inputmode="numeric" maxlength="6" placeholder="······" autocomplete="off"><button class="go">เข้าสู่ระบบ</button></div>
+   <div class="okb"><div class="ck"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7"/></svg></div><em>ยินดีต้อนรับ</em><a href="#" class="out">ออกจากระบบ</a></div></div>
+  <div class="bx" data-k="s"><i class="av s">พ</i><b>พนักงานต้อนรับ</b><small>พนักงาน</small>
+   <div class="pw"><input class="pin" inputmode="numeric" maxlength="6" placeholder="······" autocomplete="off"><button class="go">เข้าสู่ระบบ</button></div>
+   <div class="okb"><div class="ck"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7"/></svg></div><em>ยินดีต้อนรับ</em><a href="#" class="out">ออกจากระบบ</a></div></div>
+  <div class="bx" data-k="x"><i class="av p">+</i><b>เพิ่มบัญชีอื่น</b><small>บัญชีอื่น</small>
+   <div class="pw"><input class="u" placeholder="ชื่อผู้ใช้" autocomplete="off"><input class="pin" inputmode="numeric" maxlength="6" placeholder="······" autocomplete="off"><button class="go">เข้าสู่ระบบ</button></div>
+   <div class="okb"><div class="ck"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7"/></svg></div><em>ยินดีต้อนรับ</em><a href="#" class="out">ออกจากระบบ</a></div></div>
+ </div>
+</div>
+<script>
+const $=s=>document.querySelector(s),$$=s=>[...document.querySelectorAll(s)];
+// ดาวเล็กในเลเยอร์บน
+$('#stars').innerHTML=Array.from({length:22},(_,i)=>`<i style="left:${(i*37+11)%100}%;top:${(i*53+7)%52+3}%;animation-delay:${(i%7)*.6}s"></i>`).join('');
+// เงาตึก/บ้านพัก/ปาล์ม : ขอบบนของเลเยอร์ล่าง
+(function(){
+ const F='#E7D8F8';let h='',n=0;
+ const win=(x,y,w,hh,l)=>`<rect class="sw${l?' l':''}" style="--d:${(n++*.7%6).toFixed(1)}s" x="${x}" y="${y}" width="${w}" height="${hh}" rx="2"/>`;
+ const palm=(x,hh,lean)=>`<g fill="none" stroke="${F}" stroke-linecap="round"><path d="M${x} 150Q${x+lean} ${150-hh/2} ${x+lean*1.4} ${150-hh}" stroke-width="9"/><g class="sway" stroke-width="7"><path d="M${x+lean*1.4} ${150-hh}q-40-10-60 18M${x+lean*1.4} ${150-hh}q40-10 60 18M${x+lean*1.4} ${150-hh}q-30-34-62-22M${x+lean*1.4} ${150-hh}q30-34 62-22M${x+lean*1.4} ${150-hh}q0-34-4-42"/></g></g>`;
+ const cot=(x,w,hh)=>`<path d="M${x-12} ${150-hh}L${x+w/2} ${150-hh-w*.42}L${x+w+12} ${150-hh}z" fill="${F}"/><rect x="${x}" y="${150-hh}" width="${w}" height="${hh}" fill="${F}"/>`;
+ h+=cot(30,110,64)+win(55,100,22,22,1)+win(95,100,22,22);
+ h+=palm(200,110,10);
+ // ตึกโรงแรมใหญ่
+ h+=`<rect x="300" y="26" width="180" height="124" fill="${F}"/><rect x="380" y="6" width="20" height="22" fill="${F}"/><rect x="333" y="14" width="114" height="18" rx="9" fill="${F}"/>`;
+ for(let r=0;r<4;r++)for(let c=0;c<6;c++)h+=win(318+c*26,46+r*26,16,16,(r*6+c)%3===0);
+ h+=`<rect x="480" y="78" width="170" height="72" fill="${F}"/>`;for(let c=0;c<6;c++)h+=win(494+c*26,92,16,18,c%2===1);
+ // โดม + ศาลา
+ h+=`<path d="M700 150a54 54 0 0 1 108 0z" fill="${F}"/><rect x="750" y="44" width="8" height="30" fill="${F}"/><circle cx="754" cy="42" r="7" fill="${F}"/>`;
+ h+=cot(850,96,58)+win(870,112,20,20,1)+win(906,112,20,20);
+ h+=palm(1010,96,-12)+palm(1060,124,12);
+ h+=`<rect x="1120" y="46" width="150" height="104" fill="${F}"/><rect x="1146" y="28" width="26" height="22" fill="${F}"/>`;
+ for(let r=0;r<3;r++)for(let c=0;c<5;c++)h+=win(1136+c*26,64+r*26,16,16,(r+c)%3===1);
+ // ร่มชายหาด + เก้าอี้
+ h+=`<path d="M1310 100a56 56 0 0 1 112 0z" fill="${F}"/><rect x="1362" y="100" width="7" height="50" fill="${F}"/>`;
+ h+=cot(1440,100,60)+win(1462,106,20,20,1)+palm(1580,100,-8);
+ $('#skysvg').innerHTML=h})();
+
+// ===== ขบวนองค์ประกอบโรงแรมวิ่งผ่านโซนล่าง =====
+const P='#6A3AA2',K='#C2287F',LP='#F29AC1',Y='#FFD66B',O='#F2A65A',G='#5FB37A',B='#6EC3E8',D='#2A1750',W='#FFFFFF',BR='#B07A45',SK='#F2C9A5';
+const V='viewBox="0 0 200 140"';
+const items=[
+// 1 พนักงานเข็นรถกระเป๋า
+`<svg ${V}><g class="bob"><rect x="26" y="62" width="28" height="46" rx="11" fill="${K}"/><rect x="29" y="104" width="9" height="30" rx="4" fill="${D}"/><rect x="42" y="104" width="9" height="30" rx="4" fill="${D}"/><circle cx="40" cy="48" r="13" fill="${SK}"/><rect x="26" y="32" width="28" height="12" rx="6" fill="${K}"/><rect x="48" y="74" width="46" height="8" rx="4" fill="${K}"/></g><rect x="86" y="112" width="100" height="7" rx="3" fill="${O}"/><rect x="178" y="56" width="7" height="60" fill="${O}"/><rect x="92" y="62" width="40" height="50" rx="6" fill="${P}"/><rect x="138" y="82" width="34" height="30" rx="6" fill="${LP}"/><circle cx="104" cy="128" r="8" fill="${D}"/><circle cx="168" cy="128" r="8" fill="${D}"/></svg>`,
+// 2 รถรับส่ง
+`<svg ${V}><g class="bob"><rect x="8" y="52" width="176" height="64" rx="16" fill="${LP}"/><rect x="26" y="62" width="34" height="24" rx="6" fill="#CFEFFB"/><rect x="66" y="62" width="34" height="24" rx="6" fill="#CFEFFB"/><rect x="106" y="62" width="34" height="24" rx="6" fill="#CFEFFB"/><rect x="146" y="62" width="28" height="24" rx="6" fill="#CFEFFB"/><rect x="60" y="34" width="60" height="18" rx="6" fill="${Y}"/><rect x="176" y="92" width="10" height="10" rx="3" fill="${Y}"/><rect x="8" y="98" width="176" height="6" fill="${K}"/></g><circle cx="48" cy="120" r="15" fill="${D}"/><circle cx="48" cy="120" r="6" fill="${W}"/><circle cx="148" cy="120" r="15" fill="${D}"/><circle cx="148" cy="120" r="6" fill="${W}"/></svg>`,
+// 3 ปาล์ม
+`<svg ${V}><path d="M100 138Q108 90 96 44" stroke="${BR}" stroke-width="11" fill="none" stroke-linecap="round"/><g class="sway" fill="${G}"><ellipse cx="62" cy="48" rx="38" ry="11" transform="rotate(-18 62 48)"/><ellipse cx="132" cy="48" rx="38" ry="11" transform="rotate(18 132 48)"/><ellipse cx="70" cy="30" rx="34" ry="10" transform="rotate(-48 70 30)"/><ellipse cx="124" cy="30" rx="34" ry="10" transform="rotate(48 124 30)"/><ellipse cx="96" cy="22" rx="10" ry="30"/><circle cx="90" cy="54" r="6" fill="${BR}"/><circle cx="104" cy="54" r="6" fill="${BR}"/></g></svg>`,
+// 4 สระว่ายน้ำ
+`<svg ${V}><rect x="8" y="86" width="184" height="50" rx="14" fill="${B}"/><g class="rip" opacity=".7"><path d="M-20 106q10-8 20 0t20 0t20 0t20 0t20 0t20 0t20 0t20 0t20 0t20 0t20 0" stroke="#fff" stroke-width="3" fill="none"/><path d="M-30 124q10-8 20 0t20 0t20 0t20 0t20 0t20 0t20 0t20 0t20 0t20 0t20 0" stroke="#fff" stroke-width="3" fill="none"/></g><g class="flt"><circle cx="100" cy="90" r="22" fill="${K}"/><circle cx="100" cy="90" r="9" fill="${B}"/><circle cx="100" cy="68" r="10" fill="${SK}"/></g><path d="M178 90V62q0-10 10-10M170 90V62q0-10-10-10" stroke="#C9D3DB" stroke-width="5" fill="none" stroke-linecap="round"/></svg>`,
+// 5 เตียง
+`<svg ${V}><rect x="14" y="40" width="14" height="96" rx="5" fill="${BR}"/><rect x="172" y="70" width="14" height="66" rx="5" fill="${BR}"/><rect x="14" y="96" width="172" height="22" rx="8" fill="${BR}"/><rect x="26" y="70" width="148" height="34" rx="12" fill="${W}"/><rect x="62" y="82" width="112" height="28" rx="10" fill="${P}"/><rect x="32" y="60" width="38" height="20" rx="10" fill="#F6EEFF"/><circle cx="186" cy="52" r="0"/><g class="flt"><path d="M150 54l-8 0 8-8-8 0" stroke="${Y}" stroke-width="4" fill="none" stroke-linecap="round"/><path d="M168 38l-6 0 6-6-6 0" stroke="${Y}" stroke-width="3" fill="none" stroke-linecap="round"/></g></svg>`,
+// 6 กาแฟ + ครัวซองต์ (อาหารเช้า)
+`<svg ${V}><g fill="none" stroke="#fff" stroke-width="4" stroke-linecap="round"><path class="steam" d="M72 66q-8-10 0-18q8-8 0-16"/><path class="steam" d="M92 66q-8-10 0-18q8-8 0-16"/><path class="steam" d="M112 66q-8-10 0-18q8-8 0-16"/></g><rect x="52" y="74" width="80" height="50" rx="14" fill="${W}"/><rect x="52" y="90" width="80" height="12" fill="${K}"/><path d="M132 84q26 0 24 16t-26 14" stroke="${W}" stroke-width="9" fill="none"/><rect x="40" y="122" width="116" height="9" rx="4.5" fill="${LP}"/><path d="M142 132q-6-26 16-26t18 26z" fill="${O}"/></svg>`,
+// 7 รถเสิร์ฟรูมเซอร์วิส
+`<svg ${V}><path d="M52 78a44 44 0 0 1 88 0z" fill="#E4E9F0"/><circle cx="96" cy="32" r="6" fill="#E4E9F0"/><rect x="40" y="78" width="112" height="7" rx="3" fill="#B7C0CC"/><rect x="48" y="85" width="96" height="46" rx="8" fill="${P}"/><rect x="58" y="95" width="30" height="30" rx="5" fill="#8B5FC0"/><rect x="98" y="95" width="36" height="12" rx="4" fill="#8B5FC0"/><circle cx="62" cy="132" r="7" fill="${D}"/><circle cx="134" cy="132" r="7" fill="${D}"/></svg>`,
+// 8 ร่ม + เตียงอาบแดด
+`<svg ${V}><rect x="96" y="40" width="7" height="96" fill="${BR}"/><path d="M30 46a68 56 0 0 1 140 0z" fill="${K}"/><path d="M64 46a34 56 0 0 1 36-46M100 0v46M136 46a34 56 0 0 0-36-46" fill="none"/><path d="M64 46q0-30 36-46q-6 28-6 46zM136 46q0-30-36-46q6 28 6 46z" fill="#fff" opacity=".9"/><rect x="104" y="108" width="80" height="12" rx="6" fill="${Y}"/><path d="M104 108l-20-22" stroke="${Y}" stroke-width="12" stroke-linecap="round"/><rect x="112" y="120" width="6" height="14" fill="${BR}"/><rect x="172" y="120" width="6" height="14" fill="${BR}"/></svg>`,
+// 9 กระเป๋าเดินทาง
+`<svg ${V}><rect x="30" y="76" width="96" height="58" rx="10" fill="${P}"/><rect x="62" y="64" width="32" height="12" rx="5" fill="none" stroke="${P}" stroke-width="6"/><rect x="40" y="82" width="8" height="46" fill="#8B5FC0"/><rect x="108" y="82" width="8" height="46" fill="#8B5FC0"/><rect x="104" y="30" width="72" height="104" rx="10" fill="${O}"/><rect x="128" y="18" width="24" height="14" rx="5" fill="none" stroke="${O}" stroke-width="6"/><rect x="116" y="42" width="10" height="84" fill="#D98B3A"/><circle cx="116" cy="140" r="0"/></svg>`,
+// 10 ป้ายห้ามรบกวนติดลูกบิด
+`<svg ${V}><rect x="46" y="4" width="108" height="134" rx="8" fill="${BR}"/><circle cx="136" cy="76" r="7" fill="${Y}"/><g class="swgk"><path d="M78 20q0-14 14-14t14 14" fill="none" stroke="#B7C0CC" stroke-width="6"/><rect x="66" y="20" width="52" height="100" rx="14" fill="${K}"/><circle cx="92" cy="40" r="9" fill="${BR}"/><path d="M84 66a15 15 0 1 0 18 20a12 12 0 0 1-18-20z" fill="${Y}"/><rect x="78" y="98" width="28" height="6" rx="3" fill="#fff"/></g></svg>`,
+// 11 ผ้าเช็ดตัว + ดอกลีลาวดี
+`<svg ${V}><rect x="40" y="104" width="120" height="30" rx="9" fill="${W}"/><rect x="46" y="76" width="108" height="30" rx="9" fill="${LP}"/><rect x="52" y="50" width="96" height="28" rx="9" fill="${B}"/><rect x="40" y="118" width="120" height="6" fill="#E9E4F3"/><g class="flt" transform="translate(100 38)"><g fill="#fff"><ellipse rx="9" ry="16" transform="rotate(0)"/><ellipse rx="9" ry="16" transform="rotate(72)"/><ellipse rx="9" ry="16" transform="rotate(144)"/><ellipse rx="9" ry="16" transform="rotate(216)"/><ellipse rx="9" ry="16" transform="rotate(288)"/></g><circle r="5" fill="${Y}"/></g></svg>`,
+// 12 กระดิ่งเคาน์เตอร์
+`<svg ${V}><rect x="30" y="112" width="140" height="22" rx="8" fill="${BR}"/><rect x="60" y="106" width="80" height="10" rx="5" fill="#E0A82E"/><path d="M64 106a36 34 0 0 1 72 0z" fill="${Y}"/><circle cx="100" cy="68" r="6" fill="#E0A82E"/><circle class="ring" cx="100" cy="86" r="30" fill="none" stroke="${Y}" stroke-width="4"/><circle class="ring" cx="100" cy="86" r="30" fill="none" stroke="${Y}" stroke-width="4" style="animation-delay:.3s"/></svg>`,
+// 13 แผงกุญแจห้อง
+`<svg ${V}><rect x="26" y="14" width="148" height="46" rx="10" fill="${BR}"/><g><g class="swgk"><path d="M58 40v10" stroke="#C9D3DB" stroke-width="3"/><rect x="46" y="48" width="24" height="34" rx="7" fill="${W}"/><circle cx="58" cy="94" r="8" fill="none" stroke="#E0A82E" stroke-width="5"/><path d="M58 102v22" stroke="#E0A82E" stroke-width="5"/></g><g class="swgk"><path d="M100 40v10" stroke="#C9D3DB" stroke-width="3"/><rect x="88" y="48" width="24" height="34" rx="7" fill="${LP}"/><circle cx="100" cy="94" r="8" fill="none" stroke="#E0A82E" stroke-width="5"/><path d="M100 102v22" stroke="#E0A82E" stroke-width="5"/></g><g class="swgk"><path d="M142 40v10" stroke="#C9D3DB" stroke-width="3"/><rect x="130" y="48" width="24" height="34" rx="7" fill="${Y}"/><circle cx="142" cy="94" r="8" fill="none" stroke="#E0A82E" stroke-width="5"/><path d="M142 102v22" stroke="#E0A82E" stroke-width="5"/></g></g></svg>`,
+// 14 ป้าย 5 ดาว
+`<svg ${V}><rect x="96" y="60" width="8" height="76" fill="${BR}"/><rect x="24" y="14" width="152" height="52" rx="12" fill="${P}"/><g fill="${Y}" class="flt"><path id="s5" d="M0-12l3.5 8 8.5 1-6.4 5.7 1.9 8.5L0 7l-7.5 4.2 1.9-8.5L-12-3l8.5-1z" transform="translate(48 40)"/><use href="#s5" x="26"/><use href="#s5" x="52"/><use href="#s5" x="78"/><use href="#s5" x="104"/></g></svg>`
+];
+const row=items.map(s=>s).join('');
+$('#belt').innerHTML=row+row;
+
+// ===== ล็อกอิน (จำลอง) =====
+$$('.bx').forEach(bx=>{
+ bx.addEventListener('click',e=>{if(bx.classList.contains('ok'))return;if(e.target.closest('.pw'))return;
+  $$('.bx').forEach(x=>x.classList.toggle('on',x===bx));setTimeout(()=>{const i=bx.querySelector('input');i&&i.focus()},60)});
+ bx.querySelector('.go').addEventListener('click',e=>{e.stopPropagation();
+  const pin=bx.querySelector('.pin');if(pin.value.length<6){pin.animate([{transform:'translateX(-6px)'},{transform:'translateX(6px)'},{transform:'none'}],{duration:260});pin.focus();return}
+  bx.classList.add('ok');$('#stage').classList.add('wel')});
+ bx.querySelector('.out').addEventListener('click',e=>{e.preventDefault();e.stopPropagation();bx.classList.remove('ok','on');$('#stage').classList.remove('wel');bx.querySelectorAll('input').forEach(i=>i.value='')});
+});
+</script></body></html>
