@@ -1,0 +1,102 @@
+<!doctype html><html lang="th"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>กลุ่มลูกค้า — อนิเมชัน 3 หัวข้อ</title>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:wght@600&family=Noto+Sans+Thai:wght@300;400;500;600;700&family=Noto+Serif+Thai:wght@600;700&display=swap" rel="stylesheet">
+<style>
+:root{--cream:#FBF6EF;--ink:#2B1B3A;--mut:#7D7090;--line:#EADFEF;--pur:#4B2477;--pink:#B02A86;--red:#C2264B;--gold:#B8923A}
+*{box-sizing:border-box}body{margin:0;background:var(--cream);color:var(--ink);font:15px/1.6 'Noto Sans Thai',sans-serif;padding:20px 16px 60px}
+.w{max-width:880px;margin:0 auto}h1,h2{font-family:'Noto Serif Thai','Fraunces',serif;margin:0}h1{font-size:1.5rem;color:var(--pur)}h2{font-size:1.15rem;color:var(--pur);margin-bottom:2px}
+.tag{display:inline-block;background:#FFF1C7;color:#7A5A00;border-radius:99px;font-size:.75rem;padding:2px 12px;font-weight:600}
+.sub{color:var(--mut);font-size:.88rem;margin:2px 0 12px}
+section{background:#fff;border:1px solid var(--line);border-radius:20px;padding:18px;margin-bottom:16px}
+.step{display:inline-grid;place-items:center;width:26px;height:26px;border-radius:50%;background:linear-gradient(135deg,var(--red),var(--pur));color:#fff;font-weight:700;font-size:.85rem;margin-right:8px}
+.row{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px}
+.btn{border:1.5px solid #D9CBE6;background:#fff;border-radius:99px;padding:6px 15px;font:600 .85rem 'Noto Sans Thai';color:var(--pur);cursor:pointer}.btn.on{background:var(--pur);color:#fff;border-color:var(--pur)}
+/* timeline */
+.tl{position:relative;display:flex;justify-content:space-between;margin:34px 6px 10px;padding-top:6px}
+.tl:before{content:"";position:absolute;left:5%;right:5%;top:27px;height:4px;border-radius:4px;background:#EFE8F3}
+.tl .fill{position:absolute;left:5%;top:27px;height:4px;border-radius:4px;background:linear-gradient(90deg,var(--pink),var(--pur));width:0;transition:width 1.1s ease}
+.nd{position:relative;z-index:1;width:25%;text-align:center}
+.nd .c{width:44px;height:44px;border-radius:50%;margin:0 auto;display:grid;place-items:center;background:#fff;border:3px solid #E3D8EC;font-size:1.2rem;transition:all .5s}
+.nd.done .c{border-color:var(--pink);background:#FCEFF7}.nd.now .c{border-color:var(--pur);transform:scale(1.18);box-shadow:0 0 0 6px #4B247722}
+.nd.care .c{border-color:var(--red);animation:pulse 1.4s infinite}
+@keyframes pulse{0%,100%{box-shadow:0 0 0 0 #C2264B55}50%{box-shadow:0 0 0 11px #C2264B00}}
+.nd b{display:block;font-size:.84rem;margin-top:6px}.nd small{display:block;color:var(--mut);font-size:.74rem;line-height:1.3}
+.nd .w2{display:inline-block;margin-top:4px;font-size:.68rem;color:var(--red);font-weight:700;background:#FBE5E8;border-radius:99px;padding:0 8px;opacity:0;transition:opacity .5s}.nd.care .w2{opacity:1}
+.note{background:linear-gradient(135deg,#FFF6F8,#F6F0FC);border-radius:14px;padding:10px 14px;font-size:.9rem;min-height:56px}
+.miss{font-size:.76rem;color:var(--mut);margin-top:8px}
+/* bubbles */
+input[type=range]{width:100%;accent-color:var(--pink)}.qrow{display:flex;justify-content:space-between;font-size:.78rem;color:var(--mut)}
+.bub{display:flex;align-items:flex-end;justify-content:space-around;height:210px;gap:6px;margin-top:6px}
+.bb{display:flex;flex-direction:column;align-items:center;justify-content:flex-end;flex:1;text-align:center;font-size:.78rem}
+.bb .c{border-radius:50%;display:grid;place-items:center;color:#fff;font-weight:700;transition:all .9s cubic-bezier(.2,.8,.2,1)}
+.dl{font-size:.74rem;font-weight:700;margin-top:3px}.up{color:#14865C}.dn{color:var(--red)}
+/* funnel */
+#fn{width:100%;display:block}
+.fnote{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:8px}.fnote div{background:#FAF5FD;border-radius:12px;padding:8px 10px;font-size:.8rem}.fnote b{display:block;font:700 1.05rem 'Fraunces',serif}
+.fnote .bad{background:#FBE5E8}.fnote .bad b{color:var(--red)}
+@media(max-width:620px){.nd small{font-size:.68rem}.fnote{grid-template-columns:1fr}.bb{font-size:.7rem}}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+</style></head><body><div class="w">
+<h1>กลุ่มลูกค้า · เล่าเป็นภาพเคลื่อนไหว</h1>
+<p class="sub"><span class="tag">ภาพตัวอย่าง · ตัวเลขสมมติ</span> &nbsp; ใช้กลุ่มเดิมของระบบ (ใหม่ / ทั่วไป / มาซ้ำ / มาบ่อย / หาย) เปลี่ยนแค่วิธีแสดงผล</p>
+
+<section><h2><span class="step">1</span>วันของลูกค้าแต่ละกลุ่ม</h2><p class="sub">เลือกกลุ่ม แล้วกดเล่น ดูว่าเดินไปทีละช่วงอย่างไร ช่วงที่กระพริบแดงคือจุดที่ควรดูแลเป็นพิเศษ</p>
+<div class="row" id="gtabs"></div><div class="row"><button class="btn" id="play1">▶ เล่น</button></div>
+<div class="tl" id="tl"><div class="fill" id="fill"></div></div>
+<div class="note" id="note1"></div>
+<p class="miss">ข้อมูลที่ระบบมีตอนนี้: เวลาเช็คอิน/เช็คเอาท์ และว่าสั่งอาหารเช้าหรือไม่ · ยังไม่มี: เวลาที่ลงไปกินอาหารเช้า (ถ้าอยากได้ ต้องให้พนักงานกดบันทึก)</p></section>
+
+<section><h2><span class="step">2</span>กลุ่มลูกค้าเปลี่ยนไปรายไตรมาส</h2><p class="sub">ลากแถบหรือกดเล่น วงกลมของแต่ละกลุ่มโตหรือหดตามจำนวนคน</p>
+<div class="row"><button class="btn" id="qPlay">▶ เล่น</button></div>
+<input type="range" id="q" min="0" max="3" value="3"><div class="qrow"><span>ไตรมาส 4/2568</span><span>ไตรมาส 1/2569</span><span>ไตรมาส 2/2569</span><span>ไตรมาส 3/2569</span></div><div class="bub" id="bub"></div></section>
+
+<section><h2><span class="step">3</span>เส้นทางของลูกค้า</h2><p class="sub">จากทักมา → จอง → เข้าพัก → กลับมาซ้ำ แต่ละจุดคือลูกค้า 1 คน ไหลไปตามทาง ตรงที่หายไปคือตรงที่เสียลูกค้า</p>
+<div class="row"><button class="btn" id="play3">▶ เล่นอีกครั้ง</button></div>
+<canvas id="fn" height="260"></canvas><div class="fnote" id="fnote"></div>
+<p class="miss">ข้อมูลที่ระบบมีตอนนี้: คนที่ทักมาทาง LINE, การจอง, การเข้าพัก, การกลับมาซ้ำ · ยังไม่มี: คนที่ "เห็นเรา" (เช่น เปิดดูเพจหรือแผนที่) จึงเริ่มนับตั้งแต่ทักมา</p></section>
+</div>
+<script>
+const G=[{k:'new',n:'ใหม่',c:'#6B3AA8',cnt:[10,14,17,19]},{k:'gen',n:'ทั่วไป',c:'#7D7090',cnt:[12,12,13,13]},{k:'rep',n:'มาซ้ำ',c:'#E0762F',cnt:[7,9,10,11]},{k:'often',n:'มาบ่อย',c:'#2E8B7A',cnt:[4,5,5,6]},{k:'lost',n:'หาย',c:'#C2264B',cnt:[3,3,4,5]}];
+const DAY={
+ new:{steps:[['🚗','ถึงโรงแรม','เย็น ~18:00'],['🔑','เช็คอิน','~18:20'],['🍳','อาหารเช้า','ยังไม่เก็บเวลา'],['👋','เช็คเอาท์','~11:00']],care:1,
+   note:'ลูกค้าใหม่ยังไม่รู้ขั้นตอน ช่วงเช็คอินจึงสำคัญที่สุด ถ้าคำแรกที่ได้รับอบอุ่น ครั้งหน้ามีโอกาสกลับมา ควรบอก Wi-Fi และเวลาอาหารเช้าทันที'},
+ gen:{steps:[['🚗','ถึงโรงแรม','บ่าย ~15:00'],['🔑','เช็คอิน','~15:10'],['🍳','อาหารเช้า','ยังไม่เก็บเวลา'],['👋','เช็คเอาท์','~11:30']],care:3,
+   note:'พักครั้งเดียวแล้วห่างไป ช่วงเช็คเอาท์คือโอกาสสุดท้ายที่จะขอ LINE และเสนอสมาชิก ก่อนที่เขาจะหายไป'},
+ rep:{steps:[['🚗','ถึงโรงแรม','เย็น ~17:30'],['🔑','เช็คอิน','~17:40'],['🍳','อาหารเช้า','ยังไม่เก็บเวลา'],['👋','เช็คเอาท์','~10:30']],care:2,
+   note:'กลับมาครั้งที่ 2 แล้ว ลูกค้ากลุ่มนี้สังเกตว่าเราจำเขาได้ไหม ช่วงอาหารเช้าคือจังหวะทักทายด้วยชื่อ และถามว่าครั้งก่อนเป็นอย่างไร'},
+ often:{steps:[['🚗','ถึงโรงแรม','เย็น ~19:00'],['🔑','เช็คอิน','~19:05'],['🍳','อาหารเช้า','ยังไม่เก็บเวลา'],['👋','เช็คเอาท์','~09:30']],care:1,
+   note:'มาบ่อยและมักเดินทางเย็น อยากให้เช็คอินเร็วที่สุด เตรียมห้องเดิมและกุญแจไว้ก่อนถึง จะประทับใจมากกว่าของแถม'},
+ lost:{steps:[['📱','ทักไปหา','ห่างไปเกิน 12 เดือน'],['💬','ตอบกลับ','ยังไม่ตอบ'],['🔑','จองใหม่','—'],['🚗','กลับมาพัก','—']],care:0,
+   note:'กลุ่มนี้ไม่ได้อยู่ในโรงแรมแล้ว จึงเล่าเป็นเส้นทางกลับมา: จุดที่ควรทำคือทักก่อนด้วยข้อความที่เจาะจง เช่น ถามว่าคราวนี้ยังเดินทางเส้นนี้ไหม'}};
+let cur='new',tm,pos=0;
+const gt=document.getElementById('gtabs');gt.innerHTML=G.map(g=>`<button class="btn" data-k="${g.k}">${g.n}</button>`).join('');
+gt.onclick=e=>{const k=e.target.dataset.k;if(k){cur=k;draw1(true)}};
+function draw1(play){const d=DAY[cur];gt.querySelectorAll('.btn').forEach(b=>b.classList.toggle('on',b.dataset.k===cur));
+ document.getElementById('tl').innerHTML='<div class="fill" id="fill"></div>'+d.steps.map((s,i)=>`<div class="nd" id="n${i}"><div class="c">${s[0]}</div><b>${s[1]}</b><small>${s[2]}</small><span class="w2">ควรดูแล</span></div>`).join('');
+ document.getElementById('note1').textContent='แตะ ▶ เล่น เพื่อดูว่าวันนี้ของกลุ่ม "'+G.find(g=>g.k===cur).n+'" เป็นอย่างไร';
+ clearInterval(tm);if(play)run1()}
+function run1(){const d=DAY[cur];clearInterval(tm);let i=-1;const step=()=>{i++;if(i>3){clearInterval(tm);document.getElementById('note1').textContent=d.note;document.getElementById('n'+d.care).classList.add('care');return}
+  for(let j=0;j<4;j++){const n=document.getElementById('n'+j);n.classList.toggle('done',j<i);n.classList.toggle('now',j===i)}
+  document.getElementById('fill').style.width=(i/3*90)+'%'};step();tm=setInterval(step,1100)}
+play1.onclick=run1;draw1(false);run1();
+/* quarters */
+function drawQ(q){document.getElementById('bub').innerHTML=G.map(g=>{const n=g.cnt[q],d=q?n-g.cnt[q-1]:0,sz=30+n*3.4;return `<div class="bb"><div class="c" style="width:${sz}px;height:${sz}px;background:${g.c}">${n}</div><div style="margin-top:6px;font-weight:600">${g.n}</div><div class="dl ${d>0?'up':d<0?'dn':''}">${q?(d>0?'▲ +'+d:d<0?'▼ '+d:'เท่าเดิม'):'—'}</div></div>`}).join('')}
+const qs=document.getElementById('q');qs.oninput=()=>drawQ(+qs.value);drawQ(3);let qt;
+qPlay.onclick=()=>{clearInterval(qt);qs.value=0;drawQ(0);qt=setInterval(()=>{if(+qs.value>=3){clearInterval(qt);return}qs.value=+qs.value+1;drawQ(+qs.value)},1300)};
+/* funnel */
+const FS=[['ทักมา',100],['จอง',62],['เข้าพัก',54],['กลับมาซ้ำ',21]];
+const cv=document.getElementById('fn'),cx=cv.getContext('2d');let W,H=260,dp=Math.min(2,devicePixelRatio||1),dots=[],raf,t0=0;
+function sz(){W=cv.getBoundingClientRect().width;cv.width=W*dp;cv.height=H*dp;cx.setTransform(dp,0,0,dp,0,0)}
+const X=i=>W*(.1+i*.267);
+function launch(){cancelAnimationFrame(raf);sz();dots=[];t0=0;for(let i=0;i<70;i++){const r=i/70*100;const st=r<FS[3][1]?3:r<FS[2][1]?2:r<FS[1][1]?1:0;dots.push({st,y0:90+Math.random()*80,d:i*70+Math.random()*40,ph:Math.random()*6})}raf=requestAnimationFrame(loop)}
+function loop(ts){if(!t0)t0=ts;const el=ts-t0;cx.clearRect(0,0,W,H);
+ FS.forEach((s,i)=>{const h=40+s[1]*1.4;cx.fillStyle=i===3?'#FBE5E8':'#F3EBFA';cx.fillRect(X(i)-12,130-h/2,24,h);cx.fillStyle='#2B1B3A';cx.font='600 13px Noto Sans Thai';cx.textAlign='center';cx.fillText(s[0],X(i),H-30);cx.fillStyle=i===3?'#C2264B':'#4B2477';cx.font='700 15px Fraunces';cx.fillText(s[1]+'%',X(i),H-10)});
+ dots.forEach(p=>{const t=(el-p.d)/1000;if(t<=0)return;const prog=Math.min(t,p.st);const i=Math.floor(Math.min(prog,2.999)),f=prog-i;
+  const x=X(i)+(X(i+1)-X(i))*f;let y=p.y0+(130-p.y0)*.4+Math.sin(el/350+p.ph)*3,al=1,col=p.st===3?'#B02A86':'#8B6AB8';
+  if(t>p.st&&p.st<3){const k=Math.min(1,(t-p.st)/1.1);y+=k*70;al=1-k;col='#C2264B'}
+  if(al<=0)return;cx.globalAlpha=al;cx.beginPath();cx.arc(x,y,4.2,0,6.28);cx.fillStyle=col;cx.fill();cx.globalAlpha=1});
+ raf=requestAnimationFrame(loop)}
+addEventListener('resize',launch);play3.onclick=launch;
+document.getElementById('fnote').innerHTML=`<div><small>ทักมา → จอง</small><b>ต่อไปได้ 62%</b>ผ่านไปด้วยดี</div><div class="bad"><small>เข้าพัก → กลับมาซ้ำ</small><b>กลับมาแค่ 39%</b>ตรงนี้หายเยอะที่สุด ควรดูแลหลังเช็คเอาท์</div><div><small>จอง → เข้าพัก</small><b>มาจริง 87%</b>ที่เหลือยกเลิกหรือไม่มา</div>`;
+launch();
+</script></body></html>
