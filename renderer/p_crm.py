@@ -2,6 +2,7 @@
 import json, re, collections
 from patch_all import R, J
 from nb import *
+from p_cust import _svc_of
 import p_cust
 
 BASE = dno('2026-01-01')
@@ -33,7 +34,7 @@ def build_raw():
     for b in sorted(BK, key=lambda x: (x['start'], x['no'])):
         pu = PUL.index(b['purpose']) if b['purpose'] in PUL else 0
         sl.append([GIDX[b['gid']], b['start'] - BASE, b['nights'], RTL_IDX[b['room']], grpn[b['group']], CHI.get(b['ch'], 0), b['lead'],
-                   int(b['hm'][:2]), pu, 1 if b['cid'] in CO else 0, 1 if b['taxReq'] else 0, b['total'], 0])
+                   int(b['hm'][:2]), pu, 1 if b['cid'] in CO else 0, 1 if b['taxReq'] else 0, b['total'], _svc_of(b['no'], b['room'])[0]])
     return {'d0': '2026-01-01', 'cols': ["g", "ci", "n", "rt", "grp", "ch", "ld", "bh", "pu", "pay", "tx", "rm", "fd"], 's': sl, 'g': gl}
 
 AREA_OF = {'ความสะอาด': 'room', 'พนักงาน': 'svc', 'ทำเล': 'place', 'สิ่งอำนวยความสะดวก': 'fix', 'การจอง/เอกสาร': 'book', 'ความเงียบ': 'place',
@@ -60,6 +61,8 @@ def regen_embedded(s, ovp):
     a = s.index('const RAW=') + 10
     _, e = json.JSONDecoder().raw_decode(s[a:])
     s = s[:a] + J(build_raw()) + s[a + e:]
+    s = R(s, "ค่าห้อง และค่าอาหาร · รวม", "ค่าห้อง และค่าอาหาร/บริการเสริม · รวม", 1, 'emb-fd1')
+    s = R(s, "['ค่าห้อง','ค่าอาหาร']", "['ค่าห้อง','อาหาร/บริการเสริม']", 1, 'emb-fd2')
     s = R(s, 'const D0=new Date(2024,0,1);', 'const D0=new Date(2026,0,1);', 1, 'emb-d0')
     s = R(s, '(c.getFullYear()-2024)*12', '(c.getFullYear()-2026)*12', 1, 'emb-mi')
     s = s.replace('min="2024-01-01" max="2025-12-31"', 'min="2026-01-01" max="2027-12-31"')
