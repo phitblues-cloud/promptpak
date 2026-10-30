@@ -1,0 +1,36 @@
+<!doctype html><html lang="th"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>กล่องการจอง — เพิ่มเส้นทางลูกค้า</title>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:wght@600&family=Noto+Sans+Thai:wght@300;400;500;600;700&family=Noto+Serif+Thai:wght@600;700&display=swap" rel="stylesheet">
+<style>
+:root{--cream:#FBF6EF;--ink:#2B1B3A;--mut:#7D7090;--line:#EADFEF;--pur:#4B2477;--pink:#B02A86;--red:#C2264B}
+*{box-sizing:border-box}body{margin:0;background:var(--cream);color:var(--ink);font:15px/1.6 'Noto Sans Thai',sans-serif;padding:20px 16px 50px}.w{max-width:860px;margin:0 auto}
+.tag{display:inline-block;background:#FFF1C7;color:#7A5A00;border-radius:99px;font-size:.75rem;padding:2px 12px;font-weight:600}
+.box{background:#fff;border:1px solid var(--line);border-radius:20px;padding:18px;margin-top:10px}
+.bh{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap;margin-bottom:10px}.bh h2{font:700 1.3rem 'Noto Serif Thai',serif;color:var(--pur);margin:0}.bh small{color:var(--mut)}
+.blk{border:1px solid var(--line);border-radius:14px;padding:12px 14px;margin-bottom:10px}
+.hero{display:flex;align-items:baseline;gap:8px}.hero b{font:700 2rem 'Fraunces',serif}.hk{color:var(--mut);font-size:.85rem}
+.old{opacity:.55}.old .fake{height:44px;border-radius:10px;background:repeating-linear-gradient(90deg,#EFE8F3 0 38px,#F7F2FA 38px 44px)}
+.new{border:2px solid #B8923A;box-shadow:0 0 0 3px #B8923A22;position:relative}
+.new:before{content:"ส่วนที่เพิ่มใหม่";position:absolute;top:-11px;right:14px;background:#B8923A;color:#fff;font-size:.7rem;font-weight:700;border-radius:99px;padding:0 10px}
+h3{font:700 1rem 'Noto Serif Thai',serif;margin:0 0 2px}.csub{color:var(--mut);font-size:.8rem;margin:0 0 10px}
+.st{display:grid;grid-template-columns:96px 1fr 70px;gap:10px;align-items:center;margin:8px 0}
+.st span{font-size:.88rem;font-weight:600}.tr{height:22px;border-radius:8px;background:#F1EAF6;position:relative;overflow:hidden}
+.tr i{display:block;height:100%;border-radius:8px;background:linear-gradient(90deg,var(--pink),var(--pur))}.tr.bad i{background:linear-gradient(90deg,#E0762F,var(--red))}
+.st b{text-align:right;font:700 1rem 'Fraunces',serif}
+.drop{margin:-2px 0 0 106px;font-size:.76rem;color:var(--mut)}.drop em{font-style:normal;font-weight:700;color:var(--red)}
+.note{background:#FBE5E8;border-radius:12px;padding:8px 12px;font-size:.85rem;margin-top:10px}
+.miss{font-size:.74rem;color:var(--mut);margin-top:8px}
+@media(max-width:560px){.st{grid-template-columns:78px 1fr 56px}.drop{margin-left:88px}}
+</style></head><body><div class="w">
+<span class="tag">ภาพตัวอย่าง · ตัวเลขสมมติ</span>
+<p style="color:var(--mut);margin:6px 0">แดชบอร์ดลูกค้า › กล่อง "การจอง" (ส่วนจางคือของเดิม ไม่แตะ · กรอบทองคือที่เพิ่ม)</p>
+<div class="box"><div class="bh"><h2>การจอง</h2><small>Occasions · ลูกค้าจองเมื่อไหร่</small></div>
+ <div class="blk old"><div class="hero"><span class="hk">จองล่วงหน้า</span><b>3</b><span>วัน</span></div><div class="fake" style="margin-top:8px"></div></div>
+ <div class="blk old"><div class="fake"></div></div>
+ <div class="blk new"><h3>เส้นทางลูกค้า</h3><p class="csub">จากทักมา ไปจนกลับมาพักซ้ำ ตรงไหนที่ลูกค้าหายไป · ช่วง: ไตรมาสนี้</p>
+  <div class="st"><span>ทักมา</span><div class="tr"><i style="width:100%"></i></div><b>100%</b></div><div class="drop">120 คน</div>
+  <div class="st"><span>จอง</span><div class="tr"><i style="width:62%"></i></div><b>62%</b></div><div class="drop">74 คน · หายไประหว่างทาง <em>−38%</em></div>
+  <div class="st"><span>เข้าพักจริง</span><div class="tr"><i style="width:54%"></i></div><b>54%</b></div><div class="drop">65 คน · ยกเลิก/ไม่มา <em>−8%</em></div>
+  <div class="st"><span>กลับมาซ้ำ</span><div class="tr bad"><i style="width:21%"></i></div><b>21%</b></div><div class="drop">25 คน · เข้าพักแล้วไม่กลับมา <em>−33%</em></div>
+  <div class="note"><b>ตรงที่หายเยอะที่สุด:</b> จากทักมาถึงจอง (หาย 38%) และหลังเข้าพักแล้วไม่กลับมา (หาย 33%)</div>
+  <p class="miss">ระบบนับจากคนที่ทักมาทาง LINE, การจอง, การเข้าพัก และการกลับมาซ้ำ · ยังไม่มีข้อมูลคนที่ "เห็นเรา" (เปิดดูเพจ/แผนที่) จึงเริ่มนับตั้งแต่ทักมา · เป็นกราฟแท่งธรรมดา ไม่มีอนิเมชัน</p></div>
+</div></div></body></html>

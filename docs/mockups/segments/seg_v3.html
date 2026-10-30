@@ -1,0 +1,186 @@
+<!doctype html><html lang="th"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>กลุ่มลูกค้า — ภาพตัวอย่าง</title>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:wght@600&family=Noto+Sans+Thai:wght@300;400;500;600;700&family=Noto+Serif+Thai:wght@600;700&display=swap" rel="stylesheet">
+<style>
+:root{--cream:#FBF6EF;--ink:#2B1B3A;--mut:#7D7090;--line:#EADFEF;--pur:#4B2477;--pink:#B02A86;--red:#C2264B;--card:#fff;
+--c1:#6B3AA8;--c2:#C2264B;--c3:#E0762F;--c4:#2E8B7A}
+*{box-sizing:border-box}body{margin:0;background:var(--cream);color:var(--ink);font:15px/1.6 'Noto Sans Thai',sans-serif;padding:20px 16px 60px}
+.w{max-width:880px;margin:0 auto}
+h1,h2,h3{font-family:'Noto Serif Thai','Fraunces',serif;margin:0}
+h1{font-size:1.5rem;color:var(--pur)}h2{font-size:1.15rem;color:var(--pur);margin-bottom:4px}
+.tag{display:inline-block;background:#FFF1C7;color:#7A5A00;border-radius:99px;font-size:.75rem;padding:2px 12px;font-weight:600}
+.sub{color:var(--mut);font-size:.88rem;margin:2px 0 14px}
+section{background:var(--card);border:1px solid var(--line);border-radius:20px;padding:18px 18px 20px;margin-bottom:16px}
+.step{display:inline-grid;place-items:center;width:26px;height:26px;border-radius:50%;background:linear-gradient(135deg,var(--red),var(--pur));color:#fff;font-weight:700;font-size:.85rem;margin-right:8px}
+.row{display:flex;gap:10px;flex-wrap:wrap}.btn{border:1.5px solid #D9CBE6;background:#fff;border-radius:99px;padding:6px 16px;font:600 .85rem 'Noto Sans Thai';color:var(--pur);cursor:pointer}
+.btn.on{background:var(--pur);color:#fff;border-color:var(--pur)}
+/* gates */
+.gates{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin:12px 0}
+.g{border:1px solid var(--line);border-radius:14px;padding:12px}
+.g small{color:var(--mut);display:block;font-size:.76rem}.g b{font:700 1.5rem 'Fraunces',serif}
+.bar{height:8px;border-radius:9px;background:#EFE8F3;margin:8px 0 4px;overflow:hidden;position:relative}
+.bar i{display:block;height:100%;width:0;border-radius:9px;background:linear-gradient(90deg,var(--pink),var(--pur));transition:width 1.2s cubic-bezier(.2,.8,.2,1)}
+.bar u{position:absolute;top:-2px;bottom:-2px;width:2px;background:var(--ink);opacity:.5}
+.ok{color:#14865C;font-weight:600;font-size:.8rem}.no{color:var(--red);font-weight:600;font-size:.8rem}
+.verdict{border-radius:14px;padding:12px 16px;font-weight:600;transition:all .4s}
+.verdict.y{background:#E7F5EE;color:#0E5F40}.verdict.n{background:#FBE5E8;color:#8E1B33}
+/* canvas */
+#cv{width:100%;height:340px;display:block;border-radius:16px;background:#FDFAF6;border:1px solid var(--line)}
+.leg{display:flex;gap:14px;flex-wrap:wrap;margin-top:8px;font-size:.82rem}.leg i{display:inline-block;width:11px;height:11px;border-radius:50%;margin-right:6px;vertical-align:-1px}
+/* quarters */
+input[type=range]{width:100%;accent-color:var(--pink)}
+.qrow{display:flex;justify-content:space-between;font-size:.8rem;color:var(--mut)}
+.bub{display:flex;align-items:flex-end;justify-content:space-around;height:200px;gap:8px;margin-top:6px}
+.bb{display:flex;flex-direction:column;align-items:center;justify-content:flex-end;flex:1;text-align:center;font-size:.78rem}
+.bb .c{border-radius:50%;display:grid;place-items:center;color:#fff;font-weight:700;transition:all .9s cubic-bezier(.2,.8,.2,1)}
+.dl{font-size:.74rem;font-weight:700;margin-top:4px}.up{color:#14865C}.dn{color:var(--red)}
+/* cards */
+details{border:1px solid var(--line);border-radius:16px;margin-bottom:10px;background:#fff;overflow:hidden}
+summary{list-style:none;cursor:pointer;padding:12px 14px;display:flex;align-items:center;gap:12px}summary::-webkit-details-marker{display:none}
+.dot{width:14px;height:14px;border-radius:50%;flex:none}.sm{margin-left:auto;text-align:right;font-size:.8rem;color:var(--mut)}.sm b{display:block;color:var(--ink);font-size:1.05rem}
+summary .nm{font-weight:700}summary .ds{font-size:.8rem;color:var(--mut)}
+.chev{transition:transform .3s;color:var(--mut)}details[open] .chev{transform:rotate(90deg)}
+.bd{padding:2px 16px 16px;border-top:1px dashed var(--line);animation:dn .35s ease}
+@keyframes dn{from{opacity:0;transform:translateY(-6px)}to{opacity:1;transform:none}}
+.nums{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin:12px 0}
+.nums div{background:#FAF5FD;border-radius:12px;padding:8px 10px}.nums small{display:block;color:var(--mut);font-size:.72rem}.nums b{font:700 1.05rem 'Fraunces',serif}
+.ai{background:linear-gradient(135deg,#FFF6F8,#F6F0FC);border-radius:14px;padding:10px 14px;font-size:.9rem}
+.ai h4,.how h4{margin:0 0 3px;font-size:.78rem;color:var(--pink);letter-spacing:.02em}
+.how{margin-top:10px;font-size:.9rem}.how ul{margin:4px 0 0;padding-left:18px}
+.foot{color:var(--mut);font-size:.78rem;margin-top:10px}
+.locked{text-align:center;padding:26px 10px;color:var(--mut)}.locked b{color:var(--red);font-size:1.05rem}
+.hide{display:none!important}
+@media(max-width:620px){.gates{grid-template-columns:1fr}.nums{grid-template-columns:1fr 1fr}#cv{height:300px}}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+.tl{position:relative;display:flex;justify-content:space-between;margin:30px 6px 10px;padding-top:6px}
+.tl:before{content:"";position:absolute;left:12%;right:12%;top:27px;height:4px;border-radius:4px;background:#EFE8F3}
+.tl .fill{position:absolute;left:12%;top:27px;height:4px;border-radius:4px;background:linear-gradient(90deg,var(--pink),var(--pur));width:0;transition:width 1.1s ease}
+.nd{position:relative;z-index:1;width:25%;text-align:center}.nd .c{width:44px;height:44px;border-radius:50%;margin:0 auto;display:grid;place-items:center;background:#fff;border:3px solid #E3D8EC;font-size:1.2rem;transition:all .5s}
+.nd.done .c{border-color:var(--pink);background:#FCEFF7}.nd.now .c{border-color:var(--pur);transform:scale(1.18);box-shadow:0 0 0 6px #4B247722}.nd.care .c{border-color:var(--red);animation:pulse 1.4s infinite}
+@keyframes pulse{0%,100%{box-shadow:0 0 0 0 #C2264B55}50%{box-shadow:0 0 0 11px #C2264B00}}
+.nd b{display:block;font-size:.84rem;margin-top:6px}.nd small{display:block;color:var(--mut);font-size:.74rem;line-height:1.3}
+.nd .w2{display:inline-block;margin-top:4px;font-size:.68rem;color:var(--red);font-weight:700;background:#FBE5E8;border-radius:99px;padding:0 8px;opacity:0;transition:opacity .5s}.nd.care .w2{opacity:1}
+.note1{background:linear-gradient(135deg,#FFF6F8,#F6F0FC);border-radius:14px;padding:10px 14px;font-size:.9rem;min-height:56px}.miss{font-size:.76rem;color:var(--mut);margin-top:8px}
+@media(max-width:620px){.nd small{font-size:.68rem}}
+</style></head><body><div class="w">
+<h1>กลุ่มลูกค้าของพบรักรีสอร์ท</h1>
+<p class="sub"><span class="tag">ภาพตัวอย่าง · ตัวเลขสมมติ</span> &nbsp; ระบบคำนวณกลุ่มจากข้อมูลจริงเอง · AI ตั้งชื่อและเล่าเรื่อง · ตัวเลขทุกตัวมาจากระบบ</p>
+
+<section>
+ <h2><span class="step">1</span>ระบบตรวจก่อนว่า "ข้อมูลพอไหม"</h2>
+ <p class="sub">ถ้าไม่ผ่านทั้ง 3 ข้อ ระบบจะไม่แบ่งกลุ่ม เพื่อไม่ให้เห็นกลุ่มที่ไม่มีอยู่จริง</p>
+ <div class="row"><button class="btn on" id="bMany">ข้อมูลพอ (ตัวอย่าง)</button><button class="btn" id="bFew">ข้อมูลน้อย (ตัวอย่าง)</button></div>
+ <div class="gates" id="gates"></div>
+ <div class="verdict y" id="verdict"></div>
+ <p class="foot">เกณฑ์ที่เสนอ: ผู้เข้าพักจริง ≥ 60 คน · ความต่างของกลุ่ม (silhouette) ≥ 0.25 · ความเสถียร ≥ 80% (สุ่มแบ่งซ้ำ 50 รอบแล้วได้กลุ่มเดิม) — ตัวเลขเกณฑ์เป็นข้อเสนอ ปรับได้</p>
+</section>
+
+<div id="main">
+<section>
+ <h2><span class="step">2</span>กลุ่มเกิดขึ้นจากข้อมูล</h2>
+ <p class="sub">แต่ละจุด = ลูกค้า 1 คน ยิ่งคล้ายกันยิ่งเข้าใกล้กัน · ระบบเลือกจำนวนกลุ่มเอง (ตัวอย่างนี้ได้ 4)</p>
+ <div class="row" style="margin-bottom:8px"><button class="btn" id="bPlay">▶ เล่นอีกครั้ง</button><button class="btn" id="bSplit">แยกกลุ่ม</button></div>
+ <canvas id="cv"></canvas><div class="leg" id="leg"></div>
+</section>
+
+<section>
+ <h2><span class="step">3</span>วันของลูกค้าแต่ละกลุ่ม</h2>
+ <p class="sub">เลือกกลุ่มแล้วกดเล่น ช่วงที่กระพริบแดงคือจุดที่ควรดูแลเป็นพิเศษ</p>
+ <div class="row" id="gtabs"></div><div class="row"><button class="btn" id="play1">▶ เล่น</button></div>
+ <div class="tl" id="tl"></div><div class="note1" id="note1"></div>
+ <p class="miss">ข้อมูลที่ระบบมีตอนนี้: เวลาเช็คอิน/เช็คเอาท์ และว่าสั่งอาหารเช้าหรือไม่ · ยังไม่มี: เวลาที่ลงไปกินอาหารเช้า (ถ้าอยากได้ ต้องให้พนักงานกดบันทึก)</p>
+</section>
+<section>
+ <h2><span class="step">4</span>กลุ่มเปลี่ยนไปตามไตรมาส</h2>
+ <p class="sub">ลากแถบหรือกดเล่น วงกลมโตหรือหดตามจำนวนคน · ระบบคำนวณใหม่ทุกไตรมาส</p>
+ <div class="row" style="margin-bottom:6px"><button class="btn" id="qPlay">▶ เล่น</button></div>
+ <input type="range" id="q" min="0" max="3" value="3" step="1"><div class="qrow"><span>ไตรมาส 4/2568</span><span>ไตรมาส 1/2569</span><span>ไตรมาส 2/2569</span><span>ไตรมาส 3/2569</span></div>
+ <div class="bub" id="bub"></div>
+</section>
+
+<section>
+ <h2><span class="step">5</span>เล่าแต่ละกลุ่ม <span class="tag" style="background:#F1E6FA;color:var(--pur)">แตะเพื่อเปิด/ย่อ</span></h2>
+ <p class="sub">ชื่อกลุ่มและข้อความเล่าเรื่องเขียนโดย AI จากตัวเลขของกลุ่มนั้น · ตัวเลขในช่องทุกช่องมาจากระบบ</p>
+ <div id="cards"></div>
+</section>
+</div>
+<div id="lockedBox" class="hide"><section><div class="locked"><b>ยังแบ่งกลุ่มอย่างมีนัยสำคัญไม่ได้</b><p>ตอนนี้มีผู้เข้าพักจริง 12 คน ต้องมีอีกอย่างน้อย 48 คน<br>ระหว่างนี้ใช้ภาพรวมแบบเดิม (ใหม่ / มาซ้ำ / มาบ่อย) ไปก่อน</p></div></section></div>
+</div>
+<svg width="0" height="0" style="position:absolute"><defs>
+<symbol id="f4" viewBox="0 0 32 32"><circle cx="16" cy="16" r="14" fill="#7DA84A"/><circle cx="11" cy="13" r="1.8" fill="#fff"/><circle cx="21" cy="13" r="1.8" fill="#fff"/><path d="M10.5 19.5c2 2 9 2 11 0" stroke="#fff" stroke-width="2" fill="none" stroke-linecap="round"/></symbol>
+<symbol id="f5" viewBox="0 0 32 32"><circle cx="16" cy="16" r="14" fill="#14865C"/><circle cx="11" cy="13" r="1.8" fill="#fff"/><circle cx="21" cy="13" r="1.8" fill="#fff"/><path d="M9.5 18.5c2.2 4 10.8 4 13 0z" fill="#fff"/></symbol>
+<symbol id="f3" viewBox="0 0 32 32"><circle cx="16" cy="16" r="14" fill="#C9961F"/><circle cx="11" cy="13" r="1.8" fill="#fff"/><circle cx="21" cy="13" r="1.8" fill="#fff"/><path d="M10.5 21.5h11" stroke="#fff" stroke-width="2" stroke-linecap="round"/></symbol></defs></svg>
+<script>
+const G=[
+ {n:'ช่างและผู้รับเหมาพักยาว',c:'--c1',cnt:[22,24,26,28],nights:'9.2 คืน',spend:'11,200 ฿',rep:'78%',sat:4.6,ico:'f5',
+  ai:'ส่วนใหญ่มากับบริษัทผู้รับเหมาหรือโรงงานในพื้นที่ จองล่วงหน้านานและพักเป็นสัปดาห์ ชอบห้องเดิม ซักรีดและอาหารเช้าใช้บ่อย',
+  how:['เสนอราคารายสัปดาห์และห้องเดิมให้ก่อน','จัดซักรีดและอาหารเช้าเป็นแพ็กเกจ','ถามความพึงพอใจกลางสัปดาห์']},
+ {n:'พนักงานบริษัทเดินทางด่วน',c:'--c2',cnt:[20,22,23,24],nights:'2.1 คืน',spend:'4,300 ฿',rep:'61%',sat:4.3,ico:'f4',
+  ai:'จองก่อนวันพักไม่ถึง 2 วัน เบิกบริษัทเป็นหลัก ต้องการใบกำกับภาษีเร็ว เช็คอินดึกบ่อย',
+  how:['ส่งใบกำกับภาษีให้ภายในวันเช็คเอาท์','มีช่องเช็คอินดึกที่ไม่ต้องรอ','เสนอวางบิลรายเดือนให้ลูกค้าบริษัท']},
+ {n:'ครอบครัวพักผ่อนสุดสัปดาห์',c:'--c3',cnt:[22,21,21,21],nights:'2.0 คืน',spend:'5,100 ฿',rep:'38%',sat:4.1,ico:'f4',
+  ai:'พักศุกร์–อาทิตย์ มากันหลายคนและมีเด็ก จองผ่าน LINE ให้ความสำคัญกับความสะอาดและอาหารเช้า',
+  how:['ย้ำเรื่องเตียงเสริมและอาหารเช้าตอนยืนยัน','ส่งข้อความชวนกลับมาก่อนวันหยุดยาว','ให้พนักงานทักทายเด็กๆ ตอนเช็คอิน']},
+ {n:'แวะพักระหว่างทาง',c:'--c4',cnt:[14,14,13,14],nights:'1.1 คืน',spend:'1,300 ฿',rep:'9%',sat:3.7,ico:'f3',
+  ai:'มาหน้าร้านหรือโทรมาวันเดียวกัน พักคืนเดียวแล้วไปต่อ ราคาและเวลาเช็คอินมีผลกับการตัดสินใจ',
+  how:['บอกราคาและเวลาเช็คอินชัดตั้งแต่ประโยคแรก','ขอเบอร์/LINE ตอนเช็คอินเพื่อทักกลับมา','เสนอสมาชิกถ้าเดินทางเส้นนี้บ่อย']}];
+const css=n=>getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+const Q=3,fmt=n=>n.toLocaleString('th-TH');
+/* ---- gates ---- */
+const SC={many:[['ผู้เข้าพักจริง',87,'คน',60,100,v=>v>=60],['ความต่างของกลุ่ม',0.41,'',0.25,0.6,v=>v>=0.25],['ความเสถียร',92,'%',80,100,v=>v>=80]],
+          few:[['ผู้เข้าพักจริง',12,'คน',60,100,v=>v>=60],['ความต่างของกลุ่ม',0.11,'',0.25,0.6,v=>v>=0.25],['ความเสถียร',54,'%',80,100,v=>v>=80]]};
+function setGates(k){const rows=SC[k];const ok=rows.every(r=>r[5](r[1]));
+ document.getElementById('gates').innerHTML=rows.map(r=>`<div class="g"><small>${r[0]}</small><b>${r[1]}</b> <small style="display:inline">${r[2]}</small><div class="bar"><i data-w="${Math.min(100,r[1]/r[4]*100)}"></i><u style="left:${r[3]/r[4]*100}%"></u></div>${r[5](r[1])?'<span class="ok">✓ ผ่าน</span>':'<span class="no">✗ ยังไม่ถึง (ขีดดำคือเกณฑ์)</span>'}</div>`).join('');
+ requestAnimationFrame(()=>requestAnimationFrame(()=>document.querySelectorAll('.bar i').forEach(i=>i.style.width=i.dataset.w+'%')));
+ const v=document.getElementById('verdict');v.className='verdict '+(ok?'y':'n');v.textContent=ok?'✓ ข้อมูลพอ — ระบบแบ่งได้ 4 กลุ่ม':'✗ ข้อมูลยังไม่พอ — ระบบจะไม่แบ่งกลุ่ม';
+ document.getElementById('main').classList.toggle('hide',!ok);document.getElementById('lockedBox').classList.toggle('hide',ok);
+ document.getElementById('bMany').classList.toggle('on',k==='many');document.getElementById('bFew').classList.toggle('on',k==='few');if(ok){startAnim()}}
+bMany.onclick=()=>setGates('many');bFew.onclick=()=>setGates('few');
+/* ---- canvas ---- */
+const cv=document.getElementById('cv'),ctx=cv.getContext('2d');let W,H,dpr=Math.min(2,devicePixelRatio||1);
+function size(){const r=cv.getBoundingClientRect();W=r.width;H=r.height;cv.width=W*dpr;cv.height=H*dpr;ctx.setTransform(dpr,0,0,dpr,0,0)}
+addEventListener('resize',()=>{size();layout()});
+let seed=7;const rnd=()=>(seed=(seed*16807)%2147483647)/2147483647;
+const P=[];let t0=0,mode='cloud';
+function layout(){const cs=[[.2,.5],[.43,.32],[.65,.62],[.85,.38]];P.forEach(p=>{const c=cs[p.g];p.tx=c[0]*W+p.ox*Math.min(W,520)/520*1;p.ty=c[1]*H+p.oy*1})}
+function mk(){seed=7;P.length=0;G.forEach((g,gi)=>{for(let i=0;i<g.cnt[Q];i++){const a=rnd()*6.28,r=Math.sqrt(rnd())*(24+g.cnt[Q]*.9);P.push({g:gi,x:0,y:0,ox:Math.cos(a)*r,oy:Math.sin(a)*r*.8,ph:rnd()*6.28,s:3.3+rnd()*1.6})}});
+ P.forEach(p=>{p.x=W*.5+(rnd()-.5)*W*.45;p.y=H*.5+(rnd()-.5)*H*.5})}
+let raf;function frame(ts){if(!t0)t0=ts;const el=(ts-t0)/1000;ctx.clearRect(0,0,W,H);
+ const k=mode==='split'?Math.min(1,el/2):0;const e=1-Math.pow(1-k,3);
+ if(mode==='split'){ctx.fillStyle='#7D7090';ctx.font='600 13px Noto Sans Thai';ctx.textAlign='center';
+  G.forEach((g,gi)=>{const cs=[[.2,.5],[.43,.32],[.65,.62],[.85,.38]][gi];ctx.globalAlpha=Math.max(0,(e-.6)/.4);ctx.fillStyle=css(g.c);ctx.fillText(g.n,cs[0]*W,cs[1]*H-(30+g.cnt[Q]*.9)-6);ctx.globalAlpha=1})}
+ P.forEach(p=>{const bx=W*.5+Math.cos(el*.6+p.ph)*W*.28,by=H*.5+Math.sin(el*.5+p.ph*1.3)*H*.3;
+  const wx=Math.cos(el*1.3+p.ph)*2,wy=Math.sin(el*1.1+p.ph)*2;
+  p.x+=((mode==='split'?p.tx+wx:bx)-p.x)*(mode==='split'?.05:.03);p.y+=((mode==='split'?p.ty+wy:by)-p.y)*(mode==='split'?.05:.03);
+  ctx.beginPath();ctx.arc(p.x,p.y,p.s,0,6.28);ctx.fillStyle=mode==='split'?css(G[p.g].c):'#B9AEC9';ctx.globalAlpha=mode==='split'?.88:.7;ctx.fill();ctx.globalAlpha=1});
+ raf=requestAnimationFrame(frame)}
+function startAnim(){cancelAnimationFrame(raf);size();mk();layout();mode='cloud';t0=0;raf=requestAnimationFrame(frame);
+ clearTimeout(window.__t);window.__t=setTimeout(()=>{mode='split';t0=0},1600)}
+bPlay.onclick=startAnim;bSplit.onclick=()=>{mode=mode==='split'?'cloud':'split';t0=0;bSplit.textContent=mode==='split'?'รวมกลับ':'แยกกลุ่ม'};
+document.getElementById('leg').innerHTML=G.map(g=>`<span><i style="background:var(${g.c})"></i>${g.n}</span>`).join('');
+/* ---- quarters ---- */
+function drawQ(q){const tot=G.reduce((a,g)=>a+g.cnt[q],0);
+ document.getElementById('bub').innerHTML=G.map((g,i)=>{const n=g.cnt[q],d=q?n-g.cnt[q-1]:0,sz=34+n*2.4;return `<div class="bb"><div class="c" style="width:${sz}px;height:${sz}px;background:var(${g.c})">${n}</div><div style="margin-top:6px;font-weight:600">${g.n}</div><div class="dl ${d>0?'up':d<0?'dn':''}">${q?(d>0?'▲ +'+d:d<0?'▼ '+d:'เท่าเดิม'):'—'}</div></div>`}).join('');}
+const qs=document.getElementById('q');qs.oninput=()=>drawQ(+qs.value);drawQ(3);
+let qt;qPlay.onclick=()=>{clearInterval(qt);qs.value=0;drawQ(0);qt=setInterval(()=>{if(+qs.value>=3){clearInterval(qt);return}qs.value=+qs.value+1;drawQ(+qs.value)},1300)};
+/* ---- cards ---- */
+document.getElementById('cards').innerHTML=G.map((g,i)=>{const n=g.cnt[Q],tot=G.reduce((a,x)=>a+x.cnt[Q],0);return `<details ${i===0?'open':''}><summary><span class="dot" style="background:var(${g.c})"></span><div><div class="nm">${g.n}</div><div class="ds">${Math.round(n/tot*100)}% ของลูกค้าที่พักจริง</div></div><div class="sm"><b>${n} คน</b></div><span class="chev">›</span></summary>
+ <div class="bd"><div class="nums"><div><small>พักเฉลี่ย</small><b>${g.nights}</b></div><div><small>ยอดใช้จ่ายเฉลี่ย/ครั้ง</small><b>${g.spend}</b></div><div><small>กลับมาซ้ำ</small><b>${g.rep}</b></div><div><small>ความพึงพอใจ</small><b style="display:flex;align-items:center;gap:6px"><svg width="24" height="24"><use href="#${g.ico}"/></svg>${g.sat}</b></div></div>
+ <div class="ai"><h4>✦ AI เล่าให้ฟัง</h4>${g.ai}</div><div class="how"><h4>วิธีดูแลที่ควรทำ</h4><ul>${g.how.map(x=>`<li>${x}</li>`).join('')}</ul></div></div></details>`}).join('')+'<p class="foot">ชื่อกลุ่ม เรื่องเล่า และวิธีดูแลเขียนโดย AI · จำนวนคน ค่าเฉลี่ย และความพึงพอใจคำนวณโดยระบบ</p>';
+
+const DAY=[
+ {steps:[['🏗️','ถึงโรงแรม','เย็น ~17:30'],['🔑','เช็คอิน','~17:45'],['🍳','อาหารเช้า','ยังไม่เก็บเวลา'],['🧺','ซักรีด/ทำงาน','ระหว่างสัปดาห์']],care:3,note:'พักเป็นสัปดาห์ ช่วงกลางสัปดาห์คือจุดที่ควรเช็คว่าซักรีดและอาหารเช้าเป็นอย่างไร ก่อนที่ความเหนื่อยสะสมกลายเป็นความไม่พอใจ'},
+ {steps:[['🚗','ถึงโรงแรม','ค่ำ ~20:30'],['🔑','เช็คอิน','~20:40'],['🍳','อาหารเช้า','ยังไม่เก็บเวลา'],['🧾','เช็คเอาท์','~08:00 + ขอใบกำกับ']],care:1,note:'มาดึก เหนื่อย อยากเช็คอินเร็ว ถ้าต้องรอที่เคาน์เตอร์คือจุดที่เสียคะแนนมากที่สุด ควรเตรียมห้องและกุญแจไว้ก่อนถึง'},
+ {steps:[['👨‍👩‍👧','ถึงโรงแรม','ศุกร์เย็น ~18:00'],['🔑','เช็คอิน','~18:15'],['🍳','อาหารเช้า','เสาร์เช้า'],['🏊','พักผ่อน/เช็คเอาท์','อาทิตย์ ~11:00']],care:2,note:'ครอบครัวให้ความสำคัญกับอาหารเช้าและความสะอาด ช่วงอาหารเช้าคือจังหวะที่พนักงานทักทายเด็กๆ ได้ผลที่สุด'},
+ {steps:[['🚙','ถึงโรงแรม','บ่าย/เย็น ~16:00'],['🔑','เช็คอิน','~16:10'],['🍳','อาหารเช้า','ยังไม่เก็บเวลา'],['👋','เช็คเอาท์','~09:00']],care:3,note:'พักคืนเดียวแล้วไปต่อ ตอนเช็คเอาท์คือโอกาสเดียวที่จะขอ LINE และเชิญเป็นสมาชิก ก่อนที่เขาจะขับต่อไป'}];
+let cur=0,tm;const gt=document.getElementById('gtabs');
+gt.innerHTML=G.map((g,i)=>`<button class="btn" data-k="${i}">${g.n}</button>`).join('');
+gt.onclick=e=>{const k=e.target.dataset.k;if(k!=null){cur=+k;draw1()}};
+function draw1(){const d=DAY[cur];gt.querySelectorAll('.btn').forEach(b=>b.classList.toggle('on',+b.dataset.k===cur));clearInterval(tm);
+ document.getElementById('tl').innerHTML='<div class="fill" id="fill"></div>'+d.steps.map((s,i)=>`<div class="nd" id="n${i}"><div class="c">${s[0]}</div><b>${s[1]}</b><small>${s[2]}</small><span class="w2">ควรดูแล</span></div>`).join('');
+ document.getElementById('note1').textContent='กด ▶ เล่น เพื่อดูวันของกลุ่ม "'+G[cur].n+'"';run1()}
+function run1(){const d=DAY[cur];clearInterval(tm);document.querySelectorAll('.nd').forEach(n=>n.classList.remove('care','done','now'));let i=-1;const step=()=>{i++;if(i>3){clearInterval(tm);document.getElementById('note1').textContent=d.note;document.getElementById('n'+d.care).classList.add('care');return}
+ for(let j=0;j<4;j++){const n=document.getElementById('n'+j);n.classList.toggle('done',j<i);n.classList.toggle('now',j===i)}document.getElementById('fill').style.width=(i/3*76)+'%'};step();tm=setInterval(step,1100)}
+play1.onclick=run1;
+draw1();setGates('many');
+</script></body></html>
