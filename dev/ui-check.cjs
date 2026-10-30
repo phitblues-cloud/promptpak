@@ -7,11 +7,11 @@ p.on('console',m=>{if(m.type()==='error'&&!/ERR_TUNNEL|fonts|net::|Failed to loa
 await p.goto('http://localhost:3999/');await p.waitForTimeout(1500);
 const lf=p.frameLocator('#loginfr');
 await p.screenshot({path:`${out}/${tag}_login.png`});
-await lf.locator('.acc.owner').click();await p.waitForTimeout(300);
-await lf.locator('#pin').fill('000000');await lf.locator('#pf button').click();await p.waitForTimeout(800);
-console.log('wrong pin msg:',await lf.locator('#er').textContent());
+await lf.locator('.bx[data-k=o]').click();await p.waitForTimeout(300);
+await lf.locator('.bx.on .pin').fill('000000');await lf.locator('.bx.on .go').click();await p.waitForTimeout(800);
+console.log('wrong pin msg:',await lf.locator('.bx.on .err').textContent());
 await p.screenshot({path:`${out}/${tag}_pin.png`});
-await lf.locator('#pin').fill('123456');await lf.locator('#pf button').click();
+await lf.locator('.bx.on .pin').fill('123456');await lf.locator('.bx.on .go').click();
 await p.waitForTimeout(4000);
 console.log('login hidden:',await p.evaluate(()=>document.getElementById('loginfr').classList.contains('hide')));
 for(const k of ['home','book','cust','hk','fin','rep','mkt','crmm','linechat']){await p.evaluate(k=>show(k),k);await p.waitForTimeout(1300);await p.screenshot({path:`${out}/${tag}_${k}.png`});}

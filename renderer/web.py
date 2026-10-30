@@ -47,15 +47,11 @@ async function enter(k,pin){
 
 
 def patch_login(post):
+    """หน้าล็อกอินใหม่ (renderer/login.html · ภาพร่าง login_v8 อนุมัติ 31 ต.ค.): กล่องบัญชี 3 ใบ + ใส่ PIN จริง"""
     i = post.index('const LOGIN=') + len('const LOGIN=')
-    L, end = json.JSONDecoder().raw_decode(post[i:])
-    a = L.index('function enter(k){')
-    b = L.index("document.getElementById('v1').onclick")
-    L = L[:a] + PIN_JS + '\n' + L[b:]
-    old = "if(document.getElementById('rem').checked&&!saved.includes(k))saved.push(k);\n    enter(k)};"
-    assert old in L, 'login form'
-    L = L.replace(old, "if(document.getElementById('rem').checked&&!saved.includes(k))saved.push(k);\n    enter(k,p.value)};")
-    L = L.replace('<span>รหัสผ่าน</span>', '<span>รหัสผ่าน (PIN)</span>')
+    _, end = json.JSONDecoder().raw_decode(post[i:])
+    with open(os.path.join(os.path.dirname(__file__), 'login.html'), encoding='utf-8') as f:
+        L = f.read()
     return post[:i] + json.dumps(L, ensure_ascii=False).replace('</', '<\\/') + post[i + end:]
 
 
