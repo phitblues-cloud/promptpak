@@ -28,6 +28,26 @@ for a, b in [("async function poll(){if(busy||document.hidden)return;", "async f
              ("window.showLogin=async function(){try{await fetch('/api/app?part=logout',{method:'POST'})}catch(_){}location.reload()};", "window.showLogin=function(){location.reload()};")]:
     assert h.count(a) == 1, a[:50]
     h = h.replace(a, b)
+# ---- หน้าล็อกอินในเดโม: แตะกล่องบัญชีแล้วเข้าเลย (ไม่ต้องใส่ PIN) ----
+DEMO_LOGIN_JS = """<script>
+(function(){var NM={o:['owner','เจ้าของรีสอร์ท'],s:['staff','พนักงานต้อนรับ']};
+ document.querySelectorAll('.bx').forEach(function(bx){
+  bx.addEventListener('click',function(e){e.stopImmediatePropagation();e.preventDefault();
+   if(bx.classList.contains('ok'))return;var n=NM[bx.dataset.k]||NM.s;
+   bx.classList.add('ok');var t=bx.querySelector('.tg'),b=bx.querySelector('.big');if(t)t.textContent='\\u2713';if(b)b.innerHTML='ยินดี<br>ต้อนรับ';
+   var st=document.getElementById('stage');if(st)st.classList.add('wel');
+   setTimeout(function(){parent.postMessage({pbr:'login',role:n[0],name:n[1]},'*')},900)},true)})})();
+</script>"""
+i0 = h.index('const LOGIN=') + len('const LOGIN=')
+_, e0 = json.JSONDecoder().raw_decode(h[i0:])
+L0 = json.loads(h[i0:i0 + e0])
+assert L0.count('</script></body>') == 1
+assert L0.count('ใส่ชื่อผู้ใช้และรหัส') == 1
+L0 = L0.replace('ใส่ชื่อผู้ใช้และรหัส', 'เดโม · แตะเพื่อเข้าเป็นพนักงาน')
+L0 = L0.replace('</script></body>', '</script>' + DEMO_LOGIN_JS + '</body>')
+h = h[:i0] + json.dumps(L0, ensure_ascii=False).replace('</', '<\\/') + h[i0 + e0:]
+assert h.count(" applyRole(PP.role,PP.name);\n") == 1
+h = h.replace(" applyRole(PP.role,PP.name);\n", " /* เดโม: รอให้แตะกล่องบัญชีก่อนเข้า */\n", 1)
 SHIM = r"""<meta name="robots" content="noindex"><script>
 /* เดโม: ไม่มีหลังบ้านจริง · คำสั่งบันทึกทุกอย่างตอบว่า "สำเร็จ" ในเครื่องนี้เท่านั้น ข้อมูลไม่ถูกเก็บ รีเฟรชแล้วกลับเป็นเดิม */
 (function(){var rf=window.fetch.bind(window);
